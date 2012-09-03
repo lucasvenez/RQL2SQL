@@ -1,0 +1,16 @@
+Quais são os produtos que fizeram parte de todas as vendas?
+
+£idProduto, idVenda(ItensVenda) / £idVenda(Venda)
+
+SELECT DISTINCT idProduto
+FROM itensVenda
+WHERE (
+	SELECT count(*)
+	FROM (SELECT DISTINCT idProduto FROM itensVenda) AS p, venda
+	WHERE p.idProduto = itensVenda.idProduto
+          ) = 
+          (
+	SELECT count(*)
+	FROM itensvenda AS a
+	WHERE a.idProduto = itensvenda.idProduto
+          )

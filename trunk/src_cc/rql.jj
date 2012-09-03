@@ -1,0 +1,723 @@
+/**
+ * This document describe the Relational Query Language.
+ * @author Lucas Venezian Povoa
+ * @since 24th Setember, 2010
+ */
+
+/*
+ * Compiler options
+ */
+options {
+
+	/*
+	 * Esse atributo determina que as classes não devem ser estáticas.
+	 */
+	STATIC = false;
+
+	GRAMMAR_ENCODING = "ISO-8859-1";
+
+	/*
+	 * Esse atributo determina que o Analisador Sintático deve mostrar na saída-padrão
+	 * quais são os não-terminais que estão sendo "executados" e quais são os tokens que
+	 * estão sendo consumidos em cada um deles.
+	 */
+	DEBUG_LOOKAHEAD = true;
+}
+ 
+PARSER_BEGIN( RelationalQueryLanguage )
+package com.rql.parser;
+
+/*
+ * Import session
+ */
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import com.rql.*;
+
+public class RelationalQueryLanguage {
+
+	/**
+	 * Compiler version describe.
+	 */
+	public static final String VERSION = "Relational Query Language Translator 1.0 - 2010";
+
+	/**
+	 * Attribute used to check if there is or there is not abstract output of syntax analysis.
+	 */
+	private static boolean debug_sa = false; //debug lexical syntax analysis process
+
+	/**
+	 * Method main of Relational Query Language class
+	 */
+	public static void main ( String args[] ) throws ParseException {
+
+		/**
+		 * Attribute used to store a reference of a parser object that will do the compilation of source code in Relational Query Language.
+		 */
+		RelationalQueryLanguage parser = null;
+		
+		/**
+		 * Attribute used to store the file name that will be analysis. 
+		 */
+		String fileName = null;
+		
+		/**
+		 * Attribute used to store the output path.
+		 */		
+		String outputPath = "./";
+
+		/**
+		 * Attribute used to store the output file name.
+		 */		
+		String outputFileName;
+		
+		/**
+		 * Number of parameters errors.
+		 */
+		int parametersErrors = 0;
+
+		/**
+		 * For clause used to get the parameters that will be used in compiler process.
+		 */
+		for ( int i = 0; i < args.length && parametersErrors == 0; i++ ) { //for 1
+
+			String arg = args[i];
+
+			if ( arg.toLowerCase().equals( "--debug-syntax-analysis" ) || arg.toLowerCase().equals( "-s" ) ) {
+
+				debug_sa = true;
+			}
+			/*
+			 * Checking help parameter
+			 */
+			else if ( arg.equals( "--help " ) || arg.equals( "-h" ) ) {
+
+				helpText();
+				System.exit( 0 );
+			}
+			/*
+			 * Checking output-path parameter
+			 */
+			else if ( arg.toLowerCase().equals( "--output-path" ) || arg.toLowerCase().equals( "-p" ) ) {
+					
+				if ( i + 1 < args.length && checkParameterOfOutputPath( args[i+1] ) )
+					outputPath = args[++i];
+				else {
+						
+					System.out.println( "The value of --output-path parameter is invalid." );
+					parametersErrors++;
+				}
+			}
+			/*
+			 * Checking output name parameter
+			 */
+			else if ( arg.toLowerCase().equals( "--output-name" ) || arg.toLowerCase().equals( "-n" ) ) { 
+					
+				if ( i + 1 < args.length && checkParameterOfOutputName( args[i+1] ) )						
+					outputFileName = args[++i];
+
+				else {
+					
+					System.out.print( "The value of output-name parameter is invalid." );
+					parametersErrors++;
+				}
+			}
+			/*
+			 * Checking target SQL parameter.
+			 */
+			else if ( arg.toLowerCase().equals( "--target-sql" ) || arg.toLowerCase().equals( "-t" ) ) {
+				
+				if ( i + 1 < args.length && checkParameterOfTargetSQL( args[i+1] ) ) i++;
+				
+				else {
+					
+					System.out.print( "The value of output-name parameter is invalid. It's just possible to use the SQL92 option." );
+					parametersErrors++;						
+				}
+			}
+			/*
+			 * Checking if the file is in the last index. 
+			 */				
+			else if ( i != args.length - 1 ) {
+					
+				parametersErrors++;
+			}
+			/*
+			 * All right. Now we go to do the compilation. 	
+			 */				
+			else
+				fileName = arg;
+		} //for 1
+
+		if ( parametersErrors != 0 ) {
+			
+			System.out.println();
+			helpText();
+			System.exit(0);
+		}
+		else {
+			
+			System.out.printf( "Reading from file %s\n", fileName );
+
+			try {
+
+				parser = new RelationalQueryLanguage( new FileInputStream( fileName ) );
+
+				/*
+				 * Disabling/Enabling the syntax analysis debug
+				 */
+				if ( !debug_sa )
+					parser.disable_tracing();
+				else
+					parser.enable_tracing();
+			}	
+			catch ( FileNotFoundException exception ) {
+
+				System.out.printf( "File %s not found.\n", fileName );
+				System.exit(0);
+			}
+			
+			try {
+				
+				parser.program();
+			}
+			catch ( NullPointerException exception ) {
+
+				System.out.println( "A file must be specified." );
+			}
+			finally {
+
+								
+				switch ( parser.token_source.foundLexError() ) 	{
+					case 0:
+						System.out.println( "Lexical errors were not found." );
+					   break;
+					   
+					case 1:
+						System.out.printf( "%c[1m%i%c[0m lexical error was found.\n", 27, 1, 27 );
+					  break;
+					  
+					default:
+						System.out.printf( "%c[1m%i%c[0m lexical errors were found.\n", 27, parser.token_source.foundLexError(), 27 );
+				}
+
+				System.out.println( "Analysis finished." );			}
+		}
+		
+	}//main
+	
+	/**
+	 * Method used to link a founded token with his name.
+	 * @see the book DELAMARO, M. E. Como Construir um Compilador: Utilizando Ferramentas Java. São Paulo: Novatec. 2004
+	 * @param x
+	 * @return
+	 */
+	public static String im ( int x ) {
+		
+		int k;
+		String s;
+		
+		s = tokenImage[x];
+		k = s.lastIndexOf( "\"" );
+		
+		try {
+		
+			s.substring( 1, k );
+		}
+		catch( Exception exception ) {}
+		
+		return s;
+	}
+	
+	/**
+	 * Method used to print the help text.
+	 */
+	private static void helpText() {
+		
+		System.out.println( "Usage: java -jar rql.jar [options] file" );
+		System.out.println();
+		
+		System.out.println( "[options]" );
+
+		System.out.printf( "%c[1m", 27 );
+		System.out.println( String.format( "\n\t·   %-30s", "-p, --output-path <path-name>" ) );
+		System.out.printf( "%c[0m", 27 );
+		System.out.println( String.format( "\n\t    %s", "Specific output path" ) );
+
+		System.out.printf( "%c[1m", 27 );
+		System.out.println( String.format( "\n\t·   %-30s", "-n, --output-name <file-name>" ) );
+		System.out.printf( "%c[0m", 27 );
+		System.out.println( String.format( "\n\t    %s", "Specific output file name" ) );
+
+		System.out.printf( "%c[1m", 27 );
+		System.out.println( String.format( "\n\t·   %-30s", "-t, --target-sql <sql-type>",   "Target sql type (default: SQL92)" ) );
+		System.out.printf( "%c[0m", 27 );
+		System.out.println( String.format( "\n\t    %s", "Target sql type (default: SQL92)" ) );
+
+		System.out.printf( "%c[1m", 27 );
+		System.out.println( String.format( "\n\t·   %-30s", "-l, --debug-lexical-analysis" ) );
+		System.out.printf( "%c[0m", 27 );
+		System.out.println( String.format( "\n\t    %s", "Show lexical analysis details." ) );
+
+		System.out.printf( "%c[1m", 27 );
+		System.out.println( String.format( "\n\t·   %-30s", "-s, --debug-syntax-analysis" ) );
+		System.out.printf( "%c[0m", 27 );
+		System.out.println( String.format( "\n\t    %s", "Show syntax analysis details." ) );
+
+		System.out.println();
+	}
+
+	/**
+	 * Method used to check if the parameter value of --output-path, --output-name and target-sql are not equals compiler parameters .
+	 * @param parameter is the value will be checked.
+	 * @return true if the value that's OK
+	 */
+	public static boolean checkParameter ( String parameter ) {
+		
+		boolean result = false;
+		
+		if (
+		  	!parameter.equals( "-p" ) && !parameter.equals( "--output-path" )                    &&
+			!parameter.equals( "-n" ) && !parameter.equals( "--output-name" )                    &&
+			!parameter.equals( "-t" ) && !parameter.equals( "--target-sql" )                     &&
+			!parameter.equals( "-l" ) && !parameter.equals( "--debug-lexical-analysis" )         &&
+			!parameter.equals( "-s" ) && !parameter.equals( "--debug-syntax-analysis"  )         &&
+			!parameter.equals( "-h" ) && !parameter.equals( "--help" )                   
+				
+		) {
+		  
+			result = true;
+		}
+		
+		return result;
+	}	
+
+	/**
+	 * Method used to check the parameter value of --output-name.
+	 * @param parameter is the value will be checked.
+	 * @return true if the value that's OK
+	 */
+	public static boolean checkParameterOfOutputName (String parameter ) {
+			
+		boolean result = false;
+		
+		if ( parameter != null && checkParameter( parameter ) )
+			result = true;
+		
+		return result;
+	}	
+	
+	/**
+	 * Method used to check the parameter value of --output-path.
+	 * @param parameter is the value will be checked.
+	 * @return true if the value that's OK
+	 */
+	public static boolean checkParameterOfOutputPath ( String parameter ) {
+		
+		boolean result = false;
+		
+		if ( parameter.indexOf( "-" ) != 0 && parameter != null && checkParameter( parameter ) )
+			result = true;
+		
+		return result;
+	}
+	
+	/**
+	 * Method used to check the parameter value of --target-sql.
+	 * @param parameter is the value will be checked.
+	 * @return true if the value that's OK
+	 */
+	public static boolean checkParameterOfTargetSQL ( String parameter ) {
+		
+		boolean result = false;
+		
+		if ( parameter.toUpperCase().equals( "SQL92" ) )
+			result = true;
+		
+		return result;
+	}	  
+}//RelationalQueryLanguage class
+PARSER_END( RelationalQueryLanguage )
+
+/*************************************************************************************************************
+/*											Compiler Options												 *
+/*************************************************************************************************************/
+
+TOKEN_MGR_DECLS: {
+  
+	int countLexError = 0;
+
+	public int foundLexError() {
+	  
+		return countLexError;
+	}
+}
+
+/*************************************************************************************************************
+/*											Lexical Set														 *
+/*************************************************************************************************************/
+
+SKIP: {
+		" "
+	|	"\n"
+	|	"\r"
+	|	"\r\n"
+}
+
+/**
+ * Special tokens
+ * @since Setember 24th, 2010
+ */
+TOKEN : {
+       < QUOTE              :   "'"   >
+   |   < DOUBLE_QUOTE       :   "\""  >
+   |   < PERCENT            :   "%"   >
+   |   < AMPERSAND          :   "&"   >
+   |   < LEFT_PARENTHESIS   :   "("   >
+   |   < RIGHT_PARENTHESIS  :   ")"   >
+   |   < ASTERISK           :   "*"   >
+   |   < PLUS_SIGN          :   "+"   >
+   |   < COMMA              :   ","   >
+   |   < MINUS_SIGN         :   "-"   >
+   |   < PERIOD             :   "."   >
+   |   < SOLIDUS            :   "/"   >
+   |   < COLON              :   ":"   >
+   |   < SEMICOLON          :   ";"   >
+   |   < LESS_THAN          :   "<"   > 
+   |   < EQUALS             :   "="   >
+   |   < NOT_EQUALS         :   ( "!=" | "<>" ) >
+   |   < GREATER_THAN       :   ">"              >
+   |   < GREATER_THAN_OR_EQUALS   :   ">="       >
+   |   < LESS_THAN_OR_EQUALS      :   "<="       >
+   |   < QUESTION_MARK            :   "?"        >
+   |   < UNDERSCORE               :   "_"        >
+   |   < VERTICAL_BAR             :   "|"        >
+   |   < LEFT_BRACKET             :   "["        >
+   |   < RIGHT_BRACKET            :   "]"        >
+   |   < LEFT_KEY                 :   "{"        >
+   |   < RIGHT_KEY                :   "}"        >
+   |   < INSTANCEOF				  :   "instanceof" >
+   |   < IF                       :   "->"         >
+   |   < POWER                    :   "**"         >
+}
+
+/**
+ * Relational Operations Tokens
+ * @since Setember 24th, 2010
+ */
+TOKEN: {
+        < PROJECT_TOKEN	:   "¢" >
+   |	< SELECT_TOKEN	:   "£" >
+   |	< RENAME_TOKEN	:   "§" >
+   |	< EXTEND_TOKEN	:   < AMPERSAND > >
+}
+
+/**
+ * Aggregation operation tokens
+ * @since Setember 24th, 2010
+ */
+TOKEN: {
+     < COUNT	: "#" >
+   | < SUM		: "$" >
+   | < AVG		: "@" >
+   | < MAX		: < PLUS_SIGN  > >
+   | < MIN		: < MINUS_SIGN > >
+}
+ 
+/**
+ * Logic operators tokens
+ * @since Setember 25th, 2010
+ */
+TOKEN: {
+       < AND   :   "^"   >
+   |   < OR    :   "v"   >
+   |   < XOR   :   "_v_" >
+   |   < NOT   :   "¬"   >
+}
+
+/**
+ * Data types
+ */
+TOKEN: {
+
+   < VARCHAR_TYPE   : "VARCHAR" ( < LEFT_PARENTHESIS > < INTEGER > < RIGHT_PARENTHESIS > )? >
+|  < CHAR_TYPE      : "CHAR" ( < LEFT_PARENTHESIS > < INTEGER > < RIGHT_PARENTHESIS > )?    >
+|  < INTEGER_TYPE   : ( "INT" | "INTEGER" ) ( < LEFT_PARENTHESIS > < INTEGER > < RIGHT_PARENTHESIS > )? >
+|  < DOUBLE_TYPE    : ( "DOUBLE"  | "DECIMAL" | "RATIONAL" ) ( < LEFT_PARENTHESIS > < INTEGER > ( < PERIOD > < INTEGER > )? )? >
+|  < FLOAT_TYPE     : ( "FLOAT" | "LONG" ) ( < LEFT_PARENTHESIS > < INTEGER > ( < PERIOD > < INTEGER > )? )? >
+|  < BLOB_TYPE      : ( "BLOB" | "LONG BLOB" ) >
+|  < GEOMETRIC_TYPE : ( "POINT" | "LINE" | "POLYGON" | "MULTI POINTS" | "MULTIPART LINE" | "MULTIPART LINE" ) >
+|  < RELATION_TYPE  : ( "DEE" | "DUM" ) >
+|  < BOOLEAN_TYPE   : "BOOLEAN" >}
+
+/**
+ * constants
+ * @since Setember 25th, 2010
+ */
+TOKEN: {
+      < INTEGER : (< PLUS_SIGN > | < MINUS_SIGN >)? ["0"-"9"] (["0"-"9"])*                                                >
+   |  < DECIMAL : (< PLUS_SIGN > | < MINUS_SIGN >)? ["0"-"9"] (["0"-"9"])* ( "." (["0"-"9"])* )			                >
+   |  < HEX	    : (< PLUS_SIGN > | < MINUS_SIGN >)? ["0"-"9", "A"-"F", "a"-"f"] (["0"-"9", "A"-"F", "a"-"f"])* ["h", "H"]	>
+   |  < OCT	    : (< PLUS_SIGN > | < MINUS_SIGN >)? ["0"-"7"] (["0"-"7"])* ["o", "O"]									    >
+   |  < BIN	    : ( ["0"-"1"] ( ["0"-"1"] )* ["b", "B"] )												                    >
+   |  < STRING  : < DOUBLE_QUOTE >( ~[ "\"", "\n", "\r" ] )* < DOUBLE_QUOTE >												>
+   |  < TRUE    : "TRUE" 																				                    >
+   |  < FALSE   : "FALSE"	 																			                    >
+}
+
+/**
+ * Identifier
+ * @since Setember 25th, 2010
+ */
+TOKEN : {  
+		<IDENTIFIER	: ( < LETTER > |  < UNDERSCORE > ) ( < LETTER > | < DIGIT > |  < UNDERSCORE > )*	>
+	|	<#LETTER	: ["A"-"Z", "a"-"z"] >
+	|	<#DIGIT		: ["0"-"9"]          > 
+}
+
+/**
+ * States of the lexical analysis
+ */
+
+/**
+ * ENDLINE_COMMENT STATE
+ */
+SKIP: {
+
+	"//" : ENDLINE_COMMENT
+}
+
+< ENDLINE_COMMENT > SKIP: {
+  
+	 "\n" : DEFAULT
+   | < ~[] >
+}
+
+/**
+ * MULTILINE_COMMENT STATE
+ */
+SKIP: {
+  
+	"/*" : MULTILINE_COMMENT
+}
+
+<MULTILINE_COMMENT > SKIP: {
+  
+		"*/" : DEFAULT
+	|	< ~[] >
+}
+
+/**
+ * DOCUMENTATION_COMMENT STATE
+ */
+SKIP: {
+  
+  "/**" : DOCUMENTATION_COMMENT
+}
+
+< DOCUMENTATION_COMMENT > SKIP: {
+  
+		"*/" : DEFAULT
+	|	< ~[] >
+}
+
+/**
+ * Lexical error catch
+ */
+SPECIAL_TOKEN: {
+
+	<INVALID_LEXICAL:
+		(
+			~[
+				"a"-"z",
+				"A"-"Z",
+				"0"-"9",
+				"\"",
+				"'",
+				"`",
+				"!",
+				"@",
+				"#",
+				"$",
+				"%",
+				"(",
+				")",
+				"-",
+				"_",
+				"+",
+				"*",
+				"=",
+				"£",
+				"¢",
+				"¬",
+				"§",
+				"|",
+				"{",
+				"}",
+				"ª",
+				"º",
+				"^",
+				">",
+				" ",
+				"\t",
+				"\n",
+				"\r",
+				"\f",
+				"<"
+			]
+		)+
+	> {
+	  
+	  System.err.printf(
+	    "Invalid string found from line %d, column %d - %s\n",
+	  	input_stream.getBeginLine(),
+	  	input_stream.getBeginColumn(),
+	  	image
+	  );
+
+	  countLexError++;
+	}
+	| < INVALID_CONST: "\"" (~ ["\n","\r","\""])* ["\n","\r"] > {
+
+		System.err.printf(
+	    	"Invalid string found from line %d, column %d - %s\n",
+	  		input_stream.getBeginLine(),
+	  		input_stream.getBeginColumn(),
+	  		image
+		);
+
+		countLexError++;
+	}
+}
+
+/* *************************************************************************************************************
+/*                                                Syntax Definition
+/* *************************************************************************************************************/
+
+ListNode program() : {
+
+   RelationalOperationsNode r = null;
+   ListNode l = null;
+}
+{
+	(
+	   r = relationalOperations() < SEMICOLON >
+	   
+	   {  if ( l == null ) l = new ListNode( r );
+	      else l.add( r ); }
+	   
+	)* < EOF >
+
+	{ return l; }}
+
+RelationalOperationsNode relationalOperations() : {
+
+   RelationalOperationsNodeChildren opnd = null;
+} {
+
+   opnd = query()
+//|opnd = structure()
+//|opnd = security()
+
+   { return new RelationalOperationsNode( opnd ); }}
+
+QueryNode query() : {
+
+   QueryNodeChildren qnc = null;
+} {
+   
+   readyOnlyOperations()
+//|  dataManipulationOperations()
+
+   { return new QueryNode( qnc ); }}
+
+ReadyOnlyOperationsNode readyOnlyOperations() : {} {
+ 	unitaryOperations()
+//| binaryOperations()}
+
+void unitaryOperations() : {} {
+
+   ( project() | select() | rename() )* < LEFT_PARENTHESIS > ( readyOnlyOperations() ) < RIGHT_PARENTHESIS >
+|  relation()
+}
+
+void project() : {} {
+
+	< PROJECT_TOKEN > < IDENTIFIER > ( < COMMA > < IDENTIFIER > )*
+}
+
+void select() : {} {
+
+   < SELECT_TOKEN > logicalSentence()
+}
+
+void rename() : {} {
+
+   < RENAME_TOKEN > < IDENTIFIER > < IDENTIFIER > ( < COMMA > < IDENTIFIER > < IDENTIFIER > )* 
+}
+
+void relation() : {} {
+
+   < IDENTIFIER >
+}
+
+void logicalSentence() : {} {
+
+   conditionalSentence() ( logicalOperator() conditionalSentence() )*}
+
+void conditionalSentence() : {} {
+  
+   comparisonSentence() ( < IF > comparisonSentence() < COLON > comparisonSentence() )*
+}
+
+void comparisonSentence() : {} {
+
+   instanceofSentence() ( comparisonOperator() instanceofSentence() )*
+}
+
+void instanceofSentence() : {} {
+
+   additionSentence() [ < INSTANCEOF > type() ]
+}  
+
+void additionSentence() : {} {
+
+   multiplicationSentence() ( ( < PLUS_SIGN > | <MINUS_SIGN> ) multiplicationSentence() )*}
+
+void multiplicationSentence() : {} {
+
+   factor() ( ( < ASTERISK > | < POWER > | < SOLIDUS > | < PERCENT > ) factor() )*}
+
+void factor() : {} {
+   [ < NOT > ]   (         literal() | < IDENTIFIER >
+      |  < LEFT_PARENTHESIS > conditionalSentence() < RIGHT_PARENTHESIS >
+   )
+}
+
+void logicalOperator() : {} {
+  
+   < AND > | < OR > | < XOR >
+}
+
+void comparisonOperator() : {} {
+     < LESS_THAN > | < LESS_THAN_OR_EQUALS > | < GREATER_THAN > | < GREATER_THAN_OR_EQUALS > | < EQUALS > | < NOT_EQUALS >
+}
+
+void literal() : {} {
+
+   < INTEGER > |  < DECIMAL > |  < HEX > |  < OCT > |  < BIN > |  < STRING > |  < TRUE > |  < FALSE >
+}
+
+void type() : {} {
+
+   < VARCHAR_TYPE >
+|  < CHAR_TYPE    >
+|  < INTEGER_TYPE >
+|  < DOUBLE_TYPE  >
+|  < FLOAT_TYPE   >
+|  < BLOB_TYPE    >
+|  < GEOMETRIC_TYPE >
+|  < RELATION_TYPE  >
+|  < BOOLEAN_TYPE   >
+|  < IDENTIFIER     >
+}
