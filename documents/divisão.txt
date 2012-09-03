@@ -1,0 +1,11 @@
+SELECT Produto.descricao
+FROM Produto
+WHERE 
+	(SELECT count(idProduto) * (SELECT count(idCompraVenda) FROM CompraVenda WHERE tipo = 'C')
+	 FROM produto AS p
+	 WHERE Produto.idProduto = p.idProduto
+	) = 
+	(SELECT count(*)
+	 FROM ItemCompraVenda
+	 WHERE ItemCompraVenda.idProduto = Produto.idProduto 
+	)
