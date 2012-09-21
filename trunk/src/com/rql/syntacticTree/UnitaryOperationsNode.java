@@ -5,23 +5,28 @@ import com.rql.syntacticTree.interfaces.ReadyOnlyOperationsNodeChildren;
 
 public class UnitaryOperationsNode extends Node implements ReadyOnlyOperationsNodeChildren {
 
-	public UnitaryOperationsNode(Token position) {
-		super(position);
-		// TODO Auto-generated constructor stub
+	private ListNode ln = null;
+	private ReadyOnlyOperationsNode roon = null;
+	private RelationNode rn = null;
+	
+	public UnitaryOperationsNode( ListNode listNode, ReadyOnlyOperationsNode roon ) {
+		super(listNode != null ? listNode.getFirstToken() : roon.getFirstToken() );
+		this.ln = listNode;
+		this.roon = roon;
+	}
+	
+	public UnitaryOperationsNode( RelationNode rn ) {
+		super(rn.getFirstToken());
+		this.rn = rn;
 	}
 
 	@Override
 	public Token getFirstToken() {
-		// TODO Auto-generated method stub
-		return null;
+		if ( rn != null )
+			return rn.getFirstToken();
+		else if( ln != null )
+			return ln.getFirstToken();
+		else
+			return roon.getFirstToken();
 	}
-
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-
-	}
-
 }
