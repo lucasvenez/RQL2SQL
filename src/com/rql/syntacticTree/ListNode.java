@@ -9,13 +9,11 @@ public class ListNode extends Node {
 	private ListNode next = null;
 	
 	public ListNode( Node node ) {
-		
 		super(node.getPosition() );
 		this.node = node;	
 	}
 	
 	public ListNode( Node node, ListNode next ) {
-		
 		super( node.getPosition() );
 		this.node = node;
 		this.next = next;

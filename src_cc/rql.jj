@@ -626,24 +626,63 @@ QueryNode query() : {
    QueryNodeChildren qnc = null;
 } {
    
-   readyOnlyOperations()
-//|  dataManipulationOperations()
+   qnc = readyOnlyOperations()
+//|  qnc = dataManipulationOperations()
 
    { return new QueryNode( qnc ); }}
 
-ReadyOnlyOperationsNode readyOnlyOperations() : {} {
- 	unitaryOperations()
-//| binaryOperations()}
+ReadyOnlyOperationsNode readyOnlyOperations() : {
 
-void unitaryOperations() : {} {
+	ReadyOnlyOperationsNodeChildren roonc = null;
+} {
+ 	roonc = unitaryOperations()
+//| roonc = binaryOperations()}
 
-   ( project() | select() | rename() )* < LEFT_PARENTHESIS > ( readyOnlyOperations() ) < RIGHT_PARENTHESIS >
-|  relation()
-}
+UnitaryOperationsNode unitaryOperations() : {
 
-void project() : {} {
+	UnitaryOperationsNodeChildren uonc = null;
+	ListNode ln = null;
+	ReadyOnlyOperationsNode roon = null;
+	RelationNode rn = null;
+} {
 
-	< PROJECT_TOKEN > < IDENTIFIER > ( < COMMA > < IDENTIFIER > )*
+   ( uonc = project()
+    {
+	  if ( uonc != null ) {
+		if ( ln == null ) ln = new ListNode( uonc );
+		else ln.add( uonc );
+	  }
+    }
+   | uonc = select()
+    {
+	  if ( uonc != null ) {
+		if ( ln == null ) ln = new ListNode( uonc );
+		else ln.add( uonc );
+	  }
+    }
+   | uonc = rename()
+	{
+	  if ( uonc != null ) {
+		if ( ln == null ) ln = new ListNode( uonc );
+		else ln.add( uonc );
+	  }
+    }
+   )* < LEFT_PARENTHESIS > roon = readyOnlyOperations() < RIGHT_PARENTHESIS >
+|  rn = relation() 	
+	{ if ( rn != null ) return new UnitaryOperationsNode( rn );
+	  else return new UnitaryOperationsNode( ln, roon );	}}
+
+void project() : {
+	ListNode ln = null;
+	Token token = null;
+} {
+
+	< PROJECT_TOKEN > token = < IDENTIFIER >
+	{ ln = new ListNode( new Node( token ) ); }
+	(
+	  < COMMA > token = < IDENTIFIER >
+	  ln.add( new Node( token ) );
+	)*
 }
 
 void select() : {} {
@@ -656,7 +695,7 @@ void rename() : {} {
    < RENAME_TOKEN > < IDENTIFIER > < IDENTIFIER > ( < COMMA > < IDENTIFIER > < IDENTIFIER > )* 
 }
 
-void relation() : {} {
+RelationNode relation() : {} {
 
    < IDENTIFIER >
 }
