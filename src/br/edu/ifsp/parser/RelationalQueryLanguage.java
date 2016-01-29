@@ -15,6 +15,7 @@ import br.edu.ifsp.symbolTable.Attribute;
 import br.edu.ifsp.symbolTable.Reference;
 import br.edu.ifsp.symbolTable.SymbolTable;
 import br.edu.ifsp.symbolTable.exceptions.UnexistentForeignKeyException;
+import br.edu.ifsp.syntacticTree.ListNode;
 
 public class RelationalQueryLanguage implements RelationalQueryLanguageConstants {
 
@@ -272,7 +273,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
 	 * 
 	 * @param location
 	 *            is the start of parameters definition.
-	 * @return true if the value that's OK and build the symbol table
+	 * @return the position of the next argument
 	 */
 	public static int checkParameterOfAttributesDefinition(String args[], int location) {
 
@@ -310,7 +311,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
 		}
 		return location;
 	}
-	
+
 	/**
 	 * Method used to check if the parameter value of --output-path,
 	 * --output-name and target-sql are not equals compiler parameters .
@@ -387,7 +388,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
 
 		return result;
 	}
-	
+
 	public static void buildSymbolTable(String definition, String regex) {
 		Pattern pattern = Pattern.compile(regex);
 		Matcher matcher = pattern.matcher(definition);
