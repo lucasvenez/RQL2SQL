@@ -29,4 +29,21 @@ public class UnitaryOperationsNode extends Node implements ReadyOnlyOperationsNo
 		else
 			return roon.getFirstToken();
 	}
+	
+	public ListNode getUnitaryOperationsChildrenNodeList(){
+		return this.ln;
+	}
+	
+	public ReadyOnlyOperationsNode getReadyOnlyOperationsNode(){
+		return this.roon;
+	}
+	
+	public RelationNode getRelationNode(){
+		return this.rn;
+	}
+	
+	@Override
+	public int getNumber() {
+		return this.number;
+	}
 }

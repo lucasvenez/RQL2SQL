@@ -17,4 +17,13 @@ public class ReadyOnlyOperationsNode extends Node implements QueryNodeChildren {
 	public Token getFirstToken() {
 		return this.node.getFirstToken();
 	}
+	
+	public ReadyOnlyOperationsNodeChildren getNode(){
+		return this.node;
+	}
+	
+	@Override
+	public int getNumber() {
+		return this.number;
+	}
 }

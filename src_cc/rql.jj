@@ -10,29 +10,36 @@
 options {
 
 	/*
-	 * Esse atributo determina que as classes n√£o devem ser est√°ticas.
+	 * Esse atributo determina que as classes n„o devem ser est·ticas.
 	 */
 	STATIC = false;
 
 	GRAMMAR_ENCODING = "ISO-8859-1";
 
 	/*
-	 * Esse atributo determina que o Analisador Sint√°tico deve mostrar na sa√≠da-padr√£o
-	 * quais s√£o os n√£o-terminais que est√£o sendo "executados" e quais s√£o os tokens que
-	 * est√£o sendo consumidos em cada um deles.
+	 * Esse atributo determina que o Analisador Sint·tico deve mostrar na saÌda-padr„o
+	 * quais s„o os n„o-terminais que est„o sendo "executados" e quais s„o os tokens que
+	 * est„o sendo consumidos em cada um deles.
 	 */
 	DEBUG_LOOKAHEAD = true;
 }
  
 PARSER_BEGIN( RelationalQueryLanguage )
-package com.rql.parser;
+package br.edu.ifsp.parser;
 
 /*
  * Import session
  */
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import com.rql.*;
+import br.edu.ifsp.symbolTable.*;
+import br.edu.ifsp.syntacticTree.*;
+import br.edu.ifsp.syntacticTree.interfaces.*;
+import br.edu.ifsp.symbolTable.exceptions.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class RelationalQueryLanguage {
 
@@ -45,6 +52,11 @@ public class RelationalQueryLanguage {
 	 * Attribute used to check if there is or there is not abstract output of syntax analysis.
 	 */
 	private static boolean debug_sa = false; //debug lexical syntax analysis process
+
+	/**
+	 * Attribute used to store the syntactic tree from analysis
+	 */
+	private static ListNode root = null; //Store the syntactic tree
 
 	/**
 	 * Method main of Relational Query Language class
@@ -94,6 +106,16 @@ public class RelationalQueryLanguage {
 
 				helpText();
 				System.exit( 0 );
+			}
+			/*
+			 * Checking attributes parameter
+			 */
+			else if (arg.equals("--attributes-definition") || arg.equals("-a")) {
+				i = checkParameterOfAttributesDefinition(args, i)-1;
+				if (i == 0) {
+					helpText();
+					System.exit(0);
+				}
 			}
 			/*
 			 * Checking output-path parameter
@@ -179,7 +201,11 @@ public class RelationalQueryLanguage {
 			
 			try {
 				
-				parser.program();
+				root = parser.program();
+				PrintTree pt = new PrintTree();
+				pt.printRoot(root);
+				pt.exportDotTree(root);
+				
 			}
 			catch ( NullPointerException exception ) {
 
@@ -201,14 +227,15 @@ public class RelationalQueryLanguage {
 						System.out.printf( "%c[1m%i%c[0m lexical errors were found.\n", 27, parser.token_source.foundLexError(), 27 );
 				}
 
-				System.out.println( "Analysis finished." );			}
+				System.out.println( "Analysis finished." );
+			}
 		}
 		
 	}//main
 	
 	/**
 	 * Method used to link a founded token with his name.
-	 * @see the book DELAMARO, M. E. Como Construir um Compilador: Utilizando Ferramentas Java. S√£o Paulo: Novatec. 2004
+	 * @see the book DELAMARO, M. E. Como Construir um Compilador: Utilizando Ferramentas Java. S„o Paulo: Novatec. 2004
 	 * @param x
 	 * @return
 	 */
@@ -240,31 +267,134 @@ public class RelationalQueryLanguage {
 		System.out.println( "[options]" );
 
 		System.out.printf( "%c[1m", 27 );
-		System.out.println( String.format( "\n\t¬∑   %-30s", "-p, --output-path <path-name>" ) );
+		System.out.println( String.format( "\n\t∑   %-30s", "-p, --output-path <path-name>" ) );
 		System.out.printf( "%c[0m", 27 );
 		System.out.println( String.format( "\n\t    %s", "Specific output path" ) );
 
 		System.out.printf( "%c[1m", 27 );
-		System.out.println( String.format( "\n\t¬∑   %-30s", "-n, --output-name <file-name>" ) );
+		System.out.println( String.format( "\n\t∑   %-30s", "-n, --output-name <file-name>" ) );
 		System.out.printf( "%c[0m", 27 );
 		System.out.println( String.format( "\n\t    %s", "Specific output file name" ) );
 
 		System.out.printf( "%c[1m", 27 );
-		System.out.println( String.format( "\n\t¬∑   %-30s", "-t, --target-sql <sql-type>",   "Target sql type (default: SQL92)" ) );
+		System.out.println( String.format( "\n\t∑   %-30s", "-t, --target-sql <sql-type>",   "Target sql type (default: SQL92)" ) );
 		System.out.printf( "%c[0m", 27 );
 		System.out.println( String.format( "\n\t    %s", "Target sql type (default: SQL92)" ) );
 
 		System.out.printf( "%c[1m", 27 );
-		System.out.println( String.format( "\n\t¬∑   %-30s", "-l, --debug-lexical-analysis" ) );
+		System.out.println( String.format( "\n\t∑   %-30s", "-l, --debug-lexical-analysis" ) );
 		System.out.printf( "%c[0m", 27 );
 		System.out.println( String.format( "\n\t    %s", "Show lexical analysis details." ) );
 
 		System.out.printf( "%c[1m", 27 );
-		System.out.println( String.format( "\n\t¬∑   %-30s", "-s, --debug-syntax-analysis" ) );
+		System.out.println( String.format( "\n\t∑   %-30s", "-s, --debug-syntax-analysis" ) );
 		System.out.printf( "%c[0m", 27 );
 		System.out.println( String.format( "\n\t    %s", "Show syntax analysis details." ) );
 
 		System.out.println();
+	}
+
+	/**
+	 * Method used to check the parameter value of --attributes-definition.
+	 * @param location
+	 *            is the start of parameters definition.
+	 * @return the position of the next argument
+	 */
+	public static int checkParameterOfAttributesDefinition(String args[], int location) {
+
+		boolean result = false;
+		List<String> attributes = new ArrayList<String>();
+		String attributeCheck = "";
+		String identifierRegex = "([a-zA-Z_][a-zA-Z1-9_]*)";
+		String typeRegex = "(VARCHAR|CHAR|INT|INTEGER|DOUBLE|DECIMAL|RATIONAL|FLOAT|LONG|BLOB)(\\([1-9]{1,3}\\))?";
+		String primaryRegex = "(PRIMARY\\s?KEY)?";
+		String foreignRegex = "(REFERENCES\\s?" + identifierRegex + "." + identifierRegex + ")?";
+		String attributeRegex = identifierRegex + "." + identifierRegex + ":" + typeRegex + primaryRegex + foreignRegex
+				+ ";";
+
+		for (int i = location + 1; i < args.length - 1; i++) {
+			String parameter = args[i];
+			if (!parameter.equals("-p") && !parameter.equals("--output-path") && !parameter.equals("-n")
+					&& !parameter.equals("--output-name") && !parameter.equals("-t")
+					&& !parameter.equals("--target-sql") && !parameter.equals("-l")
+					&& !parameter.equals("--debug-lexical-analysis") && !parameter.equals("-s")
+					&& !parameter.equals("--debug-syntax-analysis") && !parameter.equals("-h")
+					&& !parameter.equals("--help")) {
+				attributes.add(parameter);
+				attributeCheck += parameter;
+			} else {
+				location = i;
+				break;
+			}
+
+		}
+		if (!attributeCheck.matches("(" + attributeRegex + ")+")) {
+			return 0;
+		} else {
+			System.out.println("Building symbol table from arguments:");
+			buildSymbolTable(attributeCheck, attributeRegex);
+		}
+		return location;
+	}
+
+	/**
+	 * Method used to build the symbol table from arguments.
+	 * @param definition
+	 *            is the string with the information about the database
+	 * @param regex
+	 * 				is the regular expression that check the information
+	 */
+	public static void buildSymbolTable(String definition, String regex) {
+		Pattern pattern = Pattern.compile(regex);
+		Matcher matcher = pattern.matcher(definition);
+
+		SymbolTable st = new SymbolTable();
+		while (matcher.find()) {
+			String relation = matcher.group(1);
+			String attribute = matcher.group(2);
+			String type = matcher.group(3);
+
+			Attribute newAttribute = new Attribute(attribute, type);
+
+			int range = 0;
+			if (matcher.group(4) != null) {
+				range = Integer.parseInt(matcher.group(4).replace("(", "").replace(")", ""));
+				newAttribute.addFeature("range", range);
+			}
+
+			boolean primary = false;
+			if (matcher.group(5) != null) {
+				primary = true;
+				newAttribute.addFeature("primary", primary);
+			}
+
+			String referenceRelation = matcher.group(7);
+			String referenceAttribute = matcher.group(8);
+
+			if (referenceRelation != null) {
+				// Checks the foreign key
+				if (st.hasRelation(referenceRelation)
+						&& st.getRelation(referenceRelation).hasAttribute(referenceAttribute)) {
+					newAttribute.addFeature("reference", new Reference(referenceRelation, referenceAttribute));
+				} else {
+					// Throw a exception for unexistent foreign key
+					throw new UnexistentForeignKeyException();
+				}
+			}
+
+			System.out.println("  Making a new entry:");
+			System.out.println("    Relation: " + relation);
+			System.out.println("    Attribute: " + attribute);
+			System.out.println("    Type: " + type);
+			System.out.println("    Range: " + range);
+			System.out.println("    Primary: " + primary);
+			System.out.println("    Reference relation: " + referenceRelation);
+			System.out.println("    Reference attribute: " + referenceAttribute);
+			System.out.println("  Closing entry:");
+
+			st.getRelation(relation).addAttribute(attribute, newAttribute);
+		}
+		System.out.println("Finished the construction of the symbol table");
 	}
 
 	/**
@@ -335,7 +465,8 @@ public class RelationalQueryLanguage {
 			result = true;
 		
 		return result;
-	}	  
+	}
+	  
 }//RelationalQueryLanguage class
 PARSER_END( RelationalQueryLanguage )
 
@@ -406,9 +537,9 @@ TOKEN : {
  * @since Setember 24th, 2010
  */
 TOKEN: {
-        < PROJECT_TOKEN	:   "¬¢" >
-   |	< SELECT_TOKEN	:   "¬£" >
-   |	< RENAME_TOKEN	:   "¬ß" >
+        < PROJECT_TOKEN	:   "¢" >
+   |	< SELECT_TOKEN	:   "£" >
+   |	< RENAME_TOKEN	:   "ß" >
    |	< EXTEND_TOKEN	:   < AMPERSAND > >
 }
 
@@ -432,7 +563,7 @@ TOKEN: {
        < AND   :   "^"   >
    |   < OR    :   "v"   >
    |   < XOR   :   "_v_" >
-   |   < NOT   :   "¬¨"   >
+   |   < NOT   :   "¨"   >
 }
 
 /**
@@ -448,7 +579,8 @@ TOKEN: {
 |  < BLOB_TYPE      : ( "BLOB" | "LONG BLOB" ) >
 |  < GEOMETRIC_TYPE : ( "POINT" | "LINE" | "POLYGON" | "MULTI POINTS" | "MULTIPART LINE" | "MULTIPART LINE" ) >
 |  < RELATION_TYPE  : ( "DEE" | "DUM" ) >
-|  < BOOLEAN_TYPE   : "BOOLEAN" >}
+|  < BOOLEAN_TYPE   : "BOOLEAN" >
+}
 
 /**
  * constants
@@ -547,15 +679,15 @@ SPECIAL_TOKEN: {
 				"+",
 				"*",
 				"=",
-				"¬£",
-				"¬¢",
-				"¬¨",
-				"¬ß",
+				"£",
+				"¢",
+				"¨",
+				"ß",
 				"|",
 				"{",
 				"}",
-				"¬™",
-				"¬∫",
+				"™",
+				"∫",
 				"^",
 				">",
 				" ",
@@ -590,9 +722,9 @@ SPECIAL_TOKEN: {
 	}
 }
 
-/* *************************************************************************************************************
-/*                                                Syntax Definition
-/* *************************************************************************************************************/
+/* **************************************************************************************************************
+/*                                                Syntax Definition 											*
+/* **************************************************************************************************************/
 
 ListNode program() : {
 
@@ -608,7 +740,8 @@ ListNode program() : {
 	   
 	)* < EOF >
 
-	{ return l; }}
+	{ return l; }
+}
 
 RelationalOperationsNode relationalOperations() : {
 
@@ -619,24 +752,28 @@ RelationalOperationsNode relationalOperations() : {
 //|opnd = structure()
 //|opnd = security()
 
-   { return new RelationalOperationsNode( opnd ); }}
+   { return new RelationalOperationsNode( (QueryNode) opnd ); }
+}
 
 QueryNode query() : {
 
    QueryNodeChildren qnc = null;
 } {
    
-   qnc = readyOnlyOperations()
-//|  qnc = dataManipulationOperations()
-
-   { return new QueryNode( qnc ); }}
+   	qnc = readyOnlyOperations() 
+	//|  qnc = dataManipulationOperations()
+	{ return new QueryNode( qnc ); }
+   
+}
 
 ReadyOnlyOperationsNode readyOnlyOperations() : {
 
 	ReadyOnlyOperationsNodeChildren roonc = null;
 } {
- 	roonc = unitaryOperations()
-//| roonc = binaryOperations()}
+ 	roonc = unitaryOperations() 
+ 	{ return new ReadyOnlyOperationsNode(roonc); }
+//| roonc = binaryOperations()
+}
 
 UnitaryOperationsNode unitaryOperations() : {
 
@@ -649,60 +786,78 @@ UnitaryOperationsNode unitaryOperations() : {
    ( uonc = project()
     {
 	  if ( uonc != null ) {
-		if ( ln == null ) ln = new ListNode( uonc );
-		else ln.add( uonc );
+		if ( ln == null ) ln = new ListNode( (Node) uonc );
+		else ln.add( (Node) uonc );
 	  }
     }
    | uonc = select()
     {
 	  if ( uonc != null ) {
-		if ( ln == null ) ln = new ListNode( uonc );
-		else ln.add( uonc );
+		if ( ln == null ) ln = new ListNode( (Node) uonc );
+		else ln.add( (Node) uonc );
 	  }
     }
    | uonc = rename()
 	{
 	  if ( uonc != null ) {
-		if ( ln == null ) ln = new ListNode( uonc );
-		else ln.add( uonc );
+		if ( ln == null ) ln = new ListNode( (Node) uonc );
+		else ln.add( (Node) uonc );
 	  }
     }
-   )* < LEFT_PARENTHESIS > roon = readyOnlyOperations() < RIGHT_PARENTHESIS >
-|  rn = relation() 	
-	{ if ( rn != null ) return new UnitaryOperationsNode( rn );
-	  else return new UnitaryOperationsNode( ln, roon );	}}
+   )* < LEFT_PARENTHESIS > roon = readyOnlyOperations() < RIGHT_PARENTHESIS > { return new UnitaryOperationsNode(ln, roon); }
+	| rn = relation() { if ( rn != null ) return new UnitaryOperationsNode( rn );
+	  else return new UnitaryOperationsNode( ln, roon );
+	}
+}
 
-void project() : {
+ProjectNode project() : {
 	ListNode ln = null;
 	Token token = null;
 } {
 
 	< PROJECT_TOKEN > token = < IDENTIFIER >
-	{ ln = new ListNode( new Node( token ) ); }
+	{ ln = new ListNode( new AttributeNode( token ) ); }
 	(
 	  < COMMA > token = < IDENTIFIER >
-	  ln.add( new Node( token ) );
+	  {ln.add( new AttributeNode( token ) );}
 	)*
+	{ return new ProjectNode(ln); }
 }
 
-void select() : {} {
+SelectNode select() : {
+	Token temporario = null;
+} {
 
-   < SELECT_TOKEN > logicalSentence()
+   temporario = < SELECT_TOKEN > //logicalSentence()
+   { return new SelectNode(temporario); }
 }
 
-void rename() : {} {
+RenameNode rename() : {
+	ListNode ln = null;
+	Token t1 = null, t2 = null;
+} {
 
-   < RENAME_TOKEN > < IDENTIFIER > < IDENTIFIER > ( < COMMA > < IDENTIFIER > < IDENTIFIER > )* 
+   < RENAME_TOKEN > t1 = < IDENTIFIER > t2 = < IDENTIFIER >
+   { if(ln==null) ln = new ListNode( new RenameSetNode(t1, t2) );
+   	else ln.add( new RenameSetNode(t1, t2) ); }
+   ( < COMMA > t1 = < IDENTIFIER > t2 = < IDENTIFIER > 
+	{ if(ln==null) ln = new ListNode( new RenameSetNode(t1, t2) );
+   	else ln.add( new RenameSetNode(t1, t2) ); }
+   )* 
+   { return new RenameNode(ln); }
 }
 
-RelationNode relation() : {} {
-
-   < IDENTIFIER >
+RelationNode relation() : {
+	Token t = null;
+} {
+   t = < IDENTIFIER >
+   { return new RelationNode(t); }
 }
 
 void logicalSentence() : {} {
 
-   conditionalSentence() ( logicalOperator() conditionalSentence() )*}
+   conditionalSentence() ( logicalOperator() conditionalSentence() )*
+}
 
 void conditionalSentence() : {} {
   
@@ -721,14 +876,18 @@ void instanceofSentence() : {} {
 
 void additionSentence() : {} {
 
-   multiplicationSentence() ( ( < PLUS_SIGN > | <MINUS_SIGN> ) multiplicationSentence() )*}
+   multiplicationSentence() ( ( < PLUS_SIGN > | <MINUS_SIGN> ) multiplicationSentence() )*
+}
 
 void multiplicationSentence() : {} {
 
-   factor() ( ( < ASTERISK > | < POWER > | < SOLIDUS > | < PERCENT > ) factor() )*}
+   factor() ( ( < ASTERISK > | < POWER > | < SOLIDUS > | < PERCENT > ) factor() )*
+}
 
 void factor() : {} {
-   [ < NOT > ]   (         literal() | < IDENTIFIER >
+   [ < NOT > ]
+   (
+         literal() | < IDENTIFIER >
       |  < LEFT_PARENTHESIS > conditionalSentence() < RIGHT_PARENTHESIS >
    )
 }
@@ -739,7 +898,8 @@ void logicalOperator() : {} {
 }
 
 void comparisonOperator() : {} {
-     < LESS_THAN > | < LESS_THAN_OR_EQUALS > | < GREATER_THAN > | < GREATER_THAN_OR_EQUALS > | < EQUALS > | < NOT_EQUALS >
+  
+   < LESS_THAN > | < LESS_THAN_OR_EQUALS > | < GREATER_THAN > | < GREATER_THAN_OR_EQUALS > | < EQUALS > | < NOT_EQUALS >
 }
 
 void literal() : {} {
