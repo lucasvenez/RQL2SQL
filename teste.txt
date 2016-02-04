@@ -1,0 +1,50 @@
+//--RELAÇÃO (RELVAR)--//
+Produto;
+
+//--PROJEÇÃO (SELECT)--//
+¢ idProduto, nome (Produto);
+
+//--SELEÇÃO (WHERE)--//
+//£ id = 5 (Produto);
+
+//--RENOMEAR--//
+§ rename1 renamed1, rename2 renamed2 (A);
+
+//--UNIÃO--//
+//R1 U R2; Não implementado
+
+//--INTERSECÇÃO--//
+//A ~ B; Não implementado
+
+//--DIFERENÇA--//
+//A - B; Não implementado
+
+//--SEMIDIFERENÇA--//
+//A -- B; Não implementado
+
+//--PRODUTO CARTESIANO--//
+//A x B; Não implementado
+
+//--JUNÇÃO NATURAL--//
+//A[]B; Não implementado
+
+//--JUNÇÃO--//
+//A[ a1 = b2 ]B; Não implementado
+
+//--divisão--//
+//A / B; Não implementado
+
+//FALTANDO:
+//Totalização
+
+//--condicionais--
+//Agrupamento
+//Desagrupamento
+//Entrelaçamento
+//Desentrelaçamento
+//Fecho transitivo
+
+//--manipulação--
+//Inserção
+//Alteração
+//Exclusão
