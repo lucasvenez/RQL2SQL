@@ -32,6 +32,10 @@ public class ListNode extends Node {
 	public Node getNode() {
 		return this.node;
 	}
+	
+	public ListNode getNext() {
+		return this.next;
+	}
 
 	@Override
 	public Token getFirstToken() {

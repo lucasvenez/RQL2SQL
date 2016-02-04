@@ -5,6 +5,7 @@ import br.edu.ifsp.parser.Token;
 public abstract class Node {
 
    private Token position;
+   public int number;
    
    public Node( Token position ) {
 	   this.position = position;

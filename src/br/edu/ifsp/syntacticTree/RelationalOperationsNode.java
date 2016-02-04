@@ -9,10 +9,15 @@ public class RelationalOperationsNode extends Node {
 	
 	public RelationalOperationsNode( QueryNode queryNode ) {
 		super( queryNode.getFirstToken() );
+		this.node = queryNode;
 	}
 
 	@Override
 	public Token getFirstToken() {
 		return this.node.getFirstToken();
+	}
+	
+	public RelationalOperationsNodeChildren getNode(){
+		return this.node;
 	}
 }

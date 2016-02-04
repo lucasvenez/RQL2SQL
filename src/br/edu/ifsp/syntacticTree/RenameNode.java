@@ -4,21 +4,21 @@ import br.edu.ifsp.parser.RelationalQueryLanguageConstants;
 import br.edu.ifsp.parser.Token;
 import br.edu.ifsp.syntacticTree.interfaces.UnitaryOperationsNodeChildren;
 
-public class ProjectNode extends Node implements RelationalQueryLanguageConstants, UnitaryOperationsNodeChildren{
+public class RenameNode extends Node implements RelationalQueryLanguageConstants, UnitaryOperationsNodeChildren{
 
 	ListNode ln = null;
 	
-	public ProjectNode( ListNode ln ) {
-		super( new Token( PROJECT_TOKEN ) );
+	public RenameNode( ListNode ln ) {
+		super( new Token( RENAME_TOKEN ) );
 		this.ln = ln;
 	}
 
 	@Override
 	public Token getFirstToken() {
-		return new Token( PROJECT_TOKEN );
+		return new Token( RENAME_TOKEN );
 	}
 	
-	public ListNode getProjectNodeList(){
+	public ListNode getRenameSetNodeList(){
 		return this.ln;
 	}
 	

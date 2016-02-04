@@ -4,7 +4,7 @@ import br.edu.ifsp.parser.Token;
 
 public class RelationNode extends Node {
 
-	Token identifier = null;
+	private Token identifier = null;
 	
 	public RelationNode( Token token ) {
 		super(token);
@@ -14,5 +14,9 @@ public class RelationNode extends Node {
 	@Override
 	public Token getFirstToken() {
 		return identifier;
+	}
+	
+	public Token getImage(){
+		return this.identifier;
 	}
 }

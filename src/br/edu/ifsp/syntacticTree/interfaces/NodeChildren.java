@@ -5,4 +5,5 @@ import br.edu.ifsp.parser.Token;
 public interface NodeChildren {
 
 	public Token getFirstToken();
+	public int getNumber();
 }
