@@ -5,10 +5,12 @@ package br.edu.ifsp.parser;
  */
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import br.edu.ifsp.symbolTable.*;
 import br.edu.ifsp.syntacticTree.*;
 import br.edu.ifsp.syntacticTree.interfaces.*;
 import br.edu.ifsp.symbolTable.exceptions.*;
+import br.edu.ifsp.semanticAnalysis.RelationCheck;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;

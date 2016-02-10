@@ -48,3 +48,8 @@ Produto;
 //Inserção
 //Alteração
 //Exclusão
+
+
+//--TESTE ADICIONAL--//
+¢ idPessoa (¢ idPessoa, nome (Pessoa));
+¢ codPessoa (§ idPessoa codPessoa (Pessoa));

@@ -7,11 +7,13 @@ import java.io.PrintWriter;
 import javax.swing.JFileChooser;
 import javax.swing.JTextField;
 
+import br.edu.ifsp.syntacticTree.interfaces.UnitaryOperationsNodeChildren;
+
 public class PrintTree {
 	int kk;
 
 	/**
-	 *  Method used to initialize the node count
+	 * Method used to initialize the node count
 	 */
 	public PrintTree() {
 		kk = 1; // initialize the node count
@@ -19,32 +21,37 @@ public class PrintTree {
 
 	/**
 	 * Method used to print on standard output the syntactic tree analysis
+	 * 
 	 * @param x
 	 */
 	public void printRoot(ListNode x) {
 		if (x == null) {
 			String temp = "\n" + ("Empty syntctic tree. Nothing to be printed");
 		} else {
+			System.out.println("\nPrinting the syntactic analysis:");
 			numberRelationalOperationsNodeList(x);
 			printRelationalOperationsNodeList(x);
+			System.out.println();
 		}
 	}
-	
+
 	/**
 	 * Method used to print the .Dot GraphViz extension on a external file
+	 * 
 	 * @param x
 	 */
 	public void exportDotTree(ListNode x) throws IOException {
 		if (x == null) {
 			String temp = "\n" + ("Empty syntctic tree. Nothing to be printed");
 		} else {
-			if(kk==1) numberRelationalOperationsNodeList(x);
-			
+			if (kk == 1)
+				numberRelationalOperationsNodeList(x);
+
 			JFileChooser file = new JFileChooser();
 			file.setFileSelectionMode(JFileChooser.FILES_ONLY);
 			int i = file.showSaveDialog(null);
 			if (i == 1) {
-				
+
 			} else {
 				File arquivo = file.getSelectedFile();
 				PrintWriter fw = new PrintWriter(arquivo);
@@ -54,9 +61,10 @@ public class PrintTree {
 			}
 		}
 	}
-	
-	/* *******************************************************************
-	 * 							 Number the tree nodes 
+
+	/*
+	 * *******************************************************************
+	 * Number the tree nodes
 	 *********************************************************************/
 
 	public void numberRelationalOperationsNodeList(ListNode x) {
@@ -95,20 +103,13 @@ public class PrintTree {
 		if (x == null)
 			return;
 		x.number = kk++;
-		numberUnitaryOperationsChildrenNodeList(x.getUnitaryOperationsChildrenNodeList());
-		numberReadyOnlyOperationsNode(x.getReadyOnlyOperationsNode());
-	}
-
-	private void numberUnitaryOperationsChildrenNodeList(ListNode x) {
-		if (x == null)
-			return;
-		x.number = kk++;
-		if (x.getNode() instanceof ProjectNode)
-			numberProjectNode((ProjectNode) x.getNode());
-		if (x.getNode() instanceof RenameNode)
-			numberRenameNode((RenameNode) x.getNode());
-		// if(x.getNode() instanceof SelectNode)
+		if (x.getUnitaryOperationsChildrenNode() instanceof ProjectNode)
+			numberProjectNode((ProjectNode) x.getUnitaryOperationsChildrenNode());
+		if (x.getUnitaryOperationsChildrenNode() instanceof RenameNode)
+			numberRenameNode((RenameNode) x.getUnitaryOperationsChildrenNode());
+		// if(x.getUnitaryOperationsChildrenNode() instanceof SelectNode)
 		// numberSelectNode((ProjectNode)x.getNode());
+		numberReadyOnlyOperationsNode(x.getReadyOnlyOperationsNode());
 	}
 
 	private void numberProjectNode(ProjectNode x) {
@@ -146,8 +147,9 @@ public class PrintTree {
 		x.number = kk++;
 	}
 
-	 /* *******************************************************************
-	 * 							 Print the numbered tree 
+	/*
+	 * ******************************************************************* Print
+	 * the numbered tree
 	 *********************************************************************/
 
 	private void printRelationalOperationsNodeList(ListNode x) {
@@ -191,29 +193,19 @@ public class PrintTree {
 		if (x == null)
 			return;
 		System.out.println(x.number + ": UnitaryOperationsNode ===> "
-				+ (x.getUnitaryOperationsChildrenNodeList() == null ? "null"
-						: String.valueOf(x.getUnitaryOperationsChildrenNodeList().number))
+				+ (x.getUnitaryOperationsChildrenNode() == null ? "null"
+						: String.valueOf(x.getUnitaryOperationsChildrenNode().getNumber()))
 				+ " "
 				+ (x.getReadyOnlyOperationsNode() == null ? "null"
 						: String.valueOf(x.getReadyOnlyOperationsNode().number))
 				+ " " + (x.getRelationNode() == null ? "null" : String.valueOf(x.getRelationNode().getImage())));
-		printUnitaryOperationsChildrenNodeList(x.getUnitaryOperationsChildrenNodeList());
+		if (x.getUnitaryOperationsChildrenNode() instanceof ProjectNode)
+			printProjectNode((ProjectNode) x.getUnitaryOperationsChildrenNode());
+		else if (x.getUnitaryOperationsChildrenNode() instanceof RenameNode)
+			printRenameNode((RenameNode) x.getUnitaryOperationsChildrenNode());
+		// else if (x.getUnitaryOperationsChildrenNode() instanceof SelectNode)
+		// printSelectNode((SelectNode) x.getUnitaryOperationsChildrenNode());
 		printReadyOnlyOperationsNode(x.getReadyOnlyOperationsNode());
-	}
-
-	private void printUnitaryOperationsChildrenNodeList(ListNode x) {
-		if (x == null)
-			return;
-		System.out.println(x.number + ": ListNode (UnitaryOperationsChildrenNodeList) ===> "
-				+ (x.getNode() == null ? "null" : String.valueOf(x.getNode().number)) + " "
-				+ (x.getNext() == null ? "null" : String.valueOf(x.getNext().number)));
-		if (x.getNode() instanceof ProjectNode)
-			printProjectNode((ProjectNode) x.getNode());
-		else if (x.getNode() instanceof RenameNode)
-			printRenameNode((RenameNode) x.getNode());
-		// else if (x.getNode() instanceof SelectNode)
-		// printSelectNode((SelectNode) x.getNode());
-		printUnitaryOperationsChildrenNodeList(x.getNext());
 	}
 
 	private void printProjectNode(ProjectNode x) {
@@ -261,8 +253,9 @@ public class PrintTree {
 						: String.valueOf(x.getRenamedAttributeNode().getPosition().image)));
 	}
 
-	/* *******************************************************************
-	 * 							 Export to GrapViz Dot 
+	/*
+	 * *******************************************************************
+	 * Export to GrapViz Dot
 	 *********************************************************************/
 
 	private String toGraphRelationalOperationsNodeList(ListNode x) {
@@ -312,8 +305,8 @@ public class PrintTree {
 		if (x == null)
 			return "";
 		String temp = "\n" + (x.number + " [label=\"UnitaryOperationsNode\"];"
-				+ (x.getUnitaryOperationsChildrenNodeList() == null ? ""
-						: "\n" + x.number + " -> " + String.valueOf(x.getUnitaryOperationsChildrenNodeList().number)
+				+ (x.getUnitaryOperationsChildrenNode() == null ? ""
+						: "\n" + x.number + " -> " + String.valueOf(x.getUnitaryOperationsChildrenNode().getNumber())
 								+ ";")
 
 				+ (x.getReadyOnlyOperationsNode() == null ? ""
@@ -321,26 +314,13 @@ public class PrintTree {
 				+ (x.getRelationNode() == null ? ""
 						: "\n" + x.number + " -> \"" + String.valueOf(x.getRelationNode().getImage()) + " ("
 								+ String.valueOf(x.number) + ")\";"));
-		temp += toGraphUnitaryOperationsChildrenNodeList(x.getUnitaryOperationsChildrenNodeList());
-		return temp + toGraphReadyOnlyOperationsNode(x.getReadyOnlyOperationsNode());
-	}
-
-	private String toGraphUnitaryOperationsChildrenNodeList(ListNode x) {
-		if (x == null)
-			return "";
-		String temp = "\n"
-				+ (x.number + " [label=\"ListNode(UnitaryOperationsChildrenNodeList)\"];"
-						+ (x.getNode() == null ? ""
-								: "\n" + x.number + " -> " + String.valueOf(x.getNode().number) + ";")
-						+ (x.getNext() == null ? ""
-								: "\n" + x.number + " -> " + String.valueOf(x.getNext().number) + ";"));
-		if (x.getNode() instanceof ProjectNode)
-			return temp + toGraphProjectNode((ProjectNode) x.getNode());
-		else if (x.getNode() instanceof RenameNode)
-			return temp + toGraphRenameNode((RenameNode) x.getNode());
+		if (x.getUnitaryOperationsChildrenNode() instanceof ProjectNode)
+			temp += toGraphProjectNode((ProjectNode) x.getUnitaryOperationsChildrenNode());
+		else if (x.getUnitaryOperationsChildrenNode() instanceof RenameNode)
+			temp += toGraphRenameNode((RenameNode) x.getUnitaryOperationsChildrenNode());
 		// else if (x.getNode() instanceof SelectNode)
 		// toGraphSelectNode((SelectNode) x.getNode());
-		return temp + toGraphUnitaryOperationsChildrenNodeList(x.getNext());
+		return temp + toGraphReadyOnlyOperationsNode(x.getReadyOnlyOperationsNode());
 	}
 
 	private String toGraphProjectNode(ProjectNode x) {

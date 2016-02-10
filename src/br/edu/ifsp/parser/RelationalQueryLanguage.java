@@ -7,11 +7,11 @@ package br.edu.ifsp.parser;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-
 import br.edu.ifsp.symbolTable.*;
 import br.edu.ifsp.syntacticTree.*;
 import br.edu.ifsp.syntacticTree.interfaces.*;
 import br.edu.ifsp.symbolTable.exceptions.*;
+import br.edu.ifsp.semanticAnalysis.RelationCheck;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -35,8 +35,18 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
         private static ListNode root = null; //Store the syntactic tree
 
         /**
+	 * Attribute used to check if the syntactic tree will be exported to a external file.
+	 */
+        private static boolean export_tree = false; //export a graph from syntactic tree
+
+        /**
+	 * Attribute used to store the symbol table from arguments
+	 */
+        private static SymbolTable symbolTable = null; //Stores the symbol table
+
+        /**
 	 * Method main of Relational Query Language class
-     * @throws IOException 
+	 * @throws ParseException, IOException
 	 */
         public static void main ( String args[] ) throws ParseException, IOException {
 
@@ -135,6 +145,12 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
                                 }
                         }
                         /*
+			 * Checking export tree parameter
+			 */
+                        else if ( arg.equals("--export-tree") || arg.equals("-e")) {
+                                export_tree = true;
+                        }
+                        /*
 			 * Checking if the file is in the last index. 
 			 */
                         else if ( i != args.length - 1 ) {
@@ -180,9 +196,13 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
 
                                 root = parser.program();
                                 PrintTree pt = new PrintTree();
-                                pt.printRoot(root);
-                                pt.exportDotTree(root);
-
+                                if ( debug_sa ) pt.printRoot(root);
+                                if ( export_tree ) pt.exportDotTree(root);
+                                RelationCheck rc = null;
+                                if ( symbolTable != null ) {
+                                        rc = new RelationCheck(symbolTable);
+                                        System.out.println("Semantic Errors: " + rc.semanticAnalysis(root));
+                                }
                         }
                         catch ( NullPointerException exception ) {
 
@@ -268,6 +288,16 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
                 System.out.printf( "%c[0m", 27 );
                 System.out.println( String.format( "\u005cn\u005ct    %s", "Show syntax analysis details." ) );
 
+                System.out.printf( "%c[1m", 27 );
+                System.out.println( String.format( "\u005cn\u005ct\u00b7   %-30s", "-a, --attributes-definition" ) );
+                System.out.printf( "%c[0m", 27 );
+                System.out.println( String.format( "\u005cn\u005ct    %s", "Input the attributes definition for semantic analysis" ) );
+
+                System.out.printf( "%c[1m", 27 );
+                System.out.println( String.format( "\u005cn\u005ct\u00b7   %-30s", "-e, --export-tree" ) );
+                System.out.printf( "%c[0m", 27 );
+                System.out.println( String.format( "\u005cn\u005ct    %s", "Export the graph of syntactic tree." ) );
+
                 System.out.println();
         }
 
@@ -296,14 +326,16 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
                                         && !parameter.equals("--target-sql") && !parameter.equals("-l")
                                         && !parameter.equals("--debug-lexical-analysis") && !parameter.equals("-s")
                                         && !parameter.equals("--debug-syntax-analysis") && !parameter.equals("-h")
+                                        && !parameter.equals("--attributes-definition") && !parameter.equals("-a")
+                                        && !parameter.equals("--export-tree") && !parameter.equals("-e")
                                         && !parameter.equals("--help")) {
                                 attributes.add(parameter);
                                 attributeCheck += parameter;
+                                location = i;
                         } else {
                                 location = i;
                                 break;
                         }
-
                 }
                 if (!attributeCheck.matches("(" + attributeRegex + ")+")) {
                         return 0;
@@ -325,7 +357,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
                 Pattern pattern = Pattern.compile(regex);
                 Matcher matcher = pattern.matcher(definition);
 
-                SymbolTable st = new SymbolTable();
+                symbolTable = new SymbolTable();
                 while (matcher.find()) {
                         String relation = matcher.group(1);
                         String attribute = matcher.group(2);
@@ -350,11 +382,10 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
 
                         if (referenceRelation != null) {
                                 // Checks the foreign key
-                                if (st.hasRelation(referenceRelation)
-                                                && st.getRelation(referenceRelation).hasAttribute(referenceAttribute)) {
+                                if (symbolTable.hasRelation(referenceRelation)
+                                                && symbolTable.getRelation(referenceRelation).hasAttribute(referenceAttribute)) {
                                         newAttribute.addFeature("reference", new Reference(referenceRelation, referenceAttribute));
                                 } else {
-                                        // Throw a exception for unexistent foreign key
                                         throw new UnexistentForeignKeyException();
                                 }
                         }
@@ -369,7 +400,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
                         System.out.println("    Reference attribute: " + referenceAttribute);
                         System.out.println("  Closing entry:");
 
-                        st.getRelation(relation).addAttribute(attribute, newAttribute);
+                        symbolTable.getRelation(relation).addAttribute(attribute, newAttribute);
                 }
                 System.out.println("Finished the construction of the symbol table");
         }
@@ -455,7 +486,6 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
       label_1:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case LEFT_PARENTHESIS:
         case PROJECT_TOKEN:
         case SELECT_TOKEN:
         case RENAME_TOKEN:
@@ -519,66 +549,39 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
     trace_call("unitaryOperations");
     try {
         UnitaryOperationsNodeChildren uonc = null;
-        ListNode ln = null;
         ReadyOnlyOperationsNode roon = null;
         RelationNode rn = null;
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case LEFT_PARENTHESIS:
       case PROJECT_TOKEN:
       case SELECT_TOKEN:
       case RENAME_TOKEN:
-        label_2:
-        while (true) {
-          switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-          case PROJECT_TOKEN:
-          case SELECT_TOKEN:
-          case RENAME_TOKEN:
-            ;
-            break;
-          default:
-            jj_la1[1] = jj_gen;
-            break label_2;
-          }
-          switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-          case PROJECT_TOKEN:
-            uonc = project();
-          if ( uonc != null ) {
-                if ( ln == null ) ln = new ListNode( (Node) uonc );
-                else ln.add( (Node) uonc );
-          }
-            break;
-          case SELECT_TOKEN:
-            uonc = select();
-          if ( uonc != null ) {
-                if ( ln == null ) ln = new ListNode( (Node) uonc );
-                else ln.add( (Node) uonc );
-          }
-            break;
-          case RENAME_TOKEN:
-            uonc = rename();
-          if ( uonc != null ) {
-                if ( ln == null ) ln = new ListNode( (Node) uonc );
-                else ln.add( (Node) uonc );
-          }
-            break;
-          default:
-            jj_la1[2] = jj_gen;
-            jj_consume_token(-1);
-            throw new ParseException();
-          }
+        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+        case PROJECT_TOKEN:
+          uonc = project();
+          break;
+        case SELECT_TOKEN:
+          uonc = select();
+          break;
+        case RENAME_TOKEN:
+          uonc = rename();
+          break;
+        default:
+          jj_la1[1] = jj_gen;
+          jj_consume_token(-1);
+          throw new ParseException();
         }
         jj_consume_token(LEFT_PARENTHESIS);
         roon = readyOnlyOperations();
         jj_consume_token(RIGHT_PARENTHESIS);
-                                                                                {if (true) return new UnitaryOperationsNode(ln, roon);}
+                                                                              {if (true) return new UnitaryOperationsNode(uonc, roon);}
         break;
       case IDENTIFIER:
         rn = relation();
                             if ( rn != null ) {if (true) return new UnitaryOperationsNode( rn );}
-          else {if (true) return new UnitaryOperationsNode( ln, roon );}
+          else {if (true) return new UnitaryOperationsNode( uonc, roon );}
         break;
       default:
-        jj_la1[3] = jj_gen;
+        jj_la1[2] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -596,15 +599,15 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
       jj_consume_token(PROJECT_TOKEN);
       token = jj_consume_token(IDENTIFIER);
           ln = new ListNode( new AttributeNode( token ) );
-      label_3:
+      label_2:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case COMMA:
           ;
           break;
         default:
-          jj_la1[4] = jj_gen;
-          break label_3;
+          jj_la1[3] = jj_gen;
+          break label_2;
         }
         jj_consume_token(COMMA);
         token = jj_consume_token(IDENTIFIER);
@@ -639,15 +642,15 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
       t2 = jj_consume_token(IDENTIFIER);
      if(ln==null) ln = new ListNode( new RenameSetNode(t1, t2) );
         else ln.add( new RenameSetNode(t1, t2) );
-      label_4:
+      label_3:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case COMMA:
           ;
           break;
         default:
-          jj_la1[5] = jj_gen;
-          break label_4;
+          jj_la1[4] = jj_gen;
+          break label_3;
         }
         jj_consume_token(COMMA);
         t1 = jj_consume_token(IDENTIFIER);
@@ -678,7 +681,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
     trace_call("logicalSentence");
     try {
       conditionalSentence();
-      label_5:
+      label_4:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case AND:
@@ -687,8 +690,8 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
           ;
           break;
         default:
-          jj_la1[6] = jj_gen;
-          break label_5;
+          jj_la1[5] = jj_gen;
+          break label_4;
         }
         logicalOperator();
         conditionalSentence();
@@ -702,15 +705,15 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
     trace_call("conditionalSentence");
     try {
       comparisonSentence();
-      label_6:
+      label_5:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case IF:
           ;
           break;
         default:
-          jj_la1[7] = jj_gen;
-          break label_6;
+          jj_la1[6] = jj_gen;
+          break label_5;
         }
         jj_consume_token(IF);
         comparisonSentence();
@@ -726,7 +729,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
     trace_call("comparisonSentence");
     try {
       instanceofSentence();
-      label_7:
+      label_6:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case LESS_THAN:
@@ -738,8 +741,8 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
           ;
           break;
         default:
-          jj_la1[8] = jj_gen;
-          break label_7;
+          jj_la1[7] = jj_gen;
+          break label_6;
         }
         comparisonOperator();
         instanceofSentence();
@@ -759,7 +762,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
         type();
         break;
       default:
-        jj_la1[9] = jj_gen;
+        jj_la1[8] = jj_gen;
         ;
       }
     } finally {
@@ -771,7 +774,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
     trace_call("additionSentence");
     try {
       multiplicationSentence();
-      label_8:
+      label_7:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case PLUS_SIGN:
@@ -779,8 +782,8 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
           ;
           break;
         default:
-          jj_la1[10] = jj_gen;
-          break label_8;
+          jj_la1[9] = jj_gen;
+          break label_7;
         }
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case PLUS_SIGN:
@@ -790,7 +793,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
           jj_consume_token(MINUS_SIGN);
           break;
         default:
-          jj_la1[11] = jj_gen;
+          jj_la1[10] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
@@ -805,7 +808,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
     trace_call("multiplicationSentence");
     try {
       factor();
-      label_9:
+      label_8:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case PERCENT:
@@ -815,8 +818,8 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
           ;
           break;
         default:
-          jj_la1[12] = jj_gen;
-          break label_9;
+          jj_la1[11] = jj_gen;
+          break label_8;
         }
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case ASTERISK:
@@ -832,7 +835,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
           jj_consume_token(PERCENT);
           break;
         default:
-          jj_la1[13] = jj_gen;
+          jj_la1[12] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
@@ -851,7 +854,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
         jj_consume_token(NOT);
         break;
       default:
-        jj_la1[14] = jj_gen;
+        jj_la1[13] = jj_gen;
         ;
       }
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -874,7 +877,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
         jj_consume_token(RIGHT_PARENTHESIS);
         break;
       default:
-        jj_la1[15] = jj_gen;
+        jj_la1[14] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -897,7 +900,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
         jj_consume_token(XOR);
         break;
       default:
-        jj_la1[16] = jj_gen;
+        jj_la1[15] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -929,7 +932,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
         jj_consume_token(NOT_EQUALS);
         break;
       default:
-        jj_la1[17] = jj_gen;
+        jj_la1[16] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -967,7 +970,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
         jj_consume_token(FALSE);
         break;
       default:
-        jj_la1[18] = jj_gen;
+        jj_la1[17] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -1011,7 +1014,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
         jj_consume_token(IDENTIFIER);
         break;
       default:
-        jj_la1[19] = jj_gen;
+        jj_la1[18] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -1029,7 +1032,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
   public Token jj_nt;
   private int jj_ntk;
   private int jj_gen;
-  final private int[] jj_la1 = new int[20];
+  final private int[] jj_la1 = new int[19];
   static private int[] jj_la1_0;
   static private int[] jj_la1_1;
   static private int[] jj_la1_2;
@@ -1039,13 +1042,13 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
       jj_la1_init_2();
    }
    private static void jj_la1_init_0() {
-      jj_la1_0 = new int[] {0x200,0x0,0x0,0x200,0x2000,0x2000,0x0,0x0,0x1f80000,0x0,0x5000,0x5000,0x10880,0x10880,0x0,0x200,0x0,0x1f80000,0x0,0x0,};
+      jj_la1_0 = new int[] {0x0,0x0,0x0,0x2000,0x2000,0x0,0x0,0x1f80000,0x0,0x5000,0x5000,0x10880,0x10880,0x0,0x200,0x0,0x1f80000,0x0,0x0,};
    }
    private static void jj_la1_init_1() {
-      jj_la1_1 = new int[] {0x38,0x38,0x38,0x38,0x0,0x0,0x7000,0x2,0x0,0x1,0x0,0x0,0x4,0x4,0x8000,0xfe000000,0x7000,0x0,0xfe000000,0x1ff0000,};
+      jj_la1_1 = new int[] {0x38,0x38,0x38,0x0,0x0,0x7000,0x2,0x0,0x1,0x0,0x0,0x4,0x4,0x8000,0xfe000000,0x7000,0x0,0xfe000000,0x1ff0000,};
    }
    private static void jj_la1_init_2() {
-      jj_la1_2 = new int[] {0x2,0x0,0x0,0x2,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x3,0x0,0x0,0x1,0x2,};
+      jj_la1_2 = new int[] {0x2,0x0,0x2,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x3,0x0,0x0,0x1,0x2,};
    }
 
   /** Constructor with InputStream. */
@@ -1059,7 +1062,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 20; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 19; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -1073,7 +1076,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 20; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 19; i++) jj_la1[i] = -1;
   }
 
   /** Constructor. */
@@ -1083,7 +1086,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 20; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 19; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -1093,7 +1096,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 20; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 19; i++) jj_la1[i] = -1;
   }
 
   /** Constructor with generated Token Manager. */
@@ -1102,7 +1105,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 20; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 19; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -1111,7 +1114,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 20; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 19; i++) jj_la1[i] = -1;
   }
 
   private Token jj_consume_token(int kind) throws ParseException {
@@ -1169,7 +1172,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
       la1tokens[jj_kind] = true;
       jj_kind = -1;
     }
-    for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < 19; i++) {
       if (jj_la1[i] == jj_gen) {
         for (int j = 0; j < 32; j++) {
           if ((jj_la1_0[i] & (1<<j)) != 0) {

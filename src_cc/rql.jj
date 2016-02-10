@@ -32,10 +32,12 @@ package br.edu.ifsp.parser;
  */
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import br.edu.ifsp.symbolTable.*;
 import br.edu.ifsp.syntacticTree.*;
 import br.edu.ifsp.syntacticTree.interfaces.*;
 import br.edu.ifsp.symbolTable.exceptions.*;
+import br.edu.ifsp.semanticAnalysis.RelationCheck;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -59,9 +61,20 @@ public class RelationalQueryLanguage {
 	private static ListNode root = null; //Store the syntactic tree
 
 	/**
-	 * Method main of Relational Query Language class
+	 * Attribute used to check if the syntactic tree will be exported to a external file.
 	 */
-	public static void main ( String args[] ) throws ParseException {
+	private static boolean export_tree = false; //export a graph from syntactic tree
+
+	/**
+	 * Attribute used to store the symbol table from arguments
+	 */
+	private static SymbolTable symbolTable = null; //Stores the symbol table
+
+	/**
+	 * Method main of Relational Query Language class
+	 * @throws ParseException, IOException
+	 */
+	public static void main ( String args[] ) throws ParseException, IOException {
 
 		/**
 		 * Attribute used to store a reference of a parser object that will do the compilation of source code in Relational Query Language.
@@ -158,6 +171,12 @@ public class RelationalQueryLanguage {
 				}
 			}
 			/*
+			 * Checking export tree parameter
+			 */
+			else if ( arg.equals("--export-tree") || arg.equals("-e")) {
+				export_tree = true;
+			}
+			/*
 			 * Checking if the file is in the last index. 
 			 */				
 			else if ( i != args.length - 1 ) {
@@ -203,8 +222,13 @@ public class RelationalQueryLanguage {
 				
 				root = parser.program();
 				PrintTree pt = new PrintTree();
-				pt.printRoot(root);
-				pt.exportDotTree(root);
+				if ( debug_sa ) pt.printRoot(root);
+				if ( export_tree ) pt.exportDotTree(root);
+				RelationCheck rc = null;
+				if ( symbolTable != null ) {
+					rc = new RelationCheck(symbolTable);
+					System.out.println("Semantic Errors: " + rc.relationalOperationsNodeListCheck(root));
+				}
 				
 			}
 			catch ( NullPointerException exception ) {
@@ -291,6 +315,16 @@ public class RelationalQueryLanguage {
 		System.out.printf( "%c[0m", 27 );
 		System.out.println( String.format( "\n\t    %s", "Show syntax analysis details." ) );
 
+		System.out.printf( "%c[1m", 27 );
+		System.out.println( String.format( "\n\t·   %-30s", "-a, --attributes-definition" ) );
+		System.out.printf( "%c[0m", 27 );
+		System.out.println( String.format( "\n\t    %s", "Input the attributes definition for semantic analysis" ) );
+
+		System.out.printf( "%c[1m", 27 );
+		System.out.println( String.format( "\n\t·   %-30s", "-e, --export-tree" ) );
+		System.out.printf( "%c[0m", 27 );
+		System.out.println( String.format( "\n\t    %s", "Export the graph of syntactic tree." ) );
+
 		System.out.println();
 	}
 
@@ -319,14 +353,16 @@ public class RelationalQueryLanguage {
 					&& !parameter.equals("--target-sql") && !parameter.equals("-l")
 					&& !parameter.equals("--debug-lexical-analysis") && !parameter.equals("-s")
 					&& !parameter.equals("--debug-syntax-analysis") && !parameter.equals("-h")
+					&& !parameter.equals("--attributes-definition") && !parameter.equals("-a")
+					&& !parameter.equals("--export-tree") && !parameter.equals("-e")
 					&& !parameter.equals("--help")) {
 				attributes.add(parameter);
 				attributeCheck += parameter;
+				location = i;
 			} else {
 				location = i;
 				break;
 			}
-
 		}
 		if (!attributeCheck.matches("(" + attributeRegex + ")+")) {
 			return 0;
@@ -348,7 +384,7 @@ public class RelationalQueryLanguage {
 		Pattern pattern = Pattern.compile(regex);
 		Matcher matcher = pattern.matcher(definition);
 
-		SymbolTable st = new SymbolTable();
+		symbolTable = new SymbolTable();
 		while (matcher.find()) {
 			String relation = matcher.group(1);
 			String attribute = matcher.group(2);
@@ -373,8 +409,8 @@ public class RelationalQueryLanguage {
 
 			if (referenceRelation != null) {
 				// Checks the foreign key
-				if (st.hasRelation(referenceRelation)
-						&& st.getRelation(referenceRelation).hasAttribute(referenceAttribute)) {
+				if (symbolTable.hasRelation(referenceRelation)
+						&& symbolTable.getRelation(referenceRelation).hasAttribute(referenceAttribute)) {
 					newAttribute.addFeature("reference", new Reference(referenceRelation, referenceAttribute));
 				} else {
 					// Throw a exception for unexistent foreign key
@@ -392,7 +428,7 @@ public class RelationalQueryLanguage {
 			System.out.println("    Reference attribute: " + referenceAttribute);
 			System.out.println("  Closing entry:");
 
-			st.getRelation(relation).addAttribute(attribute, newAttribute);
+			symbolTable.getRelation(relation).addAttribute(attribute, newAttribute);
 		}
 		System.out.println("Finished the construction of the symbol table");
 	}
@@ -778,35 +814,17 @@ ReadyOnlyOperationsNode readyOnlyOperations() : {
 UnitaryOperationsNode unitaryOperations() : {
 
 	UnitaryOperationsNodeChildren uonc = null;
-	ListNode ln = null;
 	ReadyOnlyOperationsNode roon = null;
 	RelationNode rn = null;
 } {
 
    ( uonc = project()
-    {
-	  if ( uonc != null ) {
-		if ( ln == null ) ln = new ListNode( (Node) uonc );
-		else ln.add( (Node) uonc );
-	  }
-    }
    | uonc = select()
-    {
-	  if ( uonc != null ) {
-		if ( ln == null ) ln = new ListNode( (Node) uonc );
-		else ln.add( (Node) uonc );
-	  }
-    }
-   | uonc = rename()
-	{
-	  if ( uonc != null ) {
-		if ( ln == null ) ln = new ListNode( (Node) uonc );
-		else ln.add( (Node) uonc );
-	  }
-    }
-   )* < LEFT_PARENTHESIS > roon = readyOnlyOperations() < RIGHT_PARENTHESIS > { return new UnitaryOperationsNode(ln, roon); }
+   | uonc = rename() )
+
+    < LEFT_PARENTHESIS > roon = readyOnlyOperations() < RIGHT_PARENTHESIS > { return new UnitaryOperationsNode(uonc, roon); }
 	| rn = relation() { if ( rn != null ) return new UnitaryOperationsNode( rn );
-	  else return new UnitaryOperationsNode( ln, roon );
+	  else return new UnitaryOperationsNode( uonc, roon );
 	}
 }
 

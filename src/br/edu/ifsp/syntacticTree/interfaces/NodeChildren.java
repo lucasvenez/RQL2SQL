@@ -6,4 +6,5 @@ public interface NodeChildren {
 
 	public Token getFirstToken();
 	public int getNumber();
+	public void setNumber(int number);
 }
