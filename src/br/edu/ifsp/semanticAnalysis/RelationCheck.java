@@ -14,6 +14,10 @@ public class RelationCheck {
 		semanticErrors = 0;
 		globalScope = 0;
 	}
+	
+	public void clearSemanticErrors(){
+		semanticErrors = 0;
+	}
 
 	public int getSemanticErrors(){
 		return semanticErrors;
