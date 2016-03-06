@@ -11,6 +11,7 @@ import br.edu.ifsp.syntacticTree.*;
 import br.edu.ifsp.syntacticTree.interfaces.*;
 import br.edu.ifsp.symbolTable.exceptions.*;
 import br.edu.ifsp.semanticAnalysis.RelationCheck;
+import br.edu.ifsp.codeGeneration.CodeGenerator;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;

@@ -4,20 +4,21 @@ import br.edu.ifsp.parser.RelationalQueryLanguageConstants;
 import br.edu.ifsp.parser.Token;
 import br.edu.ifsp.syntacticTree.interfaces.UnitaryOperationsNodeChildren;
 
-public class SelectNode extends Node implements RelationalQueryLanguageConstants, UnitaryOperationsNodeChildren{
+public class SelectNode extends Node implements RelationalQueryLanguageConstants, UnitaryOperationsNodeChildren {
 
 	Token t = null;
-	
-	public SelectNode( Token t ) {
-		super( new Token( SELECT_TOKEN ) );
-		this.t = t;
+	LogicalSentenceNode lsn = null;
+
+	public SelectNode(LogicalSentenceNode lsn) {
+		super(new Token(SELECT_TOKEN));
+		this.lsn = lsn;
 	}
 
 	@Override
 	public Token getFirstToken() {
-		return new Token( SELECT_TOKEN );
+		return new Token(SELECT_TOKEN);
 	}
-	
+
 	@Override
 	public int getNumber() {
 		return this.number;
@@ -25,6 +26,10 @@ public class SelectNode extends Node implements RelationalQueryLanguageConstants
 
 	@Override
 	public void setNumber(int number) {
-		this.number=number;
+		this.number = number;
+	}
+	
+	public LogicalSentenceNode getLogicalSentenceNode(){
+		return lsn;
 	}
 }

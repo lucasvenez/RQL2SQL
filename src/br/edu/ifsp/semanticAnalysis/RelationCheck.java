@@ -2,7 +2,6 @@ package br.edu.ifsp.semanticAnalysis;
 
 import br.edu.ifsp.symbolTable.*;
 import br.edu.ifsp.syntacticTree.*;
-import br.edu.ifsp.syntacticTree.interfaces.*;
 
 public class RelationCheck {
 	SymbolTable schema;

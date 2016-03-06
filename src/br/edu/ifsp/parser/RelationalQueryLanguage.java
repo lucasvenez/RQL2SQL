@@ -12,6 +12,7 @@ import br.edu.ifsp.syntacticTree.*;
 import br.edu.ifsp.syntacticTree.interfaces.*;
 import br.edu.ifsp.symbolTable.exceptions.*;
 import br.edu.ifsp.semanticAnalysis.RelationCheck;
+import br.edu.ifsp.codeGeneration.CodeGenerator;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -68,7 +69,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
                 /**
 		 * Attribute used to store the output file name.
 		 */
-                String outputFileName;
+                String outputFileName = "Output.SQL";
 
                 /**
 		 * Number of parameters errors.
@@ -192,17 +193,30 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
                                 System.exit(0);
                         }
 
+                        /*
+			 * Set a default output name if it is empty
+			 */
+
                         try {
 
                                 root = parser.program();
                                 PrintTree pt = new PrintTree();
-                                if ( debug_sa ) pt.printRoot(root);
-                                if ( export_tree ) pt.exportDotTree(root);
+                                if (debug_sa)
+                                        pt.printRoot(root);
+                                if (export_tree)
+                                        pt.exportDotTree(root);
                                 RelationCheck rc = null;
-                                if ( symbolTable != null ) {
+                                int semanticErrors = 0;
+                                if (symbolTable != null) {
                                         rc = new RelationCheck(symbolTable);
-                                        System.out.println("Semantic Errors: " + rc.semanticAnalysis(root));
+                                        semanticErrors = rc.semanticAnalysis(root);
+                                        System.out.println("Semantic Errors: " + semanticErrors);
                                 }
+                                if (semanticErrors == 0) {
+                                        CodeGenerator generator = new CodeGenerator(outputPath + outputFileName, VERSION);
+                                        generator.generate(root);
+                                }
+
                         }
                         catch ( NullPointerException exception ) {
 
@@ -386,6 +400,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
                                                 && symbolTable.getRelation(referenceRelation).hasAttribute(referenceAttribute)) {
                                         newAttribute.addFeature("reference", new Reference(referenceRelation, referenceAttribute));
                                 } else {
+                                        // Throw a exception for unexistent foreign key
                                         throw new UnexistentForeignKeyException();
                                 }
                         }
@@ -623,9 +638,10 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
   final public SelectNode select() throws ParseException {
     trace_call("select");
     try {
-        Token temporario = null;
-      temporario = jj_consume_token(SELECT_TOKEN);
-     {if (true) return new SelectNode(temporario);}
+        LogicalSentenceNode lsn = null;
+      jj_consume_token(SELECT_TOKEN);
+      lsn = logicalSentence();
+     {if (true) return new SelectNode(lsn);}
     throw new Error("Missing return statement in function");
     } finally {
       trace_return("select");
@@ -677,10 +693,15 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
     }
   }
 
-  final public void logicalSentence() throws ParseException {
+  final public LogicalSentenceNode logicalSentence() throws ParseException {
     trace_call("logicalSentence");
     try {
-      conditionalSentence();
+        ConditionalSentenceNode csn1 = null;
+        ConditionalSentenceNode csn2 = null;
+        LogicalOperatorNode lon = null;
+        LogicalOperatorNode temp = null;
+        Token t = null;
+      csn1 = conditionalSentence();
       label_4:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -693,18 +714,32 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
           jj_la1[5] = jj_gen;
           break label_4;
         }
-        logicalOperator();
-        conditionalSentence();
+        t = logicalOperator();
+        csn2 = conditionalSentence();
+                if(lon == null) { lon = new LogicalOperatorNode(t, csn1, csn2);
+                temp = lon;
+                }else{
+                        temp.add(t, csn2);
+                        temp = temp.getNextLogicalOperatorNode();
+                }
       }
+                if(lon==null) {if (true) return new LogicalSentenceNode(csn1);}
+                else {if (true) return new LogicalSentenceNode(lon);}
+    throw new Error("Missing return statement in function");
     } finally {
       trace_return("logicalSentence");
     }
   }
 
-  final public void conditionalSentence() throws ParseException {
+  final public ConditionalSentenceNode conditionalSentence() throws ParseException {
     trace_call("conditionalSentence");
     try {
-      comparisonSentence();
+        ComparisonSentenceNode csn = null;
+        ComparisonSentenceNode csn1 = null;
+        ComparisonSentenceNode csn2 = null;
+        ListNode ln = null;
+        Token t = null;
+      csn = comparisonSentence();
       label_5:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -715,20 +750,28 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
           jj_la1[6] = jj_gen;
           break label_5;
         }
-        jj_consume_token(IF);
-        comparisonSentence();
+        t = jj_consume_token(IF);
+        csn1 = comparisonSentence();
         jj_consume_token(COLON);
-        comparisonSentence();
+        csn2 = comparisonSentence();
+                if(ln == null) ln = new ListNode(new IfNode(t, csn1, csn2)); else ln.add(new IfNode(t, csn1, csn2));
       }
+          if(ln==null) {if (true) return new ConditionalSentenceNode(csn);} else {if (true) return new ConditionalSentenceNode(csn, ln);}
+    throw new Error("Missing return statement in function");
     } finally {
       trace_return("conditionalSentence");
     }
   }
 
-  final public void comparisonSentence() throws ParseException {
+  final public ComparisonSentenceNode comparisonSentence() throws ParseException {
     trace_call("comparisonSentence");
     try {
-      instanceofSentence();
+        InstanceofSentenceNode isn1 = null;
+        InstanceofSentenceNode isn2 = null;
+        ComparisonOperatorNode con = null;
+        ComparisonOperatorNode temp = null;
+        Token t = null;
+      isn1 = instanceofSentence();
       label_6:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -744,36 +787,56 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
           jj_la1[7] = jj_gen;
           break label_6;
         }
-        comparisonOperator();
-        instanceofSentence();
+        t = comparisonOperator();
+        isn2 = instanceofSentence();
+                if(con == null){
+                        con = new ComparisonOperatorNode(t, isn1, isn2);
+                        temp = con;
+           }else{
+                        temp.add(t, isn2);
+                        temp = temp.getNextComparisonOperatorNode();
+           }
       }
+                if(con==null) {if (true) return new ComparisonSentenceNode(isn1);}
+                else {if (true) return new ComparisonSentenceNode(con);}
+    throw new Error("Missing return statement in function");
     } finally {
       trace_return("comparisonSentence");
     }
   }
 
-  final public void instanceofSentence() throws ParseException {
+  final public InstanceofSentenceNode instanceofSentence() throws ParseException {
     trace_call("instanceofSentence");
     try {
-      additionSentence();
+        AdditionSentenceNode asn = null;
+        Token type = null;
+      asn = additionSentence();
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case INSTANCEOF:
         jj_consume_token(INSTANCEOF);
-        type();
+        type = type();
         break;
       default:
         jj_la1[8] = jj_gen;
         ;
       }
+     if(type != null) {if (true) return new InstanceofSentenceNode(asn);}
+   else {if (true) return new InstanceofSentenceNode(asn, type);}
+    throw new Error("Missing return statement in function");
     } finally {
       trace_return("instanceofSentence");
     }
   }
 
-  final public void additionSentence() throws ParseException {
+  final public AdditionSentenceNode additionSentence() throws ParseException {
     trace_call("additionSentence");
     try {
-      multiplicationSentence();
+        MultiplicationSentenceNode msn1 = null;
+        MultiplicationSentenceNode msn2 = null;
+        AdditionOperatorNode aon = null;
+        AdditionOperatorNode temp = null;
+        Token t = null;
+      msn1 = multiplicationSentence();
       label_7:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -787,27 +850,42 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
         }
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case PLUS_SIGN:
-          jj_consume_token(PLUS_SIGN);
+          t = jj_consume_token(PLUS_SIGN);
           break;
         case MINUS_SIGN:
-          jj_consume_token(MINUS_SIGN);
+          t = jj_consume_token(MINUS_SIGN);
           break;
         default:
           jj_la1[10] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
-        multiplicationSentence();
+        msn2 = multiplicationSentence();
+                if(aon == null){
+                        aon = new AdditionOperatorNode(t, msn1, msn2);
+                        temp = aon;
+           }else{
+                        temp.add(t, msn2);
+                        temp = temp.getNextAdditionOperatorNode();
+           }
       }
+                if(aon==null) {if (true) return new AdditionSentenceNode(msn1);}
+                else {if (true) return new AdditionSentenceNode(aon);}
+    throw new Error("Missing return statement in function");
     } finally {
       trace_return("additionSentence");
     }
   }
 
-  final public void multiplicationSentence() throws ParseException {
+  final public MultiplicationSentenceNode multiplicationSentence() throws ParseException {
     trace_call("multiplicationSentence");
     try {
-      factor();
+        FactorNode fn1 = null;
+        FactorNode fn2 = null;
+        MultiplicationOperatorNode mon = null;
+        MultiplicationOperatorNode temp = null;
+        Token t = null;
+      fn1 = factor();
       label_8:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -823,35 +901,48 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
         }
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case ASTERISK:
-          jj_consume_token(ASTERISK);
+          t = jj_consume_token(ASTERISK);
           break;
         case POWER:
-          jj_consume_token(POWER);
+          t = jj_consume_token(POWER);
           break;
         case SOLIDUS:
-          jj_consume_token(SOLIDUS);
+          t = jj_consume_token(SOLIDUS);
           break;
         case PERCENT:
-          jj_consume_token(PERCENT);
+          t = jj_consume_token(PERCENT);
           break;
         default:
           jj_la1[12] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
-        factor();
+        fn2 = factor();
+           if(mon == null){
+                        mon = new MultiplicationOperatorNode(t, fn1, fn2);
+                        temp = mon;
+           }else{
+                        temp.add(t, fn2);
+                        temp = temp.getNextMultiplicationOperatorNode();
+           }
       }
+                if(mon==null) {if (true) return new MultiplicationSentenceNode(fn1);}
+                else {if (true) return new MultiplicationSentenceNode(mon);}
+    throw new Error("Missing return statement in function");
     } finally {
       trace_return("multiplicationSentence");
     }
   }
 
-  final public void factor() throws ParseException {
+  final public FactorNode factor() throws ParseException {
     trace_call("factor");
     try {
+        Token not = null;
+        Token t = null;
+        ConditionalSentenceNode csn = null;
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case NOT:
-        jj_consume_token(NOT);
+        not = jj_consume_token(NOT);
         break;
       default:
         jj_la1[13] = jj_gen;
@@ -866,14 +957,14 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
       case STRING:
       case TRUE:
       case FALSE:
-        literal();
+        t = literal();
         break;
       case IDENTIFIER:
-        jj_consume_token(IDENTIFIER);
+        t = jj_consume_token(IDENTIFIER);
         break;
       case LEFT_PARENTHESIS:
         jj_consume_token(LEFT_PARENTHESIS);
-        conditionalSentence();
+        csn = conditionalSentence();
         jj_consume_token(RIGHT_PARENTHESIS);
         break;
       default:
@@ -881,143 +972,157 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
         jj_consume_token(-1);
         throw new ParseException();
       }
+     if(csn == null) {if (true) return new FactorNode(not, t);} else {if (true) return new FactorNode(not, csn);}
+    throw new Error("Missing return statement in function");
     } finally {
       trace_return("factor");
     }
   }
 
-  final public void logicalOperator() throws ParseException {
+  final public Token logicalOperator() throws ParseException {
     trace_call("logicalOperator");
     try {
+        Token t = null;
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case AND:
-        jj_consume_token(AND);
+        t = jj_consume_token(AND);
         break;
       case OR:
-        jj_consume_token(OR);
+        t = jj_consume_token(OR);
         break;
       case XOR:
-        jj_consume_token(XOR);
+        t = jj_consume_token(XOR);
         break;
       default:
         jj_la1[15] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
+     {if (true) return t;}
+    throw new Error("Missing return statement in function");
     } finally {
       trace_return("logicalOperator");
     }
   }
 
-  final public void comparisonOperator() throws ParseException {
+  final public Token comparisonOperator() throws ParseException {
     trace_call("comparisonOperator");
     try {
+        Token t = null;
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case LESS_THAN:
-        jj_consume_token(LESS_THAN);
+        t = jj_consume_token(LESS_THAN);
         break;
       case LESS_THAN_OR_EQUALS:
-        jj_consume_token(LESS_THAN_OR_EQUALS);
+        t = jj_consume_token(LESS_THAN_OR_EQUALS);
         break;
       case GREATER_THAN:
-        jj_consume_token(GREATER_THAN);
+        t = jj_consume_token(GREATER_THAN);
         break;
       case GREATER_THAN_OR_EQUALS:
-        jj_consume_token(GREATER_THAN_OR_EQUALS);
+        t = jj_consume_token(GREATER_THAN_OR_EQUALS);
         break;
       case EQUALS:
-        jj_consume_token(EQUALS);
+        t = jj_consume_token(EQUALS);
         break;
       case NOT_EQUALS:
-        jj_consume_token(NOT_EQUALS);
+        t = jj_consume_token(NOT_EQUALS);
         break;
       default:
         jj_la1[16] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
+     {if (true) return t;}
+    throw new Error("Missing return statement in function");
     } finally {
       trace_return("comparisonOperator");
     }
   }
 
-  final public void literal() throws ParseException {
+  final public Token literal() throws ParseException {
     trace_call("literal");
     try {
+        Token t = null;
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case INTEGER:
-        jj_consume_token(INTEGER);
+        t = jj_consume_token(INTEGER);
         break;
       case DECIMAL:
-        jj_consume_token(DECIMAL);
+        t = jj_consume_token(DECIMAL);
         break;
       case HEX:
-        jj_consume_token(HEX);
+        t = jj_consume_token(HEX);
         break;
       case OCT:
-        jj_consume_token(OCT);
+        t = jj_consume_token(OCT);
         break;
       case BIN:
-        jj_consume_token(BIN);
+        t = jj_consume_token(BIN);
         break;
       case STRING:
-        jj_consume_token(STRING);
+        t = jj_consume_token(STRING);
         break;
       case TRUE:
-        jj_consume_token(TRUE);
+        t = jj_consume_token(TRUE);
         break;
       case FALSE:
-        jj_consume_token(FALSE);
+        t = jj_consume_token(FALSE);
         break;
       default:
         jj_la1[17] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
+          {if (true) return t;}
+    throw new Error("Missing return statement in function");
     } finally {
       trace_return("literal");
     }
   }
 
-  final public void type() throws ParseException {
+  final public Token type() throws ParseException {
     trace_call("type");
     try {
+        Token t = null;
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case VARCHAR_TYPE:
-        jj_consume_token(VARCHAR_TYPE);
+        t = jj_consume_token(VARCHAR_TYPE);
         break;
       case CHAR_TYPE:
-        jj_consume_token(CHAR_TYPE);
+        t = jj_consume_token(CHAR_TYPE);
         break;
       case INTEGER_TYPE:
-        jj_consume_token(INTEGER_TYPE);
+        t = jj_consume_token(INTEGER_TYPE);
         break;
       case DOUBLE_TYPE:
-        jj_consume_token(DOUBLE_TYPE);
+        t = jj_consume_token(DOUBLE_TYPE);
         break;
       case FLOAT_TYPE:
-        jj_consume_token(FLOAT_TYPE);
+        t = jj_consume_token(FLOAT_TYPE);
         break;
       case BLOB_TYPE:
-        jj_consume_token(BLOB_TYPE);
+        t = jj_consume_token(BLOB_TYPE);
         break;
       case GEOMETRIC_TYPE:
-        jj_consume_token(GEOMETRIC_TYPE);
+        t = jj_consume_token(GEOMETRIC_TYPE);
         break;
       case RELATION_TYPE:
-        jj_consume_token(RELATION_TYPE);
+        t = jj_consume_token(RELATION_TYPE);
         break;
       case BOOLEAN_TYPE:
-        jj_consume_token(BOOLEAN_TYPE);
+        t = jj_consume_token(BOOLEAN_TYPE);
         break;
       case IDENTIFIER:
-        jj_consume_token(IDENTIFIER);
+        t = jj_consume_token(IDENTIFIER);
         break;
       default:
         jj_la1[18] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
+          {if (true) return t;}
+    throw new Error("Missing return statement in function");
     } finally {
       trace_return("type");
     }

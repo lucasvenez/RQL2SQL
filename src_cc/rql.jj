@@ -1,6 +1,6 @@
 /**
  * This document describe the Relational Query Language.
- * @author Lucas Venezian Povoa
+ * @author Lucas Venezian Povoa and Dérick Welman Brock Rangel
  * @since 24th Setember, 2010
  */
 
@@ -38,6 +38,7 @@ import br.edu.ifsp.syntacticTree.*;
 import br.edu.ifsp.syntacticTree.interfaces.*;
 import br.edu.ifsp.symbolTable.exceptions.*;
 import br.edu.ifsp.semanticAnalysis.RelationCheck;
+import br.edu.ifsp.codeGeneration.CodeGenerator;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -94,7 +95,7 @@ public class RelationalQueryLanguage {
 		/**
 		 * Attribute used to store the output file name.
 		 */		
-		String outputFileName;
+		String outputFileName = "Output.SQL";
 		
 		/**
 		 * Number of parameters errors.
@@ -217,17 +218,29 @@ public class RelationalQueryLanguage {
 				System.out.printf( "File %s not found.\n", fileName );
 				System.exit(0);
 			}
+
+			/*
+			 * Set a default output name if it is empty
+			 */
 			
 			try {
 				
 				root = parser.program();
 				PrintTree pt = new PrintTree();
-				if ( debug_sa ) pt.printRoot(root);
-				if ( export_tree ) pt.exportDotTree(root);
+				if (debug_sa)
+					pt.printRoot(root);
+				if (export_tree)
+					pt.exportDotTree(root);
 				RelationCheck rc = null;
-				if ( symbolTable != null ) {
+				int semanticErrors = 0;
+				if (symbolTable != null) {
 					rc = new RelationCheck(symbolTable);
-					System.out.println("Semantic Errors: " + rc.relationalOperationsNodeListCheck(root));
+					semanticErrors = rc.semanticAnalysis(root);
+					System.out.println("Semantic Errors: " + semanticErrors);
+				}
+				if (semanticErrors == 0) {
+					CodeGenerator generator = new CodeGenerator(outputPath + outputFileName, VERSION);
+					generator.generate(root);
 				}
 				
 			}
@@ -843,11 +856,10 @@ ProjectNode project() : {
 }
 
 SelectNode select() : {
-	Token temporario = null;
+	LogicalSentenceNode lsn = null;
 } {
-
-   temporario = < SELECT_TOKEN > //logicalSentence()
-   { return new SelectNode(temporario); }
+   < SELECT_TOKEN > lsn = logicalSentence()
+   { return new SelectNode(lsn); }
 }
 
 RenameNode rename() : {
@@ -872,69 +884,178 @@ RelationNode relation() : {
    { return new RelationNode(t); }
 }
 
-void logicalSentence() : {} {
-
-   conditionalSentence() ( logicalOperator() conditionalSentence() )*
+LogicalSentenceNode logicalSentence() : {
+	ConditionalSentenceNode csn1 = null;
+	ConditionalSentenceNode csn2 = null;
+	LogicalOperatorNode lon = null;
+	LogicalOperatorNode temp = null;
+	Token t = null;
+} {
+   csn1 = conditionalSentence()
+   ( t = logicalOperator() csn2 = conditionalSentence() 
+   {
+		if(lon == null) { lon = new LogicalOperatorNode(t, csn1, csn2); 
+		temp = lon;
+		}else{
+			temp.add(t, csn2);
+			temp = temp.getNextLogicalOperatorNode();
+		}
+   	})*
+   	{
+	   	if(lon==null) return new LogicalSentenceNode(csn1);
+	   	else return new LogicalSentenceNode(lon);
+   	}
 }
 
-void conditionalSentence() : {} {
-  
-   comparisonSentence() ( < IF > comparisonSentence() < COLON > comparisonSentence() )*
+ConditionalSentenceNode conditionalSentence() : {
+	ComparisonSentenceNode csn = null;
+	ComparisonSentenceNode csn1 = null;
+	ComparisonSentenceNode csn2 = null;
+	ListNode ln = null;
+	Token t = null;
+} {
+   	csn = comparisonSentence() ( t = < IF > csn1 = comparisonSentence() < COLON > csn2 = comparisonSentence()
+   	{
+   		if(ln == null) ln = new ListNode(new IfNode(t, csn1, csn2)); else ln.add(new IfNode(t, csn1, csn2)); 
+   	})*
+   	{ if(ln==null) return new ConditionalSentenceNode(csn); else return new ConditionalSentenceNode(csn, ln); }
 }
 
-void comparisonSentence() : {} {
-
-   instanceofSentence() ( comparisonOperator() instanceofSentence() )*
+ComparisonSentenceNode comparisonSentence() : {
+	InstanceofSentenceNode isn1 = null;
+	InstanceofSentenceNode isn2 = null;
+	ComparisonOperatorNode con = null;
+	ComparisonOperatorNode temp = null;
+	Token t = null;
+} {
+   isn1 = instanceofSentence() ( t = comparisonOperator() isn2 = instanceofSentence() 
+   {
+   		if(con == null){
+	   		con = new ComparisonOperatorNode(t, isn1, isn2);
+	   		temp = con;
+	   }else{
+	   		temp.add(t, isn2);
+	   		temp = temp.getNextComparisonOperatorNode();
+	   }
+	})*
+	{
+	   	if(con==null) return new ComparisonSentenceNode(isn1);
+	   	else return new ComparisonSentenceNode(con);
+   	}
 }
 
-void instanceofSentence() : {} {
+InstanceofSentenceNode instanceofSentence() : {
+	AdditionSentenceNode asn = null;
+	Token type = null;
+} {
 
-   additionSentence() [ < INSTANCEOF > type() ]
+   asn = additionSentence() [ < INSTANCEOF > type = type() ]
+   { if(type != null) return new InstanceofSentenceNode(asn);
+   else return new InstanceofSentenceNode(asn, type); }
 }  
 
-void additionSentence() : {} {
-
-   multiplicationSentence() ( ( < PLUS_SIGN > | <MINUS_SIGN> ) multiplicationSentence() )*
+AdditionSentenceNode additionSentence() : {
+	MultiplicationSentenceNode msn1 = null;
+	MultiplicationSentenceNode msn2 = null;
+	AdditionOperatorNode aon = null;
+	AdditionOperatorNode temp = null;
+	Token t = null;
+} {
+   msn1= multiplicationSentence() ( ( t = <PLUS_SIGN> | t = <MINUS_SIGN> ) msn2 = multiplicationSentence() 
+   {
+   		if(aon == null){
+	   		aon = new AdditionOperatorNode(t, msn1, msn2);
+	   		temp = aon;
+	   }else{
+	   		temp.add(t, msn2);
+	   		temp = temp.getNextAdditionOperatorNode();
+	   }
+	})*
+	{
+	   	if(aon==null) return new AdditionSentenceNode(msn1);
+	   	else return new AdditionSentenceNode(aon);
+   	}
 }
 
-void multiplicationSentence() : {} {
+MultiplicationSentenceNode multiplicationSentence() : {
+	FactorNode fn1 = null;
+	FactorNode fn2 = null;
+	MultiplicationOperatorNode mon = null;
+	MultiplicationOperatorNode temp = null;
+	Token t = null;
+} {
 
-   factor() ( ( < ASTERISK > | < POWER > | < SOLIDUS > | < PERCENT > ) factor() )*
+   fn1 = factor() ( ( t = < ASTERISK > | t = < POWER > | t = < SOLIDUS > | t = < PERCENT > ) fn2 = factor() 
+   {
+	   if(mon == null){
+	   		mon = new MultiplicationOperatorNode(t, fn1, fn2);
+	   		temp = mon;
+	   }else{
+	   		temp.add(t, fn2);
+	   		temp = temp.getNextMultiplicationOperatorNode();
+	   }
+   })*
+   {
+	   	if(mon==null) return new MultiplicationSentenceNode(fn1);
+	   	else return new MultiplicationSentenceNode(mon);
+   	}
 }
 
-void factor() : {} {
-   [ < NOT > ]
-   (
-         literal() | < IDENTIFIER >
-      |  < LEFT_PARENTHESIS > conditionalSentence() < RIGHT_PARENTHESIS >
-   )
+FactorNode factor() : {
+	Token not = null;
+	Token t = null;
+	ConditionalSentenceNode csn = null;
+} {
+   [ not = < NOT > ]
+   ( t = literal() | t = < IDENTIFIER > | < LEFT_PARENTHESIS > csn = conditionalSentence() < RIGHT_PARENTHESIS > )
+   { if(csn == null) return new FactorNode(not, t); else return new FactorNode(not, csn); }
 }
 
-void logicalOperator() : {} {
-  
-   < AND > | < OR > | < XOR >
+Token logicalOperator() : {
+	Token t = null;
+} {
+   ( t = < AND > | t = < OR > | t = < XOR >)
+   { return t; }
 }
 
-void comparisonOperator() : {} {
-  
-   < LESS_THAN > | < LESS_THAN_OR_EQUALS > | < GREATER_THAN > | < GREATER_THAN_OR_EQUALS > | < EQUALS > | < NOT_EQUALS >
+Token comparisonOperator() : {
+	Token t = null;
+} {
+   ( t = < LESS_THAN >
+   | t = < LESS_THAN_OR_EQUALS >
+   | t = < GREATER_THAN >
+   | t = < GREATER_THAN_OR_EQUALS >
+   | t = < EQUALS >
+   | t = < NOT_EQUALS >)
+   { return t; }
 }
 
-void literal() : {} {
-
-   < INTEGER > |  < DECIMAL > |  < HEX > |  < OCT > |  < BIN > |  < STRING > |  < TRUE > |  < FALSE >
+Token literal() : {
+	Token t = null;
+} {
+	( t = < INTEGER >
+	| t = < DECIMAL > 
+	| t = < HEX >
+	| t = < OCT >
+	| t = < BIN >
+	| t = < STRING >
+	| t = < TRUE >
+	| t = < FALSE >)
+	{ return t; }
 }
 
-void type() : {} {
-
-   < VARCHAR_TYPE >
-|  < CHAR_TYPE    >
-|  < INTEGER_TYPE >
-|  < DOUBLE_TYPE  >
-|  < FLOAT_TYPE   >
-|  < BLOB_TYPE    >
-|  < GEOMETRIC_TYPE >
-|  < RELATION_TYPE  >
-|  < BOOLEAN_TYPE   >
-|  < IDENTIFIER     >
+Token type() : {
+	Token t = null;
+} {
+    ( t = < VARCHAR_TYPE >
+	| t = < CHAR_TYPE >
+	| t = < INTEGER_TYPE >
+	| t = < DOUBLE_TYPE >
+	| t = < FLOAT_TYPE >
+	| t = < BLOB_TYPE >
+	| t = < GEOMETRIC_TYPE >
+	| t = < RELATION_TYPE >
+	| t = < BOOLEAN_TYPE >
+	| t = < IDENTIFIER >)
+	{ return t; }
 }

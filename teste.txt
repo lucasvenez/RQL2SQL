@@ -1,14 +1,14 @@
 //--RELAÇÃO (RELVAR)--//
-Produto;
+//Pessoa;
 
 //--PROJEÇÃO (SELECT)--//
-¢ idProduto, nome (Produto);
+//¢ idPessoa, nome (Pessoa);
 
 //--SELEÇÃO (WHERE)--//
-//£ id = 5 (Produto);
+£ id * (5 + 3) > key ^ nome = ("True" -> 5 > 6 : "False") v id / atributo (Produto);
 
 //--RENOMEAR--//
-§ rename1 renamed1, rename2 renamed2 (A);
+//§ idPessoa id, nome name (Pessoa);
 
 //--UNIÃO--//
 //R1 U R2; Não implementado
@@ -51,5 +51,5 @@ Produto;
 
 
 //--TESTE ADICIONAL--//
-¢ idPessoa (¢ idPessoa, nome (Pessoa));
-¢ codPessoa (§ idPessoa codPessoa (Pessoa));
+//¢ idPessoa (¢ idPessoa, nome (Pessoa));
+//¢ codPessoa (§ idPessoa codPessoa (Pessoa));

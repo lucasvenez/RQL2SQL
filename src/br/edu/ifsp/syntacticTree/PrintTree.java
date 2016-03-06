@@ -107,8 +107,8 @@ public class PrintTree {
 			numberProjectNode((ProjectNode) x.getUnitaryOperationsChildrenNode());
 		if (x.getUnitaryOperationsChildrenNode() instanceof RenameNode)
 			numberRenameNode((RenameNode) x.getUnitaryOperationsChildrenNode());
-		// if(x.getUnitaryOperationsChildrenNode() instanceof SelectNode)
-		// numberSelectNode((ProjectNode)x.getNode());
+		if (x.getUnitaryOperationsChildrenNode() instanceof SelectNode)
+			numberSelectNode((SelectNode) x.getUnitaryOperationsChildrenNode());
 		numberReadyOnlyOperationsNode(x.getReadyOnlyOperationsNode());
 	}
 
@@ -124,6 +124,143 @@ public class PrintTree {
 			return;
 		x.number = kk++;
 		numberAttributeNodeList(x.getNext());
+	}
+
+	private void numberSelectNode(SelectNode x) {
+		if (x == null)
+			return;
+		x.number = kk++;
+		numberLogicalSentenceNode(x.getLogicalSentenceNode());
+	}
+
+	private void numberLogicalSentenceNode(LogicalSentenceNode x) {
+		if (x == null)
+			return;
+		x.number = kk++;
+		if (x.lon == null)
+			numberConditionalSentenceNode(x.getConditionalSentenceNode());
+		else
+			numberLogicalOperatorNode(x.getLogicalOperatorNode());
+	}
+
+	private void numberLogicalOperatorNode(LogicalOperatorNode x) {
+		if (x == null)
+			return;
+		x.number = kk++;
+		if (x.getNextLogicalOperatorNode() == null) {
+			numberConditionalSentenceNode(x.getConditionalSentenceNode1());
+			numberConditionalSentenceNode(x.getConditionalSentenceNode2());
+		} else {
+			numberConditionalSentenceNode(x.getConditionalSentenceNode1());
+			numberLogicalOperatorNode(x.getNextLogicalOperatorNode());
+		}
+	}
+
+	private void numberConditionalSentenceNode(ConditionalSentenceNode x) {
+		if (x == null)
+			return;
+		x.number = kk++;
+		numberComparisonSentenceNode(x.getComparisonSentenceNode());
+		numberIfNodeList(x.getIfListNode());
+	}
+
+	private void numberIfNodeList(ListNode x) {
+		if (x == null)
+			return;
+		x.number = kk++;
+		numberIfNode((IfNode) x.getNode());
+		numberIfNodeList(x.getNext());
+	}
+
+	private void numberIfNode(IfNode x) {
+		if (x == null)
+			return;
+		x.number = kk++;
+		numberComparisonSentenceNode(x.getComparisonSentenceNode1());
+		numberComparisonSentenceNode(x.getComparisonSentenceNode2());
+	}
+
+	private void numberComparisonSentenceNode(ComparisonSentenceNode x) {
+		if (x == null)
+			return;
+		x.number = kk++;
+		if (x.getComparisonOperatorNode() == null)
+			numberInstanceofSentenceNode(x.getInstanceofSentenceNode());
+		else
+			numberComparisonOperatorNode(x.getComparisonOperatorNode());
+	}
+
+	private void numberComparisonOperatorNode(ComparisonOperatorNode x) {
+		if (x == null)
+			return;
+		x.number = kk++;
+		if (x.getNextComparisonOperatorNode() == null) {
+			numberInstanceofSentenceNode(x.getInstanceofSentenceNode1());
+			numberInstanceofSentenceNode(x.getInstanceofSentenceNode2());
+		} else {
+			numberInstanceofSentenceNode(x.getInstanceofSentenceNode1());
+			numberComparisonOperatorNode(x.getNextComparisonOperatorNode());
+		}
+	}
+
+	private void numberInstanceofSentenceNode(InstanceofSentenceNode x) {
+		if (x == null)
+			return;
+		x.number = kk++;
+		numberAdditionSentenceNode(x.getAdditionSentenceNode());
+	}
+
+	private void numberAdditionSentenceNode(AdditionSentenceNode x) {
+		if (x == null)
+			return;
+		x.number = kk++;
+		if (x.getAdditionOperatorNode() == null)
+			numberMultiplicationSentenceNode(x.getMultiplicationSentenceNode());
+		else
+			numberAdditionOperatorNode(x.getAdditionOperatorNode());
+	}
+
+	private void numberAdditionOperatorNode(AdditionOperatorNode x) {
+		if (x == null)
+			return;
+		x.number = kk++;
+		if (x.getNextAdditionOperatorNode() == null) {
+			numberMultiplicationSentenceNode(x.getMultiplicationSentenceNode1());
+			numberMultiplicationSentenceNode(x.getMultiplicationSentenceNode2());
+		} else {
+			numberMultiplicationSentenceNode(x.getMultiplicationSentenceNode1());
+			numberAdditionOperatorNode(x.getNextAdditionOperatorNode());
+		}
+	}
+
+	private void numberMultiplicationSentenceNode(MultiplicationSentenceNode x) {
+		if (x == null)
+			return;
+		x.number = kk++;
+		if (x.getMultiplicationOperatorNode() == null)
+			numberFactorNode(x.getFactorNode());
+		else
+			numberMultiplicationOperatorNode(x.getMultiplicationOperatorNode());
+	}
+
+	private void numberMultiplicationOperatorNode(MultiplicationOperatorNode x) {
+		if (x == null)
+			return;
+		x.number = kk++;
+		if (x.getNextMultiplicationOperatorNode() == null) {
+			numberFactorNode(x.getFactorNode1());
+			numberFactorNode(x.getFactorNode2());
+		} else {
+			numberFactorNode(x.getFactorNode1());
+			numberMultiplicationOperatorNode(x.getNextMultiplicationOperatorNode());
+		}
+	}
+
+	private void numberFactorNode(FactorNode x) {
+		if (x == null)
+			return;
+		x.number = kk++;
+		numberConditionalSentenceNode(x.getConditionalSentenceNode());
 	}
 
 	private void numberRenameNode(RenameNode x) {
@@ -203,8 +340,8 @@ public class PrintTree {
 			printProjectNode((ProjectNode) x.getUnitaryOperationsChildrenNode());
 		else if (x.getUnitaryOperationsChildrenNode() instanceof RenameNode)
 			printRenameNode((RenameNode) x.getUnitaryOperationsChildrenNode());
-		// else if (x.getUnitaryOperationsChildrenNode() instanceof SelectNode)
-		// printSelectNode((SelectNode) x.getUnitaryOperationsChildrenNode());
+		else if (x.getUnitaryOperationsChildrenNode() instanceof SelectNode)
+			printSelectNode((SelectNode) x.getUnitaryOperationsChildrenNode());
 		printReadyOnlyOperationsNode(x.getReadyOnlyOperationsNode());
 	}
 
@@ -223,6 +360,213 @@ public class PrintTree {
 				+ (x.getNode() == null ? "null" : String.valueOf(x.getNode().getPosition().image)) + " "
 				+ (x.getNext() == null ? "null" : String.valueOf(x.getNext().number)));
 		printProjectNodeList(x.getNext());
+	}
+
+	private void printSelectNode(SelectNode x) {
+		if (x == null)
+			return;
+		System.out.println(x.number + ": SelectNode ===> "
+				+ (x.getLogicalSentenceNode() == null ? "null" : String.valueOf(x.getLogicalSentenceNode().number)));
+		printLogicalSentenceNode(x.getLogicalSentenceNode());
+	}
+
+	private void printLogicalSentenceNode(LogicalSentenceNode x) {
+		if (x == null)
+			return;
+		if (x.getLogicalOperatorNode() == null) {
+			System.out.println(x.number + ": LogicalSentenceNode ===> " + (x.getConditionalSentenceNode() == null
+					? "null" : String.valueOf(x.getConditionalSentenceNode().number)));
+			printConditionalSentenceNode(x.getConditionalSentenceNode());
+		} else {
+			System.out.println(x.number + ": LogicalSentenceNode ===> " + (x.getLogicalOperatorNode() == null ? "null"
+					: String.valueOf(x.getLogicalOperatorNode().number)));
+			printLogicalOperatorNode(x.getLogicalOperatorNode());
+		}
+	}
+
+	private void printLogicalOperatorNode(LogicalOperatorNode x) {
+		if (x == null)
+			return;
+		if (x.getNextLogicalOperatorNode() == null) {
+			System.out.println(x.number + ": LogicalOperatorNode ===> " + x.getPosition().image + " "
+					+ (x.getConditionalSentenceNode1() == null ? "null"
+							: String.valueOf(x.getConditionalSentenceNode1().number) + " "
+									+ (x.getConditionalSentenceNode2() == null ? "null"
+											: String.valueOf(x.getConditionalSentenceNode2().number))));
+			printConditionalSentenceNode(x.getConditionalSentenceNode1());
+			printConditionalSentenceNode(x.getConditionalSentenceNode2());
+		} else {
+			System.out.println(x.number + ": LogicalOperatorNode ===> " + x.getPosition().image + " "
+					+ (x.getConditionalSentenceNode1() == null ? "null"
+							: String.valueOf(x.getConditionalSentenceNode1().number))
+					+ " " + (x.getNextLogicalOperatorNode() == null ? "null"
+							: String.valueOf(x.getNextLogicalOperatorNode().number)));
+			printConditionalSentenceNode(x.getConditionalSentenceNode1());
+			printLogicalOperatorNode(x.getNextLogicalOperatorNode());
+		}
+	}
+
+	private void printConditionalSentenceNode(ConditionalSentenceNode x) {
+		if (x == null)
+			return;
+		System.out.println(x.number + ": ConditionalSentenceNode ===> "
+				+ (x.getComparisonSentenceNode() == null ? "null" : x.getComparisonSentenceNode().number) + " "
+				+ (x.getIfListNode() == null ? "null" : x.getIfListNode().number));
+		printComparisonSentenceNode(x.getComparisonSentenceNode());
+		printIfNodeList(x.getIfListNode());
+	}
+
+	private void printIfNodeList(ListNode x) {
+		if (x == null)
+			return;
+		System.out.println(
+				x.number + ": ListNode (IfNodeList) ===> " + (x.getNode() == null ? "null" : x.getNode().number) + " "
+						+ (x.getNext() == null ? "null" : x.getNext().number));
+		printIfNode((IfNode) x.getNode());
+		printIfNodeList(x.getNext());
+	}
+
+	private void printIfNode(IfNode x) {
+		if (x == null)
+			return;
+		System.out.println(x.number + ": IfNode ===> "
+				+ (x.getComparisonSentenceNode1() == null ? "null" : x.getComparisonSentenceNode1().number) + " "
+				+ (x.getComparisonSentenceNode2() == null ? "null" : x.getComparisonSentenceNode2().number));
+		printComparisonSentenceNode(x.getComparisonSentenceNode1());
+		printComparisonSentenceNode(x.getComparisonSentenceNode2());
+	}
+
+	private void printComparisonSentenceNode(ComparisonSentenceNode x) {
+		if (x == null)
+			return;
+		System.out
+				.println(x.number + ": ComparisonSentenceNode ===> "
+						+ (x.getInstanceofSentenceNode() == null
+								? (x.getComparisonOperatorNode() == null ? "null"
+										: x.getComparisonOperatorNode().number)
+								: x.getInstanceofSentenceNode().number));
+		if (x.getComparisonOperatorNode() == null)
+			printInstanceofSentenceNode(x.getInstanceofSentenceNode());
+		else
+			printComparisonOperatorNode(x.getComparisonOperatorNode());
+	}
+
+	private void printComparisonOperatorNode(ComparisonOperatorNode x) {
+		if (x == null)
+			return;
+		if (x.getNextComparisonOperatorNode() == null) {
+			System.out.println(x.number + ": ComparisonOperatorNode ===> " + x.getPosition().image + " "
+					+ (x.getInstanceofSentenceNode1() == null ? "null"
+							: String.valueOf(x.getInstanceofSentenceNode1().number) + " "
+									+ (x.getInstanceofSentenceNode2() == null ? "null"
+											: String.valueOf(x.getInstanceofSentenceNode2().number))));
+			printInstanceofSentenceNode(x.getInstanceofSentenceNode1());
+			printInstanceofSentenceNode(x.getInstanceofSentenceNode2());
+		} else {
+			System.out.println(x.number + ": ComparisonOperatorNode ===> " + x.getPosition().image + " "
+					+ (x.getInstanceofSentenceNode1() == null ? "null"
+							: String.valueOf(x.getInstanceofSentenceNode1().number))
+					+ " " + (x.getNextComparisonOperatorNode() == null ? "null"
+							: String.valueOf(x.getNextComparisonOperatorNode().number)));
+			printInstanceofSentenceNode(x.getInstanceofSentenceNode1());
+			printComparisonOperatorNode(x.getNextComparisonOperatorNode());
+		}
+	}
+
+	private void printInstanceofSentenceNode(InstanceofSentenceNode x) {
+		if (x == null)
+			return;
+		System.out.println(x.number + ": InstanceofSentenceNode ===> "
+				+ (x.getAdditionSentenceNode() == null ? "null" : x.getAdditionSentenceNode().number) + " "
+				+ (x.getType() == null ? "null" : x.getType().image));
+		printAdditionSentenceNode(x.getAdditionSentenceNode());
+	}
+
+	private void printAdditionSentenceNode(AdditionSentenceNode x) {
+		if (x == null)
+			return;
+		if (x.getAdditionOperatorNode() == null) {
+			System.out.println(x.number + ": AdditionSentenceNode ===> " + (x.getMultiplicationSentenceNode() == null
+					? "null" : String.valueOf(x.getMultiplicationSentenceNode().number)));
+			printMultiplicationSentenceNode(x.getMultiplicationSentenceNode());
+		} else {
+			System.out.println(x.number + ": AdditionSentenceNode ===> " + (x.getAdditionOperatorNode() == null ? "null"
+					: String.valueOf(x.getAdditionOperatorNode().number)));
+			printAdditionOperatorNode(x.getAdditionOperatorNode());
+		}
+	}
+
+	private void printAdditionOperatorNode(AdditionOperatorNode x) {
+		if (x == null)
+			return;
+		if (x.getNextAdditionOperatorNode() == null) {
+			System.out.println(x.number + ": AdditionOperatorNode ===> " + x.getPosition().image + " "
+					+ (x.getMultiplicationSentenceNode1() == null ? "null"
+							: String.valueOf(x.getMultiplicationSentenceNode1().number) + " "
+									+ (x.getMultiplicationSentenceNode2() == null ? "null"
+											: String.valueOf(x.getMultiplicationSentenceNode2().number))));
+			printMultiplicationSentenceNode(x.getMultiplicationSentenceNode1());
+			printMultiplicationSentenceNode(x.getMultiplicationSentenceNode2());
+		} else {
+			System.out.println(x.number + ": AdditionOperatorNode ===> " + x.getPosition().image + " "
+					+ (x.getMultiplicationSentenceNode1() == null ? "null"
+							: String.valueOf(x.getMultiplicationSentenceNode1().number))
+					+ " " + (x.getNextAdditionOperatorNode() == null ? "null"
+							: String.valueOf(x.getNextAdditionOperatorNode().number)));
+			printMultiplicationSentenceNode(x.getMultiplicationSentenceNode1());
+			printAdditionOperatorNode(x.getNextAdditionOperatorNode());
+		}
+	}
+
+	private void printMultiplicationSentenceNode(MultiplicationSentenceNode x) {
+		if (x == null)
+			return;
+		if (x.getMultiplicationOperatorNode() == null) {
+			System.out.println(x.number + ": MultiplicationSentenceNode ===> "
+					+ (x.getFactorNode() == null ? "null" : String.valueOf(x.getFactorNode().number)));
+			printFactorNode(x.getFactorNode());
+		} else {
+			System.out.println(
+					x.number + ": MultiplicationSentenceNode ===> " + (x.getMultiplicationOperatorNode() == null
+							? "null" : String.valueOf(x.getMultiplicationOperatorNode().number)));
+			printMultiplicationOperatorNode(x.getMultiplicationOperatorNode());
+		}
+	}
+
+	private void printMultiplicationOperatorNode(MultiplicationOperatorNode x) {
+		if (x == null)
+			return;
+		if (x.getNextMultiplicationOperatorNode() == null) {
+			System.out
+					.println(
+							x.number + ": MultiplicatioinOperatorNode ===> " + x.getPosition().image + " "
+									+ (x.getFactorNode1() == null ? "null"
+											: String.valueOf(x.getFactorNode1().number) + " "
+													+ (x.getFactorNode2() == null ? "null"
+															: String.valueOf(x.getFactorNode2().number))));
+			printFactorNode(x.getFactorNode1());
+			printFactorNode(x.getFactorNode2());
+		} else {
+			System.out.println(x.number + ": MultiplicationOperatorNode ===> " + x.getPosition().image + " "
+					+ (x.getFactorNode1() == null ? "null" : String.valueOf(x.getFactorNode1().number)) + " "
+					+ (x.getNextMultiplicationOperatorNode() == null ? "null"
+							: String.valueOf(x.getNextMultiplicationOperatorNode().number)));
+			printFactorNode(x.getFactorNode1());
+			printMultiplicationOperatorNode(x.getNextMultiplicationOperatorNode());
+		}
+	}
+
+	private void printFactorNode(FactorNode x) {
+		if (x == null)
+			return;
+		if (x.getConditionalSentenceNode() == null) {
+			System.out.println(x.number + ": FactorNode ===> " + (x.getNot() == null ? "null" : "note") + " "
+					+ String.valueOf(x.getPosition().image));
+		} else {
+			System.out.println(x.number + ": FactorNode ===> " + (x.getConditionalSentenceNode() == null ? "null"
+					: String.valueOf(x.getConditionalSentenceNode().number)));
+			printConditionalSentenceNode(x.getConditionalSentenceNode());
+		}
 	}
 
 	private void printRenameNode(RenameNode x) {
@@ -261,12 +605,9 @@ public class PrintTree {
 	private String toGraphRelationalOperationsNodeList(ListNode x) {
 		if (x == null)
 			return "";
-		String temp = "\n"
-				+ (x.number + " [label=\"ListNode(RelationalOperationsNodeList)\"];"
-						+ (x.getNode() == null ? ""
-								: "\n" + x.number + " -> " + String.valueOf(x.getNode().number) + ";")
-						+ (x.getNext() == null ? ""
-								: "\n" + x.number + " -> " + String.valueOf(x.getNext().number) + ";"));
+		String temp = "\n" + (x.number + " [label=\"ListNode(RelationalOperationsNodeList)\"];"
+				+ (x.getNode() == null ? "" : "\n" + x.number + " -> " + String.valueOf(x.getNode().number) + ";")
+				+ (x.getNext() == null ? "" : "\n" + x.number + " -> " + String.valueOf(x.getNext().number) + ";"));
 		temp += toGraphRelationalOperationsNode((RelationalOperationsNode) x.getNode());
 		return temp + toGraphRelationalOperationsNodeList(x.getNext());
 	}
@@ -318,8 +659,8 @@ public class PrintTree {
 			temp += toGraphProjectNode((ProjectNode) x.getUnitaryOperationsChildrenNode());
 		else if (x.getUnitaryOperationsChildrenNode() instanceof RenameNode)
 			temp += toGraphRenameNode((RenameNode) x.getUnitaryOperationsChildrenNode());
-		// else if (x.getNode() instanceof SelectNode)
-		// toGraphSelectNode((SelectNode) x.getNode());
+		else if (x.getUnitaryOperationsChildrenNode() instanceof SelectNode)
+			temp += toGraphSelectNode((SelectNode) x.getUnitaryOperationsChildrenNode());
 		return temp + toGraphReadyOnlyOperationsNode(x.getReadyOnlyOperationsNode());
 	}
 
@@ -334,12 +675,181 @@ public class PrintTree {
 	private String toGraphProjectNodeList(ListNode x) {
 		if (x == null)
 			return "";
-		String temp = "\n" + (x.number + " [label=\"ListNode(ProjectAttributeList)\"];"
-				+ (x.getNode() == null ? ""
-						: "\n" + x.number + " -> \"" + String.valueOf(x.getNode().getPosition().image) + " ("
-								+ String.valueOf(x.number) + ")\";")
+		String temp = "\n" + (x.number + " [label=\"ListNode(ProjectAttributeList)\"];" + (x.getNode() == null ? ""
+				: "\n" + x.number + " -> \"" + String.valueOf(x.getNode().getPosition().image) + " ("
+						+ String.valueOf(x.number) + ")\";")
 				+ (x.getNext() == null ? "" : "\n" + x.number + " -> " + String.valueOf(x.getNext().number) + ";"));
 		return temp + toGraphProjectNodeList(x.getNext());
+	}
+
+	private String toGraphSelectNode(SelectNode x) {
+		if (x == null)
+			return "";
+		String temp = "\n" + x.number + " [label=\"SelectNode\"];" + (x.getLogicalSentenceNode() == null ? ""
+				: "\n" + x.number + " -> " + String.valueOf(x.getLogicalSentenceNode().number) + ";");
+		return temp + toGraphLogicalSentenceNode(x.getLogicalSentenceNode());
+	}
+
+	private String toGraphLogicalSentenceNode(LogicalSentenceNode x) {
+		if (x == null)
+			return "";
+		String temp = "\n" + x.number + " [label=\"LogicalSentenceNode\"];";
+		if (x.lon == null) {
+			temp += (x.getConditionalSentenceNode() == null ? ""
+					: "\n" + x.number + " -> " + String.valueOf(x.getConditionalSentenceNode().number) + ";");
+			return temp + toGraphConditionalSentenceNode(x.getConditionalSentenceNode());
+		} else {
+			temp += (x.getLogicalOperatorNode() == null ? ""
+					: "\n" + x.number + " -> " + String.valueOf(x.getLogicalOperatorNode().number) + ";");
+			return temp + toGraphLogicalOperatorNode(x.getLogicalOperatorNode());
+		}
+	}
+
+	private String toGraphLogicalOperatorNode(LogicalOperatorNode x) {
+		if (x == null)
+			return "";
+		String temp = "\n" + x.number + " [label=\"LogicalOperatorNode ( " + x.getPosition().image + " )\"];"
+				+ (x.getConditionalSentenceNode1() == null ? ""
+						: "\n" + x.number + " ->" + x.getConditionalSentenceNode1().number + ";")
+				+ (x.getConditionalSentenceNode2() == null ? ""
+						: "\n" + x.number + " ->" + x.getConditionalSentenceNode2().number + ";")
+				+ (x.getNextLogicalOperatorNode() == null ? ""
+						: "\n" + x.number + " ->" + x.getNextLogicalOperatorNode().number + ";");
+		return temp + toGraphConditionalSentenceNode(x.getConditionalSentenceNode1())
+				+ toGraphConditionalSentenceNode(x.getConditionalSentenceNode2())
+				+ toGraphLogicalOperatorNode(x.getNextLogicalOperatorNode());
+	}
+
+	private String toGraphConditionalSentenceNode(ConditionalSentenceNode x) {
+		if (x == null)
+			return "";
+		String temp = "\n" + x.number + " [label=\"ConditionalSentenceNode\"];"
+				+ (x.getComparisonSentenceNode() == null ? ""
+						: "\n" + x.number + " -> " + x.getComparisonSentenceNode().number + ";")
+				+ (x.getIfListNode() == null ? "" : "\n" + x.number + " -> " + x.getIfListNode().number + ";");
+		return temp += toGraphComparisonSentenceNode(x.getComparisonSentenceNode())
+				+ toGraphIfListNode(x.getIfListNode());
+	}
+
+	private String toGraphIfListNode(ListNode x) {
+		if (x == null)
+			return "";
+		String temp = "\n" + x.number + " [label=\"ListNode(IfList)\"];"
+				+ (x.getNode() == null ? "" : "\n" + x.number + " -> " + x.getNode().number + ";")
+				+ (x.getNext() == null ? "" : "\n" + x.number + " -> " + x.getNext().number + ";");
+
+		return temp + toGraphIfNode((IfNode) x.getNode()) + toGraphIfListNode(x.getNext());
+	}
+
+	private String toGraphIfNode(IfNode x) {
+		if (x == null)
+			return "";
+		String temp = "\n" + x.number + " [label=\"IfNode\"];"
+				+ (x.getComparisonSentenceNode1() == null ? ""
+						: "\n" + x.number + " -> " + x.getComparisonSentenceNode1().number + ";")
+				+ (x.getComparisonSentenceNode2() == null ? ""
+						: "\n" + x.number + " -> " + x.getComparisonSentenceNode2().number + ";");
+		return temp + toGraphComparisonSentenceNode(x.getComparisonSentenceNode1())
+				+ toGraphComparisonSentenceNode(x.getComparisonSentenceNode2());
+	}
+
+	private String toGraphComparisonSentenceNode(ComparisonSentenceNode x) {
+		if (x == null)
+			return "";
+		String temp = "\n" + x.number + " [label=\"ComparisonSentenceNode\"];"
+				+ (x.getInstanceofSentenceNode() == null ? ""
+						: "\n" + x.number + " -> " + x.getInstanceofSentenceNode().number + ";")
+				+ (x.getComparisonOperatorNode() == null ? ""
+						: "\n" + x.number + " -> " + x.getComparisonOperatorNode().number + ";");
+		return temp + toGraphInstanceofSentenceNode(x.getInstanceofSentenceNode())
+				+ toGraphComparisonOperatorNode(x.getComparisonOperatorNode());
+	}
+
+	private String toGraphComparisonOperatorNode(ComparisonOperatorNode x) {
+		if (x == null)
+			return "";
+		String temp = "\n" + x.number + " [label=\"ComparisonOperatorNode ( " + x.getPosition().image + " )\"];"
+				+ (x.getInstanceofSentenceNode1() == null ? ""
+						: "\n" + x.number + " ->" + x.getInstanceofSentenceNode1().number + ";")
+				+ (x.getInstanceofSentenceNode2() == null ? ""
+						: "\n" + x.number + " ->" + x.getInstanceofSentenceNode2().number + ";")
+				+ (x.getNextComparisonOperatorNode() == null ? ""
+						: "\n" + x.number + " ->" + x.getNextComparisonOperatorNode().number + ";");
+		return temp + toGraphInstanceofSentenceNode(x.getInstanceofSentenceNode1())
+				+ toGraphInstanceofSentenceNode(x.getInstanceofSentenceNode2())
+				+ toGraphComparisonOperatorNode(x.getNextComparisonOperatorNode());
+	}
+
+	private String toGraphInstanceofSentenceNode(InstanceofSentenceNode x) {
+		if (x == null)
+			return "";
+		String temp = "\n" + x.number + " [label=\"InstanceofSentenceNode\"];"
+				+ (x.getAdditionSentenceNode() == null ? ""
+						: "\n" + x.number + " ->" + x.getAdditionSentenceNode().number + ";")
+				+ (x.getType() == null ? "" : "\n" + x.number + " ->" + x.getType().image + "(" + x.number + ")" + ";");
+		return temp + toGraphAdditionSentenceNode(x.getAdditionSentenceNode());
+	}
+
+	private String toGraphAdditionSentenceNode(AdditionSentenceNode x) {
+		if (x == null)
+			return "";
+		String temp = "\n" + x.number + " [label=\"AdditionSentenceNode\"];"
+				+ (x.getMultiplicationSentenceNode() == null ? ""
+						: "\n" + x.number + " -> " + x.getMultiplicationSentenceNode().number + ";")
+				+ (x.getAdditionOperatorNode() == null ? ""
+						: "\n" + x.number + " -> " + x.getAdditionOperatorNode().number + ";");
+		return temp + toGraphMultiplicationSentenceNode(x.getMultiplicationSentenceNode())
+				+ toGraphAdditionOperatorNode(x.getAdditionOperatorNode());
+	}
+
+	private String toGraphAdditionOperatorNode(AdditionOperatorNode x) {
+		if (x == null)
+			return "";
+		String temp = "\n" + x.number + " [label=\"AdditionOperatorNode ( " + x.getPosition().image + " )\"];"
+				+ (x.getMultiplicationSentenceNode1() == null ? ""
+						: "\n" + x.number + " ->" + x.getMultiplicationSentenceNode1().number + ";")
+				+ (x.getMultiplicationSentenceNode2() == null ? ""
+						: "\n" + x.number + " ->" + x.getMultiplicationSentenceNode2().number + ";")
+				+ (x.getNextAdditionOperatorNode() == null ? ""
+						: "\n" + x.number + " ->" + x.getNextAdditionOperatorNode().number + ";");
+		return temp + toGraphMultiplicationSentenceNode(x.getMultiplicationSentenceNode1())
+				+ toGraphMultiplicationSentenceNode(x.getMultiplicationSentenceNode2())
+				+ toGraphAdditionOperatorNode(x.getNextAdditionOperatorNode());
+	}
+
+	private String toGraphMultiplicationSentenceNode(MultiplicationSentenceNode x) {
+		if (x == null)
+			return "";
+		String temp = "\n" + x.number + " [label=\"MultiplicationSentenceNode\"];"
+				+ (x.getFactorNode() == null ? "" : "\n" + x.number + " -> " + x.getFactorNode().number + ";")
+				+ (x.getMultiplicationOperatorNode() == null ? ""
+						: "\n" + x.number + " -> " + x.getMultiplicationOperatorNode().number + ";");
+		return temp + toGraphFactorNode(x.getFactorNode())
+				+ toGraphMultiplicationOperatorNode(x.getMultiplicationOperatorNode());
+	}
+
+	private String toGraphMultiplicationOperatorNode(MultiplicationOperatorNode x) {
+		if (x == null)
+			return "";
+		String temp = "\n" + x.number + " [label=\"MultiplicationOperatorNode ( " + x.getPosition().image + " )\"];"
+				+ (x.getFactorNode1() == null ? "" : "\n" + x.number + " ->" + x.getFactorNode1().number + ";")
+				+ (x.getFactorNode2() == null ? "" : "\n" + x.number + " ->" + x.getFactorNode2().number + ";")
+				+ (x.getNextMultiplicationOperatorNode() == null ? ""
+						: "\n" + x.number + " ->" + x.getNextMultiplicationOperatorNode().number + ";");
+		return temp + toGraphFactorNode(x.getFactorNode1()) + toGraphFactorNode(x.getFactorNode2())
+				+ toGraphMultiplicationOperatorNode(x.getNextMultiplicationOperatorNode());
+	}
+
+	private String toGraphFactorNode(FactorNode x) {
+		if (x == null)
+			return "";
+		String temp = "\n" + x.number + " [label=\"FactorNode\"];";
+		if (x.getConditionalSentenceNode() == null)
+			temp += (x.getNot() == null ? "" : "\n" + x.number + " -> Not(" + x.number + ");") + "\n" + x.number
+					+ " -> \"" + x.getPosition().image.replaceAll("\"", "'") + "(" + x.number + ")\";";
+		else
+			temp += "\n" + x.number + " -> " + x.getConditionalSentenceNode().number + ";";
+		return temp + toGraphConditionalSentenceNode(x.getConditionalSentenceNode());
 	}
 
 	private String toGraphRenameNode(RenameNode x) {
@@ -353,12 +863,9 @@ public class PrintTree {
 	private String toGraphRenameSetNodeList(ListNode x) {
 		if (x == null)
 			return "";
-		String temp = "\n"
-				+ (x.number + " [label=\"ListNode(RenameSetNodeList)\"];"
-						+ (x.getNode() == null ? ""
-								: "\n" + x.number + " -> " + String.valueOf(x.getNode().number) + ";")
-						+ (x.getNext() == null ? ""
-								: "\n" + x.number + " -> " + String.valueOf(x.getNext().number) + ";"));
+		String temp = "\n" + (x.number + " [label=\"ListNode(RenameSetNodeList)\"];"
+				+ (x.getNode() == null ? "" : "\n" + x.number + " -> " + String.valueOf(x.getNode().number) + ";")
+				+ (x.getNext() == null ? "" : "\n" + x.number + " -> " + String.valueOf(x.getNext().number) + ";"));
 		return temp + toGraphRenameSetNode((RenameSetNode) x.getNode()) + toGraphRenameSetNodeList(x.getNext());
 	}
 
