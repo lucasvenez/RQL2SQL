@@ -39,4 +39,8 @@ public class Relation implements SchemaElement {
     		System.out.println(name);
     	}
     }
+	
+	public Set<String> getAttributeNames(){
+		return attributes.keySet();
+	}
 }

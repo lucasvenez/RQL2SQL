@@ -239,7 +239,7 @@ public class RelationalQueryLanguage {
 					System.out.println("Semantic Errors: " + semanticErrors);
 				}
 				if (semanticErrors == 0) {
-					CodeGenerator generator = new CodeGenerator(outputPath + outputFileName, VERSION);
+					CodeGenerator generator = new CodeGenerator(symbolTable, outputPath + outputFileName, VERSION);
 					generator.generate(root);
 				}
 				
@@ -590,6 +590,8 @@ TOKEN: {
    |	< SELECT_TOKEN	:   "£" >
    |	< RENAME_TOKEN	:   "§" >
    |	< EXTEND_TOKEN	:   < AMPERSAND > >
+   |	< UNION_TOKEN	:	"U"	>
+   |	< INTERSECTION_TOKEN	:	"INTERSECTION"	>
 }
 
 /**
@@ -819,9 +821,54 @@ ReadyOnlyOperationsNode readyOnlyOperations() : {
 
 	ReadyOnlyOperationsNodeChildren roonc = null;
 } {
- 	roonc = unitaryOperations() 
- 	{ return new ReadyOnlyOperationsNode(roonc); }
-//| roonc = binaryOperations()
+ 	( LOOKAHEAD(2) roonc = unitaryOperations() 
+	| roonc = binaryOperations()
+	)
+	{ return new ReadyOnlyOperationsNode(roonc); }
+}
+
+BinaryOperationsNode binaryOperations() : {
+	BinaryOperationsNodeChildren bonc = null;
+	BinarySetNode bst = null;
+	ReadyOnlyOperationsNode roon1 = null;
+	ReadyOnlyOperationsNode roon2 = null;
+	RelationNode rn1 = null;
+	RelationNode rn2 = null;
+} {
+	((< LEFT_PARENTHESIS > roon1 = readyOnlyOperations() < RIGHT_PARENTHESIS >) | rn1 = relation())
+	( bonc = union()
+	| bonc = intersection()
+	| bonc = difference()
+	)
+	((< LEFT_PARENTHESIS > roon2 = readyOnlyOperations() < RIGHT_PARENTHESIS >) | rn2 = relation())
+	{
+	
+	bst = new BinarySetNode();
+	if(roon1 != null) bst.addFirstRelation(roon1); else bst.addFirstRelation(rn1);
+	if(roon2 != null) bst.addFirstRelation(roon2); else bst.addFirstRelation(rn2);
+	return new BinaryOperationsNode(bonc, bst);
+	}
+}
+
+UnionNode union() : {
+	Token t = null;
+} {
+	t = < UNION_TOKEN >
+	{ return new UnionNode(t); }
+}
+
+IntersectionNode intersection() : {
+	Token t = null;
+} {
+	t = < AND >
+	{ return new IntersectionNode(t); }
+}
+
+DifferenceNode difference() : {
+	Token t = null;
+} {
+	t = < MINUS_SIGN >
+	{ return new DifferenceNode(t); }
 }
 
 UnitaryOperationsNode unitaryOperations() : {
