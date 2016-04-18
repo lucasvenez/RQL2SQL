@@ -79,67 +79,71 @@ public interface RelationalQueryLanguageConstants {
   /** RegularExpression Id. */
   int EXTEND_TOKEN = 38;
   /** RegularExpression Id. */
-  int COUNT = 39;
+  int CROSS_TOKEN = 39;
   /** RegularExpression Id. */
-  int SUM = 40;
+  int NATURAL_JOIN_TOKEN = 40;
   /** RegularExpression Id. */
-  int AVG = 41;
+  int COUNT = 41;
   /** RegularExpression Id. */
-  int MAX = 42;
+  int SUM = 42;
   /** RegularExpression Id. */
-  int MIN = 43;
+  int AVG = 43;
   /** RegularExpression Id. */
-  int AND = 44;
+  int MAX = 44;
   /** RegularExpression Id. */
-  int OR = 45;
+  int MIN = 45;
   /** RegularExpression Id. */
-  int XOR = 46;
+  int AND = 46;
   /** RegularExpression Id. */
-  int NOT = 47;
+  int OR = 47;
   /** RegularExpression Id. */
-  int VARCHAR_TYPE = 48;
+  int XOR = 48;
   /** RegularExpression Id. */
-  int CHAR_TYPE = 49;
+  int NOT = 49;
   /** RegularExpression Id. */
-  int INTEGER_TYPE = 50;
+  int VARCHAR_TYPE = 50;
   /** RegularExpression Id. */
-  int DOUBLE_TYPE = 51;
+  int CHAR_TYPE = 51;
   /** RegularExpression Id. */
-  int FLOAT_TYPE = 52;
+  int INTEGER_TYPE = 52;
   /** RegularExpression Id. */
-  int BLOB_TYPE = 53;
+  int DOUBLE_TYPE = 53;
   /** RegularExpression Id. */
-  int GEOMETRIC_TYPE = 54;
+  int FLOAT_TYPE = 54;
   /** RegularExpression Id. */
-  int RELATION_TYPE = 55;
+  int BLOB_TYPE = 55;
   /** RegularExpression Id. */
-  int BOOLEAN_TYPE = 56;
+  int GEOMETRIC_TYPE = 56;
   /** RegularExpression Id. */
-  int INTEGER = 57;
+  int RELATION_TYPE = 57;
   /** RegularExpression Id. */
-  int DECIMAL = 58;
+  int BOOLEAN_TYPE = 58;
   /** RegularExpression Id. */
-  int HEX = 59;
+  int INTEGER = 59;
   /** RegularExpression Id. */
-  int OCT = 60;
+  int DECIMAL = 60;
   /** RegularExpression Id. */
-  int BIN = 61;
+  int HEX = 61;
   /** RegularExpression Id. */
-  int STRING = 62;
+  int OCT = 62;
   /** RegularExpression Id. */
-  int TRUE = 63;
+  int BIN = 63;
   /** RegularExpression Id. */
-  int FALSE = 64;
+  int STRING = 64;
   /** RegularExpression Id. */
-  int IDENTIFIER = 65;
+  int TRUE = 65;
   /** RegularExpression Id. */
-  int LETTER = 66;
+  int FALSE = 66;
   /** RegularExpression Id. */
-  int DIGIT = 67;
+  int IDENTIFIER = 67;
   /** RegularExpression Id. */
-  int INVALID_LEXICAL = 77;
+  int LETTER = 68;
   /** RegularExpression Id. */
-  int INVALID_CONST = 78;
+  int DIGIT = 69;
+  /** RegularExpression Id. */
+  int INVALID_LEXICAL = 79;
+  /** RegularExpression Id. */
+  int INVALID_CONST = 80;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -191,6 +195,8 @@ public interface RelationalQueryLanguageConstants {
     "\"\\u00a3\"",
     "\"\\u00a7\"",
     "<EXTEND_TOKEN>",
+    "\"x\"",
+    "\"[]\"",
     "\"#\"",
     "\"$\"",
     "\"@\"",
@@ -222,13 +228,13 @@ public interface RelationalQueryLanguageConstants {
     "<DIGIT>",
     "\"//\"",
     "\"\\n\"",
-    "<token of kind 70>",
+    "<token of kind 72>",
     "\"/*\"",
     "\"*/\"",
-    "<token of kind 73>",
+    "<token of kind 75>",
     "\"/**\"",
     "\"*/\"",
-    "<token of kind 76>",
+    "<token of kind 78>",
     "<INVALID_LEXICAL>",
     "<INVALID_CONST>",
   };

@@ -2,16 +2,17 @@ package br.edu.ifsp.syntacticTree;
 
 import br.edu.ifsp.parser.Token;
 import br.edu.ifsp.syntacticTree.interfaces.ReadyOnlyOperationsNodeChildren;
+import br.edu.ifsp.syntacticTree.interfaces.UnitaryOperationsNodeChildren;
 
 public class UnitaryOperationsNode extends Node implements ReadyOnlyOperationsNodeChildren {
 
-	private ListNode ln = null;
+	private UnitaryOperationsNodeChildren uonc = null;
 	private ReadyOnlyOperationsNode roon = null;
 	private RelationNode rn = null;
 	
-	public UnitaryOperationsNode( ListNode listNode, ReadyOnlyOperationsNode roon ) {
-		super(listNode != null ? listNode.getFirstToken() : roon.getFirstToken() );
-		this.ln = listNode;
+	public UnitaryOperationsNode( UnitaryOperationsNodeChildren uonc, ReadyOnlyOperationsNode roon ) {
+		super(uonc.getFirstToken());
+		this.uonc = uonc;
 		this.roon = roon;
 	}
 	
@@ -24,14 +25,14 @@ public class UnitaryOperationsNode extends Node implements ReadyOnlyOperationsNo
 	public Token getFirstToken() {
 		if ( rn != null )
 			return rn.getFirstToken();
-		else if( ln != null )
-			return ln.getFirstToken();
+		else if( uonc != null )
+			return uonc.getFirstToken();
 		else
 			return roon.getFirstToken();
 	}
 	
-	public ListNode getUnitaryOperationsChildrenNodeList(){
-		return this.ln;
+	public UnitaryOperationsNodeChildren getUnitaryOperationsChildrenNode(){
+		return this.uonc;
 	}
 	
 	public ReadyOnlyOperationsNode getReadyOnlyOperationsNode(){
@@ -45,5 +46,11 @@ public class UnitaryOperationsNode extends Node implements ReadyOnlyOperationsNo
 	@Override
 	public int getNumber() {
 		return this.number;
+	}
+
+	@Override
+	public void setNumber(int number) {
+		this.number=number;
+		
 	}
 }

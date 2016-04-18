@@ -26,4 +26,9 @@ public class RenameNode extends Node implements RelationalQueryLanguageConstants
 	public int getNumber() {
 		return this.number;
 	}
+
+	@Override
+	public void setNumber(int number) {
+		this.number=number;
+	}
 }

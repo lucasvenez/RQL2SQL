@@ -1,6 +1,6 @@
 /**
  * This document describe the Relational Query Language.
- * @author Lucas Venezian Povoa
+ * @author Lucas Venezian Povoa and Dérick Welman Brock Rangel
  * @since 24th Setember, 2010
  */
 
@@ -32,10 +32,13 @@ package br.edu.ifsp.parser;
  */
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import br.edu.ifsp.symbolTable.*;
 import br.edu.ifsp.syntacticTree.*;
 import br.edu.ifsp.syntacticTree.interfaces.*;
 import br.edu.ifsp.symbolTable.exceptions.*;
+import br.edu.ifsp.semanticAnalysis.RelationCheck;
+import br.edu.ifsp.codeGeneration.CodeGenerator;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -59,9 +62,20 @@ public class RelationalQueryLanguage {
 	private static ListNode root = null; //Store the syntactic tree
 
 	/**
-	 * Method main of Relational Query Language class
+	 * Attribute used to check if the syntactic tree will be exported to a external file.
 	 */
-	public static void main ( String args[] ) throws ParseException {
+	private static boolean export_tree = false; //export a graph from syntactic tree
+
+	/**
+	 * Attribute used to store the symbol table from arguments
+	 */
+	private static SymbolTable symbolTable = null; //Stores the symbol table
+
+	/**
+	 * Method main of Relational Query Language class
+	 * @throws ParseException, IOException
+	 */
+	public static void main ( String args[] ) throws ParseException, IOException {
 
 		/**
 		 * Attribute used to store a reference of a parser object that will do the compilation of source code in Relational Query Language.
@@ -81,7 +95,7 @@ public class RelationalQueryLanguage {
 		/**
 		 * Attribute used to store the output file name.
 		 */		
-		String outputFileName;
+		String outputFileName = "Output.SQL";
 		
 		/**
 		 * Number of parameters errors.
@@ -112,7 +126,7 @@ public class RelationalQueryLanguage {
 			 */
 			else if (arg.equals("--attributes-definition") || arg.equals("-a")) {
 				i = checkParameterOfAttributesDefinition(args, i)-1;
-				if (i == 0) {
+				if (i < 1) {
 					helpText();
 					System.exit(0);
 				}
@@ -158,6 +172,12 @@ public class RelationalQueryLanguage {
 				}
 			}
 			/*
+			 * Checking export tree parameter
+			 */
+			else if ( arg.equals("--export-tree") || arg.equals("-e")) {
+				export_tree = true;
+			}
+			/*
 			 * Checking if the file is in the last index. 
 			 */				
 			else if ( i != args.length - 1 ) {
@@ -198,13 +218,30 @@ public class RelationalQueryLanguage {
 				System.out.printf( "File %s not found.\n", fileName );
 				System.exit(0);
 			}
+
+			/*
+			 * Set a default output name if it is empty
+			 */
 			
 			try {
 				
 				root = parser.program();
 				PrintTree pt = new PrintTree();
-				pt.printRoot(root);
-				pt.exportDotTree(root);
+				if (debug_sa)
+					pt.printRoot(root);
+				if (export_tree)
+					pt.exportDotTree(root);
+				RelationCheck rc = null;
+				int semanticErrors = 0;
+				if (symbolTable != null) {
+					rc = new RelationCheck(symbolTable);
+					semanticErrors = rc.semanticAnalysis(root);
+					System.out.println("Semantic Errors: " + semanticErrors);
+				}
+				if (semanticErrors == 0) {
+					CodeGenerator generator = new CodeGenerator(symbolTable, outputPath + outputFileName, VERSION);
+					generator.generate(root);
+				}
 				
 			}
 			catch ( NullPointerException exception ) {
@@ -291,6 +328,16 @@ public class RelationalQueryLanguage {
 		System.out.printf( "%c[0m", 27 );
 		System.out.println( String.format( "\n\t    %s", "Show syntax analysis details." ) );
 
+		System.out.printf( "%c[1m", 27 );
+		System.out.println( String.format( "\n\t·   %-30s", "-a, --attributes-definition" ) );
+		System.out.printf( "%c[0m", 27 );
+		System.out.println( String.format( "\n\t    %s", "Input the attributes definition for semantic analysis" ) );
+
+		System.out.printf( "%c[1m", 27 );
+		System.out.println( String.format( "\n\t·   %-30s", "-e, --export-tree" ) );
+		System.out.printf( "%c[0m", 27 );
+		System.out.println( String.format( "\n\t    %s", "Export the graph of syntactic tree." ) );
+
 		System.out.println();
 	}
 
@@ -319,14 +366,16 @@ public class RelationalQueryLanguage {
 					&& !parameter.equals("--target-sql") && !parameter.equals("-l")
 					&& !parameter.equals("--debug-lexical-analysis") && !parameter.equals("-s")
 					&& !parameter.equals("--debug-syntax-analysis") && !parameter.equals("-h")
+					&& !parameter.equals("--attributes-definition") && !parameter.equals("-a")
+					&& !parameter.equals("--export-tree") && !parameter.equals("-e")
 					&& !parameter.equals("--help")) {
 				attributes.add(parameter);
 				attributeCheck += parameter;
+				location = i;
 			} else {
 				location = i;
 				break;
 			}
-
 		}
 		if (!attributeCheck.matches("(" + attributeRegex + ")+")) {
 			return 0;
@@ -348,7 +397,7 @@ public class RelationalQueryLanguage {
 		Pattern pattern = Pattern.compile(regex);
 		Matcher matcher = pattern.matcher(definition);
 
-		SymbolTable st = new SymbolTable();
+		symbolTable = new SymbolTable();
 		while (matcher.find()) {
 			String relation = matcher.group(1);
 			String attribute = matcher.group(2);
@@ -373,8 +422,8 @@ public class RelationalQueryLanguage {
 
 			if (referenceRelation != null) {
 				// Checks the foreign key
-				if (st.hasRelation(referenceRelation)
-						&& st.getRelation(referenceRelation).hasAttribute(referenceAttribute)) {
+				if (symbolTable.hasRelation(referenceRelation)
+						&& symbolTable.getRelation(referenceRelation).hasAttribute(referenceAttribute)) {
 					newAttribute.addFeature("reference", new Reference(referenceRelation, referenceAttribute));
 				} else {
 					// Throw a exception for unexistent foreign key
@@ -392,7 +441,7 @@ public class RelationalQueryLanguage {
 			System.out.println("    Reference attribute: " + referenceAttribute);
 			System.out.println("  Closing entry:");
 
-			st.getRelation(relation).addAttribute(attribute, newAttribute);
+			symbolTable.getRelation(relation).addAttribute(attribute, newAttribute);
 		}
 		System.out.println("Finished the construction of the symbol table");
 	}
@@ -541,6 +590,8 @@ TOKEN: {
    |	< SELECT_TOKEN	:   "£" >
    |	< RENAME_TOKEN	:   "§" >
    |	< EXTEND_TOKEN	:   < AMPERSAND > >
+   |	< CROSS_TOKEN	:	"x" >
+   |	< NATURAL_JOIN_TOKEN	: "[]" >
 }
 
 /**
@@ -770,44 +821,95 @@ ReadyOnlyOperationsNode readyOnlyOperations() : {
 
 	ReadyOnlyOperationsNodeChildren roonc = null;
 } {
- 	roonc = unitaryOperations() 
- 	{ return new ReadyOnlyOperationsNode(roonc); }
-//| roonc = binaryOperations()
+ 	( LOOKAHEAD(2) roonc = binaryOperations()
+	| roonc = unitaryOperations() 
+	)
+	{ return new ReadyOnlyOperationsNode(roonc); }
 }
+
+BinaryOperationsNode binaryOperations() : {
+	BinaryOperationsNodeChildren bonc = null;
+	BinarySetNode bst = null;
+	ReadyOnlyOperationsNode roon1 = null;
+	ReadyOnlyOperationsNode roon2 = null;
+	RelationNode rn1 = null;
+	RelationNode rn2 = null;
+} {
+	((< LEFT_PARENTHESIS > roon1 = readyOnlyOperations() < RIGHT_PARENTHESIS >) | rn1 = relation())
+	( bonc = union()
+	| bonc = intersection()
+	| bonc = difference()
+	| bonc = join()
+	| bonc = crossjoin()
+  //| bonc = division()
+	)
+	((< LEFT_PARENTHESIS > roon2 = readyOnlyOperations() < RIGHT_PARENTHESIS >) | rn2 = relation())
+	{
+	
+	bst = new BinarySetNode();
+	if(roon1 != null) bst.addFirstRelation(roon1); else bst.addFirstRelation(rn1);
+	if(roon2 != null) bst.addSecondRelation(roon2); else bst.addSecondRelation(rn2);
+	return new BinaryOperationsNode(bonc, bst);
+	}
+}
+
+UnionNode union() : {
+	Token t = null;
+} {
+	t = < OR >
+	{ return new UnionNode(t); }
+}
+
+IntersectionNode intersection() : {
+	Token t = null;
+} {
+	t = < AND >
+	{ return new IntersectionNode(t); }
+}
+
+DifferenceNode difference() : {
+	Token t = null;
+} {
+	t = < MINUS_SIGN >
+	{ return new DifferenceNode(t); }
+}
+
+CrossJoinNode crossjoin() : {
+	Token t = null;
+} {
+	t = < CROSS_TOKEN >
+	{ return new CrossJoinNode(t); }
+}
+
+JoinNode join() : {
+	LogicalSentenceNode lsn = null;
+	Token t = null;
+} {
+	( t = <NATURAL_JOIN_TOKEN>
+	| t = < LEFT_BRACKET > [ lsn = logicalSentence() ] < RIGHT_BRACKET >
+	)
+	{ if(lsn == null) return new JoinNode(t); else return new JoinNode(t, lsn); }
+}
+
+//DivisionNode division() : {
+//	Token t = null;
+//} {
+//	t = < SOLIDUS >
+//	{ return new DivisionNode(t); }
+//}
 
 UnitaryOperationsNode unitaryOperations() : {
 
 	UnitaryOperationsNodeChildren uonc = null;
-	ListNode ln = null;
 	ReadyOnlyOperationsNode roon = null;
 	RelationNode rn = null;
 } {
 
-   ( uonc = project()
-    {
-	  if ( uonc != null ) {
-		if ( ln == null ) ln = new ListNode( (Node) uonc );
-		else ln.add( (Node) uonc );
-	  }
-    }
-   | uonc = select()
-    {
-	  if ( uonc != null ) {
-		if ( ln == null ) ln = new ListNode( (Node) uonc );
-		else ln.add( (Node) uonc );
-	  }
-    }
-   | uonc = rename()
-	{
-	  if ( uonc != null ) {
-		if ( ln == null ) ln = new ListNode( (Node) uonc );
-		else ln.add( (Node) uonc );
-	  }
-    }
-   )* < LEFT_PARENTHESIS > roon = readyOnlyOperations() < RIGHT_PARENTHESIS > { return new UnitaryOperationsNode(ln, roon); }
-	| rn = relation() { if ( rn != null ) return new UnitaryOperationsNode( rn );
-	  else return new UnitaryOperationsNode( ln, roon );
-	}
+	( uonc = project()
+	| uonc = select()
+	| uonc = rename() )
+	(< LEFT_PARENTHESIS > roon = readyOnlyOperations() < RIGHT_PARENTHESIS > { return new UnitaryOperationsNode(uonc, roon); } )
+	| (rn = relation() { return new UnitaryOperationsNode( rn );} )
 }
 
 ProjectNode project() : {
@@ -825,11 +927,10 @@ ProjectNode project() : {
 }
 
 SelectNode select() : {
-	Token temporario = null;
+	LogicalSentenceNode lsn = null;
 } {
-
-   temporario = < SELECT_TOKEN > //logicalSentence()
-   { return new SelectNode(temporario); }
+   < SELECT_TOKEN > lsn = logicalSentence()
+   { return new SelectNode(lsn); }
 }
 
 RenameNode rename() : {
@@ -854,69 +955,178 @@ RelationNode relation() : {
    { return new RelationNode(t); }
 }
 
-void logicalSentence() : {} {
-
-   conditionalSentence() ( logicalOperator() conditionalSentence() )*
+LogicalSentenceNode logicalSentence() : {
+	ConditionalSentenceNode csn1 = null;
+	ConditionalSentenceNode csn2 = null;
+	LogicalOperatorNode lon = null;
+	LogicalOperatorNode temp = null;
+	Token t = null;
+} {
+   csn1 = conditionalSentence()
+   ( t = logicalOperator() csn2 = conditionalSentence() 
+   {
+		if(lon == null) { lon = new LogicalOperatorNode(t, csn1, csn2); 
+		temp = lon;
+		}else{
+			temp.add(t, csn2);
+			temp = temp.getNextLogicalOperatorNode();
+		}
+   	})*
+   	{
+	   	if(lon==null) return new LogicalSentenceNode(csn1);
+	   	else return new LogicalSentenceNode(lon);
+   	}
 }
 
-void conditionalSentence() : {} {
-  
-   comparisonSentence() ( < IF > comparisonSentence() < COLON > comparisonSentence() )*
+ConditionalSentenceNode conditionalSentence() : {
+	ComparisonSentenceNode csn = null;
+	ComparisonSentenceNode csn1 = null;
+	ComparisonSentenceNode csn2 = null;
+	ListNode ln = null;
+	Token t = null;
+} {
+   	csn = comparisonSentence() ( t = < IF > csn1 = comparisonSentence() < COLON > csn2 = comparisonSentence()
+   	{
+   		if(ln == null) ln = new ListNode(new IfNode(t, csn1, csn2)); else ln.add(new IfNode(t, csn1, csn2)); 
+   	})*
+   	{ if(ln==null) return new ConditionalSentenceNode(csn); else return new ConditionalSentenceNode(csn, ln); }
 }
 
-void comparisonSentence() : {} {
-
-   instanceofSentence() ( comparisonOperator() instanceofSentence() )*
+ComparisonSentenceNode comparisonSentence() : {
+	InstanceofSentenceNode isn1 = null;
+	InstanceofSentenceNode isn2 = null;
+	ComparisonOperatorNode con = null;
+	ComparisonOperatorNode temp = null;
+	Token t = null;
+} {
+   isn1 = instanceofSentence() ( t = comparisonOperator() isn2 = instanceofSentence() 
+   {
+   		if(con == null){
+	   		con = new ComparisonOperatorNode(t, isn1, isn2);
+	   		temp = con;
+	   }else{
+	   		temp.add(t, isn2);
+	   		temp = temp.getNextComparisonOperatorNode();
+	   }
+	})*
+	{
+	   	if(con==null) return new ComparisonSentenceNode(isn1);
+	   	else return new ComparisonSentenceNode(con);
+   	}
 }
 
-void instanceofSentence() : {} {
+InstanceofSentenceNode instanceofSentence() : {
+	AdditionSentenceNode asn = null;
+	Token type = null;
+} {
 
-   additionSentence() [ < INSTANCEOF > type() ]
+   asn = additionSentence() [ < INSTANCEOF > type = type() ]
+   { if(type != null) return new InstanceofSentenceNode(asn);
+   else return new InstanceofSentenceNode(asn, type); }
 }  
 
-void additionSentence() : {} {
-
-   multiplicationSentence() ( ( < PLUS_SIGN > | <MINUS_SIGN> ) multiplicationSentence() )*
+AdditionSentenceNode additionSentence() : {
+	MultiplicationSentenceNode msn1 = null;
+	MultiplicationSentenceNode msn2 = null;
+	AdditionOperatorNode aon = null;
+	AdditionOperatorNode temp = null;
+	Token t = null;
+} {
+   msn1= multiplicationSentence() ( ( t = <PLUS_SIGN> | t = <MINUS_SIGN> ) msn2 = multiplicationSentence() 
+   {
+   		if(aon == null){
+	   		aon = new AdditionOperatorNode(t, msn1, msn2);
+	   		temp = aon;
+	   }else{
+	   		temp.add(t, msn2);
+	   		temp = temp.getNextAdditionOperatorNode();
+	   }
+	})*
+	{
+	   	if(aon==null) return new AdditionSentenceNode(msn1);
+	   	else return new AdditionSentenceNode(aon);
+   	}
 }
 
-void multiplicationSentence() : {} {
+MultiplicationSentenceNode multiplicationSentence() : {
+	FactorNode fn1 = null;
+	FactorNode fn2 = null;
+	MultiplicationOperatorNode mon = null;
+	MultiplicationOperatorNode temp = null;
+	Token t = null;
+} {
 
-   factor() ( ( < ASTERISK > | < POWER > | < SOLIDUS > | < PERCENT > ) factor() )*
+   fn1 = factor() ( ( t = < ASTERISK > | t = < POWER > | t = < SOLIDUS > | t = < PERCENT > ) fn2 = factor() 
+   {
+	   if(mon == null){
+	   		mon = new MultiplicationOperatorNode(t, fn1, fn2);
+	   		temp = mon;
+	   }else{
+	   		temp.add(t, fn2);
+	   		temp = temp.getNextMultiplicationOperatorNode();
+	   }
+   })*
+   {
+	   	if(mon==null) return new MultiplicationSentenceNode(fn1);
+	   	else return new MultiplicationSentenceNode(mon);
+   	}
 }
 
-void factor() : {} {
-   [ < NOT > ]
-   (
-         literal() | < IDENTIFIER >
-      |  < LEFT_PARENTHESIS > conditionalSentence() < RIGHT_PARENTHESIS >
-   )
+FactorNode factor() : {
+	Token not = null;
+	Token t = null;
+	ConditionalSentenceNode csn = null;
+} {
+   [ not = < NOT > ]
+   ( t = literal() | t = < IDENTIFIER > | < LEFT_PARENTHESIS > csn = conditionalSentence() < RIGHT_PARENTHESIS > )
+   { if(csn == null) return new FactorNode(not, t); else return new FactorNode(not, csn); }
 }
 
-void logicalOperator() : {} {
-  
-   < AND > | < OR > | < XOR >
+Token logicalOperator() : {
+	Token t = null;
+} {
+   ( t = < AND > | t = < OR > | t = < XOR >)
+   { return t; }
 }
 
-void comparisonOperator() : {} {
-  
-   < LESS_THAN > | < LESS_THAN_OR_EQUALS > | < GREATER_THAN > | < GREATER_THAN_OR_EQUALS > | < EQUALS > | < NOT_EQUALS >
+Token comparisonOperator() : {
+	Token t = null;
+} {
+   ( t = < LESS_THAN >
+   | t = < LESS_THAN_OR_EQUALS >
+   | t = < GREATER_THAN >
+   | t = < GREATER_THAN_OR_EQUALS >
+   | t = < EQUALS >
+   | t = < NOT_EQUALS >)
+   { return t; }
 }
 
-void literal() : {} {
-
-   < INTEGER > |  < DECIMAL > |  < HEX > |  < OCT > |  < BIN > |  < STRING > |  < TRUE > |  < FALSE >
+Token literal() : {
+	Token t = null;
+} {
+	( t = < INTEGER >
+	| t = < DECIMAL > 
+	| t = < HEX >
+	| t = < OCT >
+	| t = < BIN >
+	| t = < STRING >
+	| t = < TRUE >
+	| t = < FALSE >)
+	{ return t; }
 }
 
-void type() : {} {
-
-   < VARCHAR_TYPE >
-|  < CHAR_TYPE    >
-|  < INTEGER_TYPE >
-|  < DOUBLE_TYPE  >
-|  < FLOAT_TYPE   >
-|  < BLOB_TYPE    >
-|  < GEOMETRIC_TYPE >
-|  < RELATION_TYPE  >
-|  < BOOLEAN_TYPE   >
-|  < IDENTIFIER     >
+Token type() : {
+	Token t = null;
+} {
+    ( t = < VARCHAR_TYPE >
+	| t = < CHAR_TYPE >
+	| t = < INTEGER_TYPE >
+	| t = < DOUBLE_TYPE >
+	| t = < FLOAT_TYPE >
+	| t = < BLOB_TYPE >
+	| t = < GEOMETRIC_TYPE >
+	| t = < RELATION_TYPE >
+	| t = < BOOLEAN_TYPE >
+	| t = < IDENTIFIER >)
+	{ return t; }
 }

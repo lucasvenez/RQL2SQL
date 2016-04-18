@@ -26,4 +26,9 @@ public class ProjectNode extends Node implements RelationalQueryLanguageConstant
 	public int getNumber() {
 		return this.number;
 	}
+	
+	@Override
+	public void setNumber(int number) {
+		this.number = number;
+	}
 }

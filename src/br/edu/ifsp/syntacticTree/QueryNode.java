@@ -30,4 +30,9 @@ public class QueryNode extends Node implements RelationalOperationsNodeChildren{
 	public int getNumber() {
 		return this.number;
 	}
+
+	@Override
+	public void setNumber(int number) {
+		this.number=number;
+	}
 }
