@@ -126,7 +126,7 @@ public class RelationalQueryLanguage {
 			 */
 			else if (arg.equals("--attributes-definition") || arg.equals("-a")) {
 				i = checkParameterOfAttributesDefinition(args, i)-1;
-				if (i == 0) {
+				if (i < 1) {
 					helpText();
 					System.exit(0);
 				}
@@ -590,8 +590,8 @@ TOKEN: {
    |	< SELECT_TOKEN	:   "£" >
    |	< RENAME_TOKEN	:   "§" >
    |	< EXTEND_TOKEN	:   < AMPERSAND > >
-   |	< UNION_TOKEN	:	"U"	>
-   |	< INTERSECTION_TOKEN	:	"INTERSECTION"	>
+   |	< CROSS_TOKEN	:	"x" >
+   |	< NATURAL_JOIN_TOKEN	: "[]" >
 }
 
 /**
@@ -821,8 +821,8 @@ ReadyOnlyOperationsNode readyOnlyOperations() : {
 
 	ReadyOnlyOperationsNodeChildren roonc = null;
 } {
- 	( LOOKAHEAD(2) roonc = unitaryOperations() 
-	| roonc = binaryOperations()
+ 	( LOOKAHEAD(2) roonc = binaryOperations()
+	| roonc = unitaryOperations() 
 	)
 	{ return new ReadyOnlyOperationsNode(roonc); }
 }
@@ -839,13 +839,16 @@ BinaryOperationsNode binaryOperations() : {
 	( bonc = union()
 	| bonc = intersection()
 	| bonc = difference()
+	| bonc = join()
+	| bonc = crossjoin()
+  //| bonc = division()
 	)
 	((< LEFT_PARENTHESIS > roon2 = readyOnlyOperations() < RIGHT_PARENTHESIS >) | rn2 = relation())
 	{
 	
 	bst = new BinarySetNode();
 	if(roon1 != null) bst.addFirstRelation(roon1); else bst.addFirstRelation(rn1);
-	if(roon2 != null) bst.addFirstRelation(roon2); else bst.addFirstRelation(rn2);
+	if(roon2 != null) bst.addSecondRelation(roon2); else bst.addSecondRelation(rn2);
 	return new BinaryOperationsNode(bonc, bst);
 	}
 }
@@ -853,7 +856,7 @@ BinaryOperationsNode binaryOperations() : {
 UnionNode union() : {
 	Token t = null;
 } {
-	t = < UNION_TOKEN >
+	t = < OR >
 	{ return new UnionNode(t); }
 }
 
@@ -871,6 +874,30 @@ DifferenceNode difference() : {
 	{ return new DifferenceNode(t); }
 }
 
+CrossJoinNode crossjoin() : {
+	Token t = null;
+} {
+	t = < CROSS_TOKEN >
+	{ return new CrossJoinNode(t); }
+}
+
+JoinNode join() : {
+	LogicalSentenceNode lsn = null;
+	Token t = null;
+} {
+	( t = <NATURAL_JOIN_TOKEN>
+	| t = < LEFT_BRACKET > [ lsn = logicalSentence() ] < RIGHT_BRACKET >
+	)
+	{ if(lsn == null) return new JoinNode(t); else return new JoinNode(t, lsn); }
+}
+
+//DivisionNode division() : {
+//	Token t = null;
+//} {
+//	t = < SOLIDUS >
+//	{ return new DivisionNode(t); }
+//}
+
 UnitaryOperationsNode unitaryOperations() : {
 
 	UnitaryOperationsNodeChildren uonc = null;
@@ -878,14 +905,11 @@ UnitaryOperationsNode unitaryOperations() : {
 	RelationNode rn = null;
 } {
 
-   ( uonc = project()
-   | uonc = select()
-   | uonc = rename() )
-
-    < LEFT_PARENTHESIS > roon = readyOnlyOperations() < RIGHT_PARENTHESIS > { return new UnitaryOperationsNode(uonc, roon); }
-	| rn = relation() { if ( rn != null ) return new UnitaryOperationsNode( rn );
-	  else return new UnitaryOperationsNode( uonc, roon );
-	}
+	( uonc = project()
+	| uonc = select()
+	| uonc = rename() )
+	(< LEFT_PARENTHESIS > roon = readyOnlyOperations() < RIGHT_PARENTHESIS > { return new UnitaryOperationsNode(uonc, roon); } )
+	| (rn = relation() { return new UnitaryOperationsNode( rn );} )
 }
 
 ProjectNode project() : {

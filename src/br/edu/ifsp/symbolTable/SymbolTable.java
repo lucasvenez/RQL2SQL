@@ -49,4 +49,8 @@ public class SymbolTable {
     		System.out.println(name);
     	}
     }
+    
+    public Set<String> getRelationNames(){
+		return relations.keySet();
+	}
 }

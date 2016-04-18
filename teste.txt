@@ -1,3 +1,10 @@
+//-------------TESTES ADICIONAIS-----------------------------------------------------//
+//A v (B ^ C);
+//§ idPessoa codPessoa (Pessoa [] (A [] (B [] C)));
+£ TRUE ^ 5 > 6 + 7 * 3 (Pessoa); //Não gera erro semântico
+£ TRUE ^ 5 > 6 + "teste" * 3 (Pessoa); //Gera erro semântico
+
+//-------------OPERAÇÕES UNIÁRIAS----------------------------------------------------//
 //--RELAÇÃO (RELVAR)--//
 //Pessoa;
 
@@ -6,35 +13,38 @@
 
 //--SELEÇÃO (WHERE)--//
 //£ id * (5 + 3) > key ^ nome = ("True" -> 5 > 6 : "False") v id / atributo (Pessoa);
-£ idPessoa = 5 * 4 + 3 ^ true (Pessoa);
+//£ idPessoa = 5 * 4 + 3 ^ true (Pessoa);
 //£ idPessoa = 5 (Pessoa);
 
 //--RENOMEAR--//
 //§ idPessoa id, nome name (Pessoa);
 
+//-------------OPERAÇÕES BINÁRIAS----------------------------------------------------//
 //--UNIÃO--//
-//R1 U R2; Não implementado
+//A v B;
 
 //--INTERSECÇÃO--//
-//A ~ B; Não implementado
+//A ^ B;
 
 //--DIFERENÇA--//
-//A - B; Não implementado
-
-//--SEMIDIFERENÇA--//
-//A -- B; Não implementado
+//A - B;
 
 //--PRODUTO CARTESIANO--//
-//A x B; Não implementado
+//A x B; 
 
 //--JUNÇÃO NATURAL--//
-//A[]B; Não implementado
+//A[]B;
 
 //--JUNÇÃO--//
-//A[ a1 = b2 ]B; Não implementado
+//A[ a1 = b2 ]B;
 
 //--divisão--//
-//A / B; Não implementado
+//A / B;
+
+//--SEMIDIFERENÇA--//
+//A -- B; IMPLEMENTAR
+
+//-------------OUTRAS OPERAÇÕES----------------------------------------------------//
 
 //FALTANDO:
 //Totalização
@@ -50,6 +60,3 @@
 //Inserção
 //Alteração
 //Exclusão
-
-
-//--TESTE ADICIONAL--//

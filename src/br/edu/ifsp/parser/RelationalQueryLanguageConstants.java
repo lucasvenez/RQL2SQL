@@ -79,9 +79,9 @@ public interface RelationalQueryLanguageConstants {
   /** RegularExpression Id. */
   int EXTEND_TOKEN = 38;
   /** RegularExpression Id. */
-  int UNION_TOKEN = 39;
+  int CROSS_TOKEN = 39;
   /** RegularExpression Id. */
-  int INTERSECTION_TOKEN = 40;
+  int NATURAL_JOIN_TOKEN = 40;
   /** RegularExpression Id. */
   int COUNT = 41;
   /** RegularExpression Id. */
@@ -195,8 +195,8 @@ public interface RelationalQueryLanguageConstants {
     "\"\\u00a3\"",
     "\"\\u00a7\"",
     "<EXTEND_TOKEN>",
-    "\"U\"",
-    "\"INTERSECTION\"",
+    "\"x\"",
+    "\"[]\"",
     "\"#\"",
     "\"$\"",
     "\"@\"",

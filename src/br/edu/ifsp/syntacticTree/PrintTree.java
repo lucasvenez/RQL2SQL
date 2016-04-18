@@ -97,6 +97,76 @@ public class PrintTree {
 		x.number = kk++;
 		if (x.getNode() instanceof UnitaryOperationsNode)
 			numberUnitaryOperationsNode((UnitaryOperationsNode) x.getNode());
+		if (x.getNode() instanceof BinaryOperationsNode)
+			numberBinaryOperationsNode((BinaryOperationsNode) x.getNode());
+	}
+
+	private void numberBinaryOperationsNode(BinaryOperationsNode x) {
+		if (x == null)
+			return;
+		x.number = kk++;
+		if (x.getBinaryOperationsNodeChildren() instanceof UnionNode)
+			numberUnionNode((UnionNode) x.getBinaryOperationsNodeChildren());
+		if (x.getBinaryOperationsNodeChildren() instanceof IntersectionNode)
+			numberIntersectionNode((IntersectionNode) x.getBinaryOperationsNodeChildren());
+		if (x.getBinaryOperationsNodeChildren() instanceof DifferenceNode)
+			numberDifferenceNode((DifferenceNode) x.getBinaryOperationsNodeChildren());
+		if (x.getBinaryOperationsNodeChildren() instanceof DivisionNode)
+			numberDivisionNode((DivisionNode) x.getBinaryOperationsNodeChildren());
+		if (x.getBinaryOperationsNodeChildren() instanceof JoinNode)
+			numberJoinNode((JoinNode) x.getBinaryOperationsNodeChildren());
+		if (x.getBinaryOperationsNodeChildren() instanceof CrossJoinNode)
+			numberCrossJoinNode((CrossJoinNode) x.getBinaryOperationsNodeChildren());
+		numberBinarySetNode(x.getBinarySetNode());
+	}
+
+	private void numberBinarySetNode(BinarySetNode x) {
+		if (x == null)
+			return;
+		x.number = kk++;
+		if (x.getReadyOnlyOperationsNode1() != null)
+			numberReadyOnlyOperationsNode(x.getReadyOnlyOperationsNode1());
+		if (x.getReadyOnlyOperationsNode2() != null)
+			numberReadyOnlyOperationsNode(x.getReadyOnlyOperationsNode2());
+	}
+
+	private void numberUnionNode(UnionNode x) {
+		if (x == null)
+			return;
+		x.number = kk++;
+	}
+
+	private void numberIntersectionNode(IntersectionNode x) {
+		if (x == null)
+			return;
+		x.number = kk++;
+	}
+
+	private void numberDifferenceNode(DifferenceNode x) {
+		if (x == null)
+			return;
+		x.number = kk++;
+	}
+
+	private void numberDivisionNode(DivisionNode x) {
+		if (x == null)
+			return;
+		x.number = kk++;
+	}
+
+	private void numberCrossJoinNode(CrossJoinNode x) {
+		if (x == null)
+			return;
+		x.number = kk++;
+	}
+
+	private void numberJoinNode(JoinNode x) {
+		if (x == null)
+			return;
+		x.number = kk++;
+		if (x.getLogicalSentenceNode() != null) {
+			numberLogicalSentenceNode(x.getLogicalSentenceNode());
+		}
 	}
 
 	private void numberUnitaryOperationsNode(UnitaryOperationsNode x) {
@@ -324,6 +394,56 @@ public class PrintTree {
 				+ (x.getNode() == null ? "null" : String.valueOf(x.getNode().getNumber())));
 		if (x.getNode() instanceof UnitaryOperationsNode)
 			printUnitaryOperationsNode((UnitaryOperationsNode) x.getNode());
+		if (x.getNode() instanceof BinaryOperationsNode)
+			printBinaryOperationsNode((BinaryOperationsNode) x.getNode());
+	}
+
+	private void printBinaryOperationsNode(BinaryOperationsNode x) {
+		if (x == null)
+			return;
+		String token = "";
+		if (x.getBinaryOperationsNodeChildren() instanceof UnionNode)
+			token = "v";
+		if (x.getBinaryOperationsNodeChildren() instanceof IntersectionNode)
+			token = "^";
+		if (x.getBinaryOperationsNodeChildren() instanceof DifferenceNode)
+			token = "-";
+		if (x.getBinaryOperationsNodeChildren() instanceof DivisionNode)
+			token = "/";
+		if (x.getBinaryOperationsNodeChildren() instanceof CrossJoinNode)
+			token = "x";
+		if (x.getBinaryOperationsNodeChildren() instanceof JoinNode) {
+			System.out.println(
+					x.number + ": BinaryOperationsNode ===> " + x.getBinaryOperationsNodeChildren().getNumber() + " "
+							+ (x.getBinarySetNode() == null ? "null" : String.valueOf(x.getBinarySetNode().number)));
+			printJoinNode((JoinNode) x.getBinaryOperationsNodeChildren());
+		} else
+			System.out.println(x.number + ": BinaryOperationsNode ===> " + (token == "" ? "" : token + " ")
+					+ (x.getBinarySetNode() == null ? "null" : String.valueOf(x.getBinarySetNode().number)));
+		printBinarySetNode(x.getBinarySetNode());
+	}
+
+	private void printJoinNode(JoinNode x) {
+		if (x == null)
+			return;
+		System.out.println(x.number + ": JoinNode ===> " + (x.getLogicalSentenceNode() == null ? "null (NATURAL JOIN)"
+				: String.valueOf(x.getLogicalSentenceNode().number)));
+		printLogicalSentenceNode(x.getLogicalSentenceNode());
+	}
+
+	private void printBinarySetNode(BinarySetNode x) {
+		if (x == null)
+			return;
+		System.out.println(x.number + ": BinaryOperationsNode ===> "
+				+ (x.getReadyOnlyOperationsNode1() == null ? x.getRelationNode1().getPosition().image
+						: x.getReadyOnlyOperationsNode1().number)
+				+ " " + (x.getReadyOnlyOperationsNode2() == null ? x.getRelationNode2().getPosition().image
+						: x.getReadyOnlyOperationsNode2().number)
+				+ " ");
+		if (x.getReadyOnlyOperationsNode1() != null)
+			printReadyOnlyOperationsNode(x.getReadyOnlyOperationsNode1());
+		if (x.getReadyOnlyOperationsNode2() != null)
+			printReadyOnlyOperationsNode(x.getReadyOnlyOperationsNode2());
 	}
 
 	private void printUnitaryOperationsNode(UnitaryOperationsNode x) {
@@ -639,22 +759,104 @@ public class PrintTree {
 				: "\n" + x.number + " -> " + String.valueOf(x.getNode().getNumber()) + ";"));
 		if (x.getNode() instanceof UnitaryOperationsNode)
 			return temp + toGraphUnitaryOperationsNode((UnitaryOperationsNode) x.getNode());
+		if (x.getNode() instanceof BinaryOperationsNode)
+			return temp + toGraphBinaryOperationsNode((BinaryOperationsNode) x.getNode());
 		return "";
+	}
+
+	private String toGraphBinaryOperationsNode(BinaryOperationsNode x) {
+		if (x == null)
+			return "";
+		String temp = "\n" + (x.number + " [label=\"BinaryOperationsNode\"];"
+				+ (x.getBinaryOperationsNodeChildren() == null ? ""
+						: "\n" + x.number + " -> " + String.valueOf(x.getBinaryOperationsNodeChildren().getNumber())
+								+ ";")
+				+ (x.getBinarySetNode() == null ? ""
+						: "\n" + x.number + " -> " + String.valueOf(x.getBinarySetNode().number) + ";"));
+		if (x.getBinaryOperationsNodeChildren() instanceof UnionNode)
+			temp += toGraphUnionNode((UnionNode) x.getBinaryOperationsNodeChildren());
+		if (x.getBinaryOperationsNodeChildren() instanceof IntersectionNode)
+			temp += toGraphIntersectionNode((IntersectionNode) x.getBinaryOperationsNodeChildren());
+		if (x.getBinaryOperationsNodeChildren() instanceof DifferenceNode)
+			temp += toGraphDifferenceNode((DifferenceNode) x.getBinaryOperationsNodeChildren());
+		if (x.getBinaryOperationsNodeChildren() instanceof DivisionNode)
+			temp += toGraphDivisionNode((DivisionNode) x.getBinaryOperationsNodeChildren());
+		if (x.getBinaryOperationsNodeChildren() instanceof JoinNode)
+			temp += toGraphJoinNode((JoinNode) x.getBinaryOperationsNodeChildren());
+		if (x.getBinaryOperationsNodeChildren() instanceof CrossJoinNode)
+			temp += toGraphCrossJoinNode((CrossJoinNode) x.getBinaryOperationsNodeChildren());
+		return temp + toGraphBinarySetNode(x.getBinarySetNode());
+	}
+
+	private String toGraphBinarySetNode(BinarySetNode x) {
+		if (x == null)
+			return "";
+		String temp = "\n" + (x.number + " [label=\"BinarySetNode\"];" + (x.getReadyOnlyOperationsNode1() == null
+				? "\n" + x.number + " -> \"" + x.getRelationNode1().getPosition().image + " (" + x.number + ")\""
+				: "\n" + x.number + " -> " + String.valueOf(x.getReadyOnlyOperationsNode1().getNumber()))
+				+ (x.getReadyOnlyOperationsNode2() == null ? "\n" + x.number + " -> \""
+						+ x.getRelationNode2().getPosition().image + " (" + x.number + ")\""
+						: "\n" + x.number + " -> " + String.valueOf(x.getReadyOnlyOperationsNode2().getNumber())));
+		if (x.getReadyOnlyOperationsNode1() != null)
+			temp += toGraphReadyOnlyOperationsNode(x.getReadyOnlyOperationsNode1());
+		if (x.getReadyOnlyOperationsNode2() != null)
+			temp += toGraphReadyOnlyOperationsNode(x.getReadyOnlyOperationsNode2());
+		return temp;
+	}
+
+	private String toGraphUnionNode(UnionNode x) {
+		if (x == null)
+			return "";
+		return x.number + " [label=\"v\"];";
+	}
+
+	private String toGraphIntersectionNode(IntersectionNode x) {
+		if (x == null)
+			return "";
+		return x.number + " [label=\"^\"];";
+	}
+
+	private String toGraphDifferenceNode(DifferenceNode x) {
+		if (x == null)
+			return "";
+		return x.number + " [label=\"-\"];";
+	}
+	
+	private String toGraphCrossJoinNode(CrossJoinNode x) {
+		if (x == null)
+			return "";
+		return x.number + " [label=\"x\"];";
+	}
+
+	private String toGraphDivisionNode(DivisionNode x) {
+		if (x == null)
+			return "";
+		return x.number + " [label=\"/\"];";
+	}
+
+	private String toGraphJoinNode(JoinNode x) {
+		if (x == null)
+			return "";
+		return x.number + " [label=\"JoinNode " + (x.getLogicalSentenceNode() == null ? " (Natuaral)" : "") + "\"];"
+				+ (x.getLogicalSentenceNode() == null ? ""
+						: "\n" + x.number + " -> " + String.valueOf(x.getLogicalSentenceNode().number) + "; ")
+				+ toGraphLogicalSentenceNode(x.getLogicalSentenceNode());
 	}
 
 	private String toGraphUnitaryOperationsNode(UnitaryOperationsNode x) {
 		if (x == null)
 			return "";
-		String temp = "\n" + (x.number + " [label=\"UnitaryOperationsNode\"];"
-				+ (x.getUnitaryOperationsChildrenNode() == null ? ""
-						: "\n" + x.number + " -> " + String.valueOf(x.getUnitaryOperationsChildrenNode().getNumber())
-								+ ";")
-
-				+ (x.getReadyOnlyOperationsNode() == null ? ""
-						: "\n" + x.number + " -> " + String.valueOf(x.getReadyOnlyOperationsNode().number) + "; ")
-				+ (x.getRelationNode() == null ? ""
-						: "\n" + x.number + " -> \"" + String.valueOf(x.getRelationNode().getImage()) + " ("
-								+ String.valueOf(x.number) + ")\";"));
+		String temp = "\n"
+				+ (x.number + " [label=\"UnitaryOperationsNode\"];"
+						+ (x.getUnitaryOperationsChildrenNode() == null ? ""
+								: "\n" + x.number + " -> "
+										+ String.valueOf(x.getUnitaryOperationsChildrenNode().getNumber()) + ";")
+						+ (x.getReadyOnlyOperationsNode() == null ? ""
+								: "\n" + x.number + " -> " + String.valueOf(x.getReadyOnlyOperationsNode().number)
+										+ "; ")
+						+ (x.getRelationNode() == null ? ""
+								: "\n" + x.number + " -> \"" + String.valueOf(x.getRelationNode().getImage()) + " ("
+										+ String.valueOf(x.number) + ")\";"));
 		if (x.getUnitaryOperationsChildrenNode() instanceof ProjectNode)
 			temp += toGraphProjectNode((ProjectNode) x.getUnitaryOperationsChildrenNode());
 		else if (x.getUnitaryOperationsChildrenNode() instanceof RenameNode)

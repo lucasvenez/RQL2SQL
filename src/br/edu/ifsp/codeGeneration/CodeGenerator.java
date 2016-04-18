@@ -83,6 +83,66 @@ public class CodeGenerator {
 		output += "SELECT DISTINCT ";
 		if (x.getNode() instanceof UnitaryOperationsNode)
 			generateUnitaryOperationsNode((UnitaryOperationsNode) x.getNode(), first, scope);
+		if (x.getNode() instanceof BinaryOperationsNode)
+			generateBinaryOperationsNode((BinaryOperationsNode) x.getNode(), first, scope);
+	}
+
+	private void generateBinaryOperationsNode(BinaryOperationsNode x, boolean first, int scope) {
+		if (x == null)
+			return;
+		output += "* FROM ";
+		generateFirstBinaryRelation(x.getBinarySetNode(), first, scope);
+		if (x.getBinaryOperationsNodeChildren() instanceof UnionNode)
+			output += " UNION ";
+		if (x.getBinaryOperationsNodeChildren() instanceof IntersectionNode)
+			output += " INTERSECT ";
+		if (x.getBinaryOperationsNodeChildren() instanceof DifferenceNode)
+			output += " EXCEPT ";
+
+		if (x.getBinaryOperationsNodeChildren() instanceof JoinNode) {
+			generateJoinNode((JoinNode) x.getBinaryOperationsNodeChildren());
+			generateSecondBinaryRelation(x.getBinarySetNode(), first, scope);
+			if (((JoinNode) x.getBinaryOperationsNodeChildren()).getLogicalSentenceNode() != null)
+				output += " ON ";
+			generateLogicalSentenceNode(((JoinNode) x.getBinaryOperationsNodeChildren()).getLogicalSentenceNode());
+		} else if (x.getBinaryOperationsNodeChildren() instanceof CrossJoinNode) {
+			output += " CROSS JOIN ";
+			generateSecondBinaryRelation(x.getBinarySetNode(), first, scope);
+		} else {
+			output += "SELECT DINSTINC * FROM ";
+			generateSecondBinaryRelation(x.getBinarySetNode(), first, scope);
+		}
+	}
+
+	private void generateJoinNode(JoinNode x) {
+		if (x == null)
+			return;
+		if (x.getLogicalSentenceNode() == null)
+			output += " NATURAL JOIN ";
+		else
+			output += " INNER JOIN ";
+	}
+
+	private void generateFirstBinaryRelation(BinarySetNode x, boolean first, int scope) {
+		if (x == null)
+			return;
+		if (x.getReadyOnlyOperationsNode1() != null) {
+			output += "(";
+			generateReadyOnlyOperationsNode(x.getReadyOnlyOperationsNode1(), first, scope);
+			output += ")";
+		} else
+			output += x.getRelationNode1().getImage();
+	}
+
+	private void generateSecondBinaryRelation(BinarySetNode x, boolean first, int scope) {
+		if (x == null)
+			return;
+		if (x.getReadyOnlyOperationsNode2() != null) {
+			output += "(";
+			generateReadyOnlyOperationsNode(x.getReadyOnlyOperationsNode2(), first, scope);
+			output += ")";
+		} else
+			output += x.getRelationNode2().getImage();
 	}
 
 	private void generateUnitaryOperationsNode(UnitaryOperationsNode x, boolean first, int scope) {
@@ -97,9 +157,13 @@ public class CodeGenerator {
 
 		output += " FROM ";
 
-		if (x.getRelationNode() != null)
-			output += x.getRelationNode().getPosition().image;
-		else {
+		if (x.getRelationNode() != null) {
+			if (first)
+				output += x.getRelationNode().getPosition().image;
+			else {
+				output = output.substring(0, output.length() - 23) + x.getRelationNode().getPosition().image;
+			}
+		} else {
 			globalScope++;
 			output += "(";
 			generateReadyOnlyOperationsNode(x.getReadyOnlyOperationsNode(), false, scope);
@@ -285,12 +349,12 @@ public class CodeGenerator {
 	private void generateFactorNode(FactorNode x) {
 		if (x == null)
 			return;
-		if(x.getConditionalSentenceNode()==null)
+		if (x.getConditionalSentenceNode() == null)
 			output += (x.getNot() == null ? "" : "!") + x.getPosition().image;
-		else{
-			output+= (x.getNot() == null ? "" : "! ") + "( ";
+		else {
+			output += (x.getNot() == null ? "" : "! ") + "( ";
 			generateConditionalSentenceNode(x.getConditionalSentenceNode());
-			output+= " )";
+			output += " )";
 		}
 	}
 }

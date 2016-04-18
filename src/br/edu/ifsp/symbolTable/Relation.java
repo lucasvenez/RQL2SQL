@@ -43,4 +43,8 @@ public class Relation implements SchemaElement {
 	public Set<String> getAttributeNames(){
 		return attributes.keySet();
 	}
+	
+	public int getAttributesNumber(){
+		return attributes.size();
+	}
 }
