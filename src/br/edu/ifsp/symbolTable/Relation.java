@@ -18,6 +18,12 @@ public class Relation implements SchemaElement {
 	public void addAttribute(String name, Attribute attribute) {
 		attributes.put(name, attribute);
 	}
+	
+	public void removeAttribute(String name){
+		System.out.println("REMOVING:"+name);
+		//attributes.remove(name);
+		attributes.remove(name, this.getAttribute(name));
+	}
 
 	public Attribute getAttribute(String name) {
 		return attributes.get(name);
@@ -44,7 +50,7 @@ public class Relation implements SchemaElement {
 		return attributes.keySet();
 	}
 	
-	public int getAttributesNumber(){
+	public int getNumberOfAttributes(){
 		return attributes.size();
 	}
 }

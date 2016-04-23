@@ -1,12 +1,12 @@
 //-------------TESTES ADICIONAIS-----------------------------------------------------//
 //A v (B ^ C);
 //§ idPessoa codPessoa (Pessoa [] (A [] (B [] C)));
-£ TRUE ^ 5 > 6 + 7 * 3 (Pessoa); //Não gera erro semântico
-£ TRUE ^ 5 > 6 + "teste" * 3 (Pessoa); //Gera erro semântico
+//£ TRUE ^ 5 > 6 + 7 * 3 (Pessoa); //Não gera erro semântico
+//£ TRUE ^ 5 > 6 + "teste" * 3 (Pessoa); //Gera erro semântico
 
 //-------------OPERAÇÕES UNIÁRIAS----------------------------------------------------//
 //--RELAÇÃO (RELVAR)--//
-//Pessoa;
+Pessoa;
 
 //--PROJEÇÃO (SELECT)--//
 //¢ idPessoa, nome (Pessoa);
@@ -18,6 +18,9 @@
 
 //--RENOMEAR--//
 //§ idPessoa id, nome name (Pessoa);
+
+//--FECHO TRANSITIVO--//
+//<<Pessoa>>
 
 //-------------OPERAÇÕES BINÁRIAS----------------------------------------------------//
 //--UNIÃO--//
@@ -39,7 +42,7 @@
 //A[ a1 = b2 ]B;
 
 //--divisão--//
-//A / B;
+//Produto / Venda;
 
 //--SEMIDIFERENÇA--//
 //A -- B; IMPLEMENTAR

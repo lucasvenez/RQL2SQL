@@ -4,7 +4,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
+import br.edu.ifsp.symbolTable.Relation;
 import br.edu.ifsp.symbolTable.SymbolTable;
 import br.edu.ifsp.syntacticTree.*;
 
@@ -73,45 +76,107 @@ public class CodeGenerator {
 			return;
 		if (x.getNode() instanceof ReadyOnlyOperationsNode) {
 			globalScope++;
-			generateReadyOnlyOperationsNode((ReadyOnlyOperationsNode) x.getNode(), true, globalScope);
+			generateReadyOnlyOperationsNode((ReadyOnlyOperationsNode) x.getNode(), true);
 		}
 	}
 
-	private void generateReadyOnlyOperationsNode(ReadyOnlyOperationsNode x, boolean first, int scope) {
+	private void generateReadyOnlyOperationsNode(ReadyOnlyOperationsNode x, boolean first) {
 		if (x == null)
 			return;
 		output += "SELECT DISTINCT ";
 		if (x.getNode() instanceof UnitaryOperationsNode)
-			generateUnitaryOperationsNode((UnitaryOperationsNode) x.getNode(), first, scope);
+			generateUnitaryOperationsNode((UnitaryOperationsNode) x.getNode(), first, globalScope);
 		if (x.getNode() instanceof BinaryOperationsNode)
-			generateBinaryOperationsNode((BinaryOperationsNode) x.getNode(), first, scope);
+			generateBinaryOperationsNode((BinaryOperationsNode) x.getNode(), first, globalScope);
 	}
 
 	private void generateBinaryOperationsNode(BinaryOperationsNode x, boolean first, int scope) {
 		if (x == null)
 			return;
 		output += "* FROM ";
-		generateFirstBinaryRelation(x.getBinarySetNode(), first, scope);
+
+		int binaryScopes[] = new int[2];
+		String binaryRelation[] = new String[2];
+
+		globalScope++;
+		binaryScopes[0] = globalScope;
+		int outputLength = output.length();
+		generateFirstBinaryRelation(x.getBinarySetNode(), first);
+		binaryRelation[0] = output.substring(outputLength, output.length());
+		globalScope++;
+		binaryScopes[1] = globalScope;
+
+		if (x.getBinaryOperationsNodeChildren() instanceof DivisionNode) {
+			outputLength = output.length();
+			generateSecondBinaryRelation(x.getBinarySetNode(), first);
+			binaryRelation[1] = output.substring(outputLength, output.length());
+			// Clear the line to write the division code
+			output = output.substring(0, output.lastIndexOf("\n"));
+			generateBinaryDivisionNode(x, scope, binaryScopes, binaryRelation, first);
+			return;
+		}
+
 		if (x.getBinaryOperationsNodeChildren() instanceof UnionNode)
 			output += " UNION ";
 		if (x.getBinaryOperationsNodeChildren() instanceof IntersectionNode)
 			output += " INTERSECT ";
 		if (x.getBinaryOperationsNodeChildren() instanceof DifferenceNode)
 			output += " EXCEPT ";
-
 		if (x.getBinaryOperationsNodeChildren() instanceof JoinNode) {
 			generateJoinNode((JoinNode) x.getBinaryOperationsNodeChildren());
-			generateSecondBinaryRelation(x.getBinarySetNode(), first, scope);
+			generateSecondBinaryRelation(x.getBinarySetNode(), first);
 			if (((JoinNode) x.getBinaryOperationsNodeChildren()).getLogicalSentenceNode() != null)
 				output += " ON ";
 			generateLogicalSentenceNode(((JoinNode) x.getBinaryOperationsNodeChildren()).getLogicalSentenceNode());
 		} else if (x.getBinaryOperationsNodeChildren() instanceof CrossJoinNode) {
 			output += " CROSS JOIN ";
-			generateSecondBinaryRelation(x.getBinarySetNode(), first, scope);
+			generateSecondBinaryRelation(x.getBinarySetNode(), first);
 		} else {
 			output += "SELECT DINSTINC * FROM ";
-			generateSecondBinaryRelation(x.getBinarySetNode(), first, scope);
+			generateSecondBinaryRelation(x.getBinarySetNode(), first);
 		}
+	}
+
+	private void generateBinaryDivisionNode(BinaryOperationsNode x, int scope, int binaryScopes[],
+			String binaryRelation[], boolean first) {
+		if (x == null)
+			return;
+		Relation relation1 = schema.getRelation("temporaryRelation" + binaryScopes[0]);
+		Relation relation2 = schema.getRelation("temporaryRelation" + binaryScopes[1]);
+		Set<String> intersection = new HashSet<String>();
+		Set<String> exception = new HashSet<String>();
+		
+		//schema.printTable();
+		
+		for (String attribute : relation1.getAttributeNames()) {
+			if (relation2.hasAttribute(attribute)) {
+				intersection.add(attribute);// direita
+			} else {
+				exception.add(attribute);// esquerda
+			}
+		}
+
+		output += "SELECT DISTINCT ";
+		for (String attribute : exception) {
+			output += attribute + ", ";
+		}
+		
+		output = output.substring(0, output.length() - 2) + " FROM " + binaryRelation[0] + " AS temporaryRelation1"
+				+ " WHERE ( SELECT COUNT(DISTINCT ";
+
+		System.out.println("Intersection"+intersection.size());
+		for (String attribute : intersection) {
+			output += attribute + ", ";
+		}
+
+		output = output.substring(0, output.length() - 2) + ") FROM " + binaryRelation[1]
+				+ ") = ( SELECT COUNT(*) FROM " + binaryRelation[0] + " AS temporaryRelation2 WHERE ";
+		
+		for (String attribute : exception) {
+			output += "temporaryRelation1." + attribute + " = temporaryRelation2." + attribute + " AND ";
+		}
+		
+		output = output.substring(0, output.length()-5) + ")";
 	}
 
 	private void generateJoinNode(JoinNode x) {
@@ -123,23 +188,23 @@ public class CodeGenerator {
 			output += " INNER JOIN ";
 	}
 
-	private void generateFirstBinaryRelation(BinarySetNode x, boolean first, int scope) {
+	private void generateFirstBinaryRelation(BinarySetNode x, boolean first) {
 		if (x == null)
 			return;
 		if (x.getReadyOnlyOperationsNode1() != null) {
 			output += "(";
-			generateReadyOnlyOperationsNode(x.getReadyOnlyOperationsNode1(), first, scope);
+			generateReadyOnlyOperationsNode(x.getReadyOnlyOperationsNode1(), first);
 			output += ")";
 		} else
 			output += x.getRelationNode1().getImage();
 	}
 
-	private void generateSecondBinaryRelation(BinarySetNode x, boolean first, int scope) {
+	private void generateSecondBinaryRelation(BinarySetNode x, boolean first) {
 		if (x == null)
 			return;
 		if (x.getReadyOnlyOperationsNode2() != null) {
 			output += "(";
-			generateReadyOnlyOperationsNode(x.getReadyOnlyOperationsNode2(), first, scope);
+			generateReadyOnlyOperationsNode(x.getReadyOnlyOperationsNode2(), first);
 			output += ")";
 		} else
 			output += x.getRelationNode2().getImage();
@@ -166,7 +231,7 @@ public class CodeGenerator {
 		} else {
 			globalScope++;
 			output += "(";
-			generateReadyOnlyOperationsNode(x.getReadyOnlyOperationsNode(), false, scope);
+			generateReadyOnlyOperationsNode(x.getReadyOnlyOperationsNode(), false);
 			output += ")";
 		}
 

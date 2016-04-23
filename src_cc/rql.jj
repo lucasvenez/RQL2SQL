@@ -592,6 +592,8 @@ TOKEN: {
    |	< EXTEND_TOKEN	:   < AMPERSAND > >
    |	< CROSS_TOKEN	:	"x" >
    |	< NATURAL_JOIN_TOKEN	: "[]" >
+   |	< TRANSITIVE_CLOSE_LEFT		: "<<" >
+   |	< TRANSITIVE_CLOSE_RIGHT	: ">>" >
 }
 
 /**
@@ -841,7 +843,7 @@ BinaryOperationsNode binaryOperations() : {
 	| bonc = difference()
 	| bonc = join()
 	| bonc = crossjoin()
-  //| bonc = division()
+    | bonc = division()
 	)
 	((< LEFT_PARENTHESIS > roon2 = readyOnlyOperations() < RIGHT_PARENTHESIS >) | rn2 = relation())
 	{
@@ -891,12 +893,12 @@ JoinNode join() : {
 	{ if(lsn == null) return new JoinNode(t); else return new JoinNode(t, lsn); }
 }
 
-//DivisionNode division() : {
-//	Token t = null;
-//} {
-//	t = < SOLIDUS >
-//	{ return new DivisionNode(t); }
-//}
+DivisionNode division() : {
+	Token t = null;
+} {
+	t = < SOLIDUS >
+	{ return new DivisionNode(t); }
+}
 
 UnitaryOperationsNode unitaryOperations() : {
 
@@ -908,6 +910,7 @@ UnitaryOperationsNode unitaryOperations() : {
 	( uonc = project()
 	| uonc = select()
 	| uonc = rename() )
+	
 	(< LEFT_PARENTHESIS > roon = readyOnlyOperations() < RIGHT_PARENTHESIS > { return new UnitaryOperationsNode(uonc, roon); } )
 	| (rn = relation() { return new UnitaryOperationsNode( rn );} )
 }

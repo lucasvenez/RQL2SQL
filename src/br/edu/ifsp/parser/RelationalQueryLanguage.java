@@ -7,53 +7,16 @@ package br.edu.ifsp.parser;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import br.edu.ifsp.symbolTable.*;
+import br.edu.ifsp.syntacticTree.*;
+import br.edu.ifsp.syntacticTree.interfaces.*;
+import br.edu.ifsp.symbolTable.exceptions.*;
+import br.edu.ifsp.semanticAnalysis.RelationCheck;
+import br.edu.ifsp.codeGeneration.CodeGenerator;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import br.edu.ifsp.codeGeneration.CodeGenerator;
-import br.edu.ifsp.semanticAnalysis.RelationCheck;
-import br.edu.ifsp.symbolTable.Attribute;
-import br.edu.ifsp.symbolTable.Reference;
-import br.edu.ifsp.symbolTable.SymbolTable;
-import br.edu.ifsp.symbolTable.exceptions.UnexistentForeignKeyException;
-import br.edu.ifsp.syntacticTree.AdditionOperatorNode;
-import br.edu.ifsp.syntacticTree.AdditionSentenceNode;
-import br.edu.ifsp.syntacticTree.AttributeNode;
-import br.edu.ifsp.syntacticTree.BinaryOperationsNode;
-import br.edu.ifsp.syntacticTree.BinarySetNode;
-import br.edu.ifsp.syntacticTree.ComparisonOperatorNode;
-import br.edu.ifsp.syntacticTree.ComparisonSentenceNode;
-import br.edu.ifsp.syntacticTree.ConditionalSentenceNode;
-import br.edu.ifsp.syntacticTree.CrossJoinNode;
-import br.edu.ifsp.syntacticTree.DifferenceNode;
-import br.edu.ifsp.syntacticTree.FactorNode;
-import br.edu.ifsp.syntacticTree.IfNode;
-import br.edu.ifsp.syntacticTree.InstanceofSentenceNode;
-import br.edu.ifsp.syntacticTree.IntersectionNode;
-import br.edu.ifsp.syntacticTree.JoinNode;
-import br.edu.ifsp.syntacticTree.ListNode;
-import br.edu.ifsp.syntacticTree.LogicalOperatorNode;
-import br.edu.ifsp.syntacticTree.LogicalSentenceNode;
-import br.edu.ifsp.syntacticTree.MultiplicationOperatorNode;
-import br.edu.ifsp.syntacticTree.MultiplicationSentenceNode;
-import br.edu.ifsp.syntacticTree.PrintTree;
-import br.edu.ifsp.syntacticTree.ProjectNode;
-import br.edu.ifsp.syntacticTree.QueryNode;
-import br.edu.ifsp.syntacticTree.ReadyOnlyOperationsNode;
-import br.edu.ifsp.syntacticTree.RelationNode;
-import br.edu.ifsp.syntacticTree.RelationalOperationsNode;
-import br.edu.ifsp.syntacticTree.RenameNode;
-import br.edu.ifsp.syntacticTree.RenameSetNode;
-import br.edu.ifsp.syntacticTree.SelectNode;
-import br.edu.ifsp.syntacticTree.UnionNode;
-import br.edu.ifsp.syntacticTree.UnitaryOperationsNode;
-import br.edu.ifsp.syntacticTree.interfaces.BinaryOperationsNodeChildren;
-import br.edu.ifsp.syntacticTree.interfaces.QueryNodeChildren;
-import br.edu.ifsp.syntacticTree.interfaces.ReadyOnlyOperationsNodeChildren;
-import br.edu.ifsp.syntacticTree.interfaces.RelationalOperationsNodeChildren;
-import br.edu.ifsp.syntacticTree.interfaces.UnitaryOperationsNodeChildren;
 
 public class RelationalQueryLanguage implements RelationalQueryLanguageConstants {
 
@@ -87,6 +50,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
 	 * @throws ParseException, IOException
 	 */
         public static void main ( String args[] ) throws ParseException, IOException {
+
                 /**
 		 * Attribute used to store a reference of a parser object that will do the compilation of source code in Relational Query Language.
 		 */
@@ -358,6 +322,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
 	 * @return the position of the next argument
 	 */
         public static int checkParameterOfAttributesDefinition(String args[], int location) {
+
                 boolean result = false;
                 List<String> attributes = new ArrayList<String>();
                 String attributeCheck = "";
@@ -387,10 +352,8 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
                         }
                 }
                 if (!attributeCheck.matches("(" + attributeRegex + ")+")) {
-                	System.out.println("Erro");
                         return 0;
                 } else {
-                	System.out.println("ENTROU");
                         System.out.println("Building symbol table from arguments:");
                         buildSymbolTable(attributeCheck, attributeRegex);
                 }
@@ -653,6 +616,9 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
       case CROSS_TOKEN:
         bonc = crossjoin();
         break;
+      case SOLIDUS:
+        bonc = division();
+        break;
       default:
         jj_la1[3] = jj_gen;
         jj_consume_token(-1);
@@ -773,12 +739,18 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
     }
   }
 
-//DivisionNode division() : {
-//	Token t = null;
-//} {
-//	t = < SOLIDUS >
-//	{ return new DivisionNode(t); }
-//}
+  final public DivisionNode division() throws ParseException {
+    trace_call("division");
+    try {
+        Token t = null;
+      t = jj_consume_token(SOLIDUS);
+          {if (true) return new DivisionNode(t);}
+    throw new Error("Missing return statement in function");
+    } finally {
+      trace_return("division");
+    }
+  }
+
   final public UnitaryOperationsNode unitaryOperations() throws ParseException {
     trace_call("unitaryOperations");
     try {
@@ -1353,24 +1325,24 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
     finally { jj_save(0, xla); }
   }
 
-  private boolean jj_3R_33() {
+  private boolean jj_3R_35() {
     if (!jj_rescan) trace_call("select(LOOKING AHEAD...)");
     if (jj_scan_token(SELECT_TOKEN)) { if (!jj_rescan) trace_return("select(LOOKAHEAD FAILED)"); return true; }
     { if (!jj_rescan) trace_return("select(LOOKAHEAD SUCCEEDED)"); return false; }
   }
 
-  private boolean jj_3R_23() {
+  private boolean jj_3R_24() {
     if (!jj_rescan) trace_call("crossjoin(LOOKING AHEAD...)");
     if (jj_scan_token(CROSS_TOKEN)) { if (!jj_rescan) trace_return("crossjoin(LOOKAHEAD FAILED)"); return true; }
     { if (!jj_rescan) trace_return("crossjoin(LOOKAHEAD SUCCEEDED)"); return false; }
   }
 
-  private boolean jj_3R_24() {
-    if (jj_3R_26()) return true;
+  private boolean jj_3R_26() {
+    if (jj_3R_28()) return true;
     return false;
   }
 
-  private boolean jj_3R_32() {
+  private boolean jj_3R_34() {
     if (!jj_rescan) trace_call("project(LOOKING AHEAD...)");
     if (jj_scan_token(PROJECT_TOKEN)) { if (!jj_rescan) trace_return("project(LOOKAHEAD FAILED)"); return true; }
     { if (!jj_rescan) trace_return("project(LOOKAHEAD SUCCEEDED)"); return false; }
@@ -1381,37 +1353,47 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
     return false;
   }
 
-  private boolean jj_3R_21() {
+  private boolean jj_3R_22() {
     if (!jj_rescan) trace_call("difference(LOOKING AHEAD...)");
     if (jj_scan_token(MINUS_SIGN)) { if (!jj_rescan) trace_return("difference(LOOKAHEAD FAILED)"); return true; }
     { if (!jj_rescan) trace_return("difference(LOOKAHEAD SUCCEEDED)"); return false; }
   }
 
-  private boolean jj_3R_17() {
+  private boolean jj_3R_18() {
     if (!jj_rescan) trace_call("readyOnlyOperations(LOOKING AHEAD...)");
     Token xsp;
     xsp = jj_scanpos;
     if (jj_3_1()) {
     jj_scanpos = xsp;
-    if (jj_3R_24()) { if (!jj_rescan) trace_return("readyOnlyOperations(LOOKAHEAD FAILED)"); return true; }
+    if (jj_3R_26()) { if (!jj_rescan) trace_return("readyOnlyOperations(LOOKAHEAD FAILED)"); return true; }
     }
     { if (!jj_rescan) trace_return("readyOnlyOperations(LOOKAHEAD SUCCEEDED)"); return false; }
   }
 
   private boolean jj_3R_11() {
-    if (jj_3R_18()) return true;
+    if (jj_3R_19()) return true;
     return false;
   }
 
-  private boolean jj_3R_28() {
-    if (jj_3R_18()) return true;
+  private boolean jj_3R_30() {
+    if (jj_3R_19()) return true;
     return false;
   }
 
-  private boolean jj_3R_20() {
+  private boolean jj_3R_21() {
     if (!jj_rescan) trace_call("intersection(LOOKING AHEAD...)");
     if (jj_scan_token(AND)) { if (!jj_rescan) trace_return("intersection(LOOKAHEAD FAILED)"); return true; }
     { if (!jj_rescan) trace_return("intersection(LOOKAHEAD SUCCEEDED)"); return false; }
+  }
+
+  private boolean jj_3R_33() {
+    if (jj_3R_36()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_32() {
+    if (jj_3R_35()) return true;
+    return false;
   }
 
   private boolean jj_3R_31() {
@@ -1419,102 +1401,103 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
     return false;
   }
 
-  private boolean jj_3R_30() {
-    if (jj_3R_33()) return true;
-    return false;
-  }
-
   private boolean jj_3R_29() {
-    if (jj_3R_32()) return true;
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_31()) {
+    jj_scanpos = xsp;
+    if (jj_3R_32()) {
+    jj_scanpos = xsp;
+    if (jj_3R_33()) return true;
+    }
+    }
     return false;
   }
 
-  private boolean jj_3R_27() {
+  private boolean jj_3R_28() {
+    if (!jj_rescan) trace_call("unitaryOperations(LOOKING AHEAD...)");
     Token xsp;
     xsp = jj_scanpos;
     if (jj_3R_29()) {
     jj_scanpos = xsp;
-    if (jj_3R_30()) {
-    jj_scanpos = xsp;
-    if (jj_3R_31()) return true;
-    }
-    }
-    return false;
-  }
-
-  private boolean jj_3R_26() {
-    if (!jj_rescan) trace_call("unitaryOperations(LOOKING AHEAD...)");
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3R_27()) {
-    jj_scanpos = xsp;
-    if (jj_3R_28()) { if (!jj_rescan) trace_return("unitaryOperations(LOOKAHEAD FAILED)"); return true; }
+    if (jj_3R_30()) { if (!jj_rescan) trace_return("unitaryOperations(LOOKAHEAD FAILED)"); return true; }
     }
     { if (!jj_rescan) trace_return("unitaryOperations(LOOKAHEAD SUCCEEDED)"); return false; }
   }
 
-  private boolean jj_3R_19() {
+  private boolean jj_3R_20() {
     if (!jj_rescan) trace_call("union(LOOKING AHEAD...)");
     if (jj_scan_token(OR)) { if (!jj_rescan) trace_return("union(LOOKAHEAD FAILED)"); return true; }
     { if (!jj_rescan) trace_return("union(LOOKAHEAD SUCCEEDED)"); return false; }
   }
 
-  private boolean jj_3R_18() {
+  private boolean jj_3R_19() {
     if (!jj_rescan) trace_call("relation(LOOKING AHEAD...)");
     if (jj_scan_token(IDENTIFIER)) { if (!jj_rescan) trace_return("relation(LOOKAHEAD FAILED)"); return true; }
     { if (!jj_rescan) trace_return("relation(LOOKAHEAD SUCCEEDED)"); return false; }
   }
 
+  private boolean jj_3R_25() {
+    if (!jj_rescan) trace_call("division(LOOKING AHEAD...)");
+    if (jj_scan_token(SOLIDUS)) { if (!jj_rescan) trace_return("division(LOOKAHEAD FAILED)"); return true; }
+    { if (!jj_rescan) trace_return("division(LOOKAHEAD SUCCEEDED)"); return false; }
+  }
+
   private boolean jj_3R_16() {
-    if (jj_3R_23()) return true;
+    if (jj_3R_24()) return true;
     return false;
   }
 
-  private boolean jj_3R_25() {
+  private boolean jj_3R_27() {
     if (jj_scan_token(LEFT_BRACKET)) return true;
     return false;
   }
 
   private boolean jj_3R_15() {
-    if (jj_3R_22()) return true;
+    if (jj_3R_23()) return true;
     return false;
   }
 
   private boolean jj_3R_14() {
-    if (jj_3R_21()) return true;
+    if (jj_3R_22()) return true;
     return false;
   }
 
-  private boolean jj_3R_34() {
+  private boolean jj_3R_36() {
     if (!jj_rescan) trace_call("rename(LOOKING AHEAD...)");
     if (jj_scan_token(RENAME_TOKEN)) { if (!jj_rescan) trace_return("rename(LOOKAHEAD FAILED)"); return true; }
     { if (!jj_rescan) trace_return("rename(LOOKAHEAD SUCCEEDED)"); return false; }
   }
 
   private boolean jj_3R_13() {
-    if (jj_3R_20()) return true;
+    if (jj_3R_21()) return true;
     return false;
   }
 
-  private boolean jj_3R_22() {
+  private boolean jj_3R_17() {
+    if (jj_3R_25()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_23() {
     if (!jj_rescan) trace_call("join(LOOKING AHEAD...)");
     Token xsp;
     xsp = jj_scanpos;
     if (jj_scan_token(40)) {
     jj_scanpos = xsp;
-    if (jj_3R_25()) { if (!jj_rescan) trace_return("join(LOOKAHEAD FAILED)"); return true; }
+    if (jj_3R_27()) { if (!jj_rescan) trace_return("join(LOOKAHEAD FAILED)"); return true; }
     }
     { if (!jj_rescan) trace_return("join(LOOKAHEAD SUCCEEDED)"); return false; }
   }
 
   private boolean jj_3R_12() {
-    if (jj_3R_19()) return true;
+    if (jj_3R_20()) return true;
     return false;
   }
 
   private boolean jj_3R_10() {
     if (jj_scan_token(LEFT_PARENTHESIS)) return true;
-    if (jj_3R_17()) return true;
+    if (jj_3R_18()) return true;
     return false;
   }
 
@@ -1535,7 +1518,10 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
     jj_scanpos = xsp;
     if (jj_3R_15()) {
     jj_scanpos = xsp;
-    if (jj_3R_16()) { if (!jj_rescan) trace_return("binaryOperations(LOOKAHEAD FAILED)"); return true; }
+    if (jj_3R_16()) {
+    jj_scanpos = xsp;
+    if (jj_3R_17()) { if (!jj_rescan) trace_return("binaryOperations(LOOKAHEAD FAILED)"); return true; }
+    }
     }
     }
     }
@@ -1564,7 +1550,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
       jj_la1_init_2();
    }
    private static void jj_la1_init_0() {
-      jj_la1_0 = new int[] {0x200,0x0,0x200,0x10004000,0x200,0x200,0x10000000,0x0,0x0,0x2000,0x2000,0x0,0x0,0x1f80000,0x0,0x5000,0x5000,0x10880,0x10880,0x0,0x200,0x0,0x1f80000,0x0,0x0,};
+      jj_la1_0 = new int[] {0x200,0x0,0x200,0x10014000,0x200,0x200,0x10000000,0x0,0x0,0x2000,0x2000,0x0,0x0,0x1f80000,0x0,0x5000,0x5000,0x10880,0x10880,0x0,0x200,0x0,0x1f80000,0x0,0x0,};
    }
    private static void jj_la1_init_1() {
       jj_la1_1 = new int[] {0x38,0x38,0x0,0xc180,0x0,0xf8020000,0x100,0x38,0x38,0x0,0x0,0x1c000,0x2,0x0,0x1,0x0,0x0,0x4,0x4,0x20000,0xf8000000,0x1c000,0x0,0xf8000000,0x7fc0000,};
