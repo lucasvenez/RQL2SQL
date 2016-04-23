@@ -44,6 +44,11 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 		return semanticErrors;
 	}
 
+	private void throwSemanticError(String message) {
+		semanticErrors++;
+		System.out.println(message);
+	}
+
 	private void relationalOperationsNodeListCheck(ListNode x) {
 		if (x == null) {
 			return;
@@ -126,7 +131,8 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 			intersectionNodeCheck((IntersectionNode) x.getBinaryOperationsNodeChildren(), scope, binaryScopes);
 		if (x.getBinaryOperationsNodeChildren() instanceof DifferenceNode)
 			differenceNodeCheck((DifferenceNode) x.getBinaryOperationsNodeChildren(), scope, binaryScopes);
-		// MISSING DIVISION OPERATION
+		if (x.getBinaryOperationsNodeChildren() instanceof DivisionNode)
+			divisionNodeCheck((DivisionNode) x.getBinaryOperationsNodeChildren(), scope, binaryScopes);
 	}
 
 	private void unionNodeCheck(UnionNode x, int scope, int[] binaryScopes) {
@@ -134,9 +140,8 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 			return;
 		Relation relation1 = schema.getRelation("temporaryRelation" + (binaryScopes[0]));
 		Relation relation2 = schema.getRelation("temporaryRelation" + (binaryScopes[1]));
-		if (relation1.getAttributesNumber() != relation2.getAttributesNumber()) {
-			semanticErrors++;
-			System.out.println(
+		if (relation1.getNumberOfAttributes() != relation2.getNumberOfAttributes()) {
+			throwSemanticError(
 					"\tfor the union operation, the relations must have the same number of attributes : At the line "
 							+ x.getPosition().beginLine + ", column " + x.getPosition().beginColumn);
 		}
@@ -147,9 +152,8 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 			return;
 		Relation relation1 = schema.getRelation("temporaryRelation" + (binaryScopes[0]));
 		Relation relation2 = schema.getRelation("temporaryRelation" + (binaryScopes[1]));
-		if (relation1.getAttributesNumber() != relation2.getAttributesNumber()) {
-			semanticErrors++;
-			System.out.println(
+		if (relation1.getNumberOfAttributes() != relation2.getNumberOfAttributes()) {
+			throwSemanticError(
 					"\tfor the intersection operation, the relations must have the same number of attributes : At the line "
 							+ x.getPosition().beginLine + ", column " + x.getPosition().beginColumn);
 		}
@@ -160,9 +164,8 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 			return;
 		Relation relation1 = schema.getRelation("temporaryRelation" + (binaryScopes[0]));
 		Relation relation2 = schema.getRelation("temporaryRelation" + (binaryScopes[1]));
-		if (relation1.getAttributesNumber() != relation2.getAttributesNumber()) {
-			semanticErrors++;
-			System.out.println(
+		if (relation1.getNumberOfAttributes() != relation2.getNumberOfAttributes()) {
+			throwSemanticError(
 					"\tfor the difference operation, the relations must have the same number of attributes : At the line "
 							+ x.getPosition().beginLine + ", column " + x.getPosition().beginColumn);
 		}
@@ -197,6 +200,36 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 		// Add the attributes of the second relation
 		for (String s : relation2.getAttributeNames()) {
 			join.addAttribute(s, relation2.getAttribute(s));
+		}
+	}
+
+	private void divisionNodeCheck(DivisionNode x, int scope, int[] binaryScopes) {
+		if (x == null)
+			return;
+		Relation relation1 = schema.getRelation("temporaryRelation" + (binaryScopes[0]));
+		Relation relation2 = schema.getRelation("temporaryRelation" + (binaryScopes[1]));
+		System.out.println("temporaryRelation" + scope);
+		Relation division = schema.getRelation("temporaryRelation" + scope);
+		
+		if (relation1.getNumberOfAttributes() > relation2.getNumberOfAttributes()) {
+			Set<String> relation1Attributes = relation1.getAttributeNames();
+			Set<String> relation2Attributes = relation2.getAttributeNames();
+			for (String attribute : relation2Attributes) {
+				if (!relation1.hasAttribute(attribute)) {
+					throwSemanticError("\tThe divisor of the operation must be a subset of the dividend: \""
+							+ x.getPosition().image + "\" at the line " + x.getPosition().beginLine + ", column "
+							+ x.getPosition().beginColumn);
+					break;
+				}
+			}
+			for(String attribute : relation1Attributes){
+				if(!relation2Attributes.contains(attribute))
+				division.addAttribute(attribute, relation1.getAttribute(attribute));
+			}
+		} else {
+			throwSemanticError("\tThe divisor of the operation must be a subset of the dividend: \""
+					+ x.getPosition().image + "\" at the line " + x.getPosition().beginLine + ", column "
+					+ x.getPosition().beginColumn);
 		}
 	}
 
@@ -239,8 +272,7 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 			schema.getRelation("temporaryRelation" + scope).addAttribute(x.getPosition().image,
 					r.getAttribute(x.getPosition().image));
 		} else {
-			semanticErrors++;
-			System.out.println("\tAttribute does not exist: \"" + x.getPosition().image + "\" at the line "
+			throwSemanticError("\tAttribute does not exist: \"" + x.getPosition().image + "\" at the line "
 					+ x.getPosition().beginLine + ", column " + x.getPosition().beginColumn);
 		}
 	}
@@ -272,8 +304,7 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 		int trueConstant = RelationalQueryLanguageConstants.TRUE;
 		int falseConstant = RelationalQueryLanguageConstants.FALSE;
 		if ((kind1 != trueConstant && kind1 != falseConstant) || (kind2 != trueConstant && kind2 != falseConstant)) {
-			semanticErrors++;
-			System.out.println("\tLogical operations requires two boolean values: At the line "
+			throwSemanticError("\tLogical operations requires two boolean values: At the line "
 					+ x.getPosition().beginLine + ", column " + x.getPosition().beginColumn);
 		}
 		return kind1;
@@ -324,8 +355,7 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 		if (x.getPosition().kind != RelationalQueryLanguageConstants.EQUALS
 				&& x.getPosition().kind != RelationalQueryLanguageConstants.NOT_EQUALS)
 			if (!numberConstants.contains(kind1) || !numberConstants.contains(kind2)) {
-				semanticErrors++;
-				System.out.println("\tSize comparators requires two numeric operators : At the line "
+				throwSemanticError("\tSize comparators requires two numeric operators : At the line "
 						+ x.getPosition().beginLine + ", column " + x.getPosition().beginColumn);
 			}
 		return RelationalQueryLanguageConstants.TRUE;
@@ -359,8 +389,7 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 		else
 			kind2 = additionOperatorNodeCheck(x.getNextAdditionOperatorNode(), scope);
 		if (!numberConstants.contains(kind1) || !numberConstants.contains(kind2)) {
-			semanticErrors++;
-			System.out.println("\tAddition or subtraction requires two numeric operators : At the line "
+			throwSemanticError("\tAddition or subtraction requires two numeric operators : At the line "
 					+ x.getPosition().beginLine + ", column " + x.getPosition().beginColumn);
 		}
 		return kind1;
@@ -385,8 +414,7 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 		} else
 			kind2 = multiplicationOperatorNode(x.getNextMultiplicationOperatorNode(), scope);
 		if (!numberConstants.contains(kind1) || !numberConstants.contains(kind2)) {
-			semanticErrors++;
-			System.out.println(
+			throwSemanticError(
 					"\tMultiplication, division, power or MOD operation requires two numeric operators : At the line "
 							+ x.getPosition().beginLine + ", column " + x.getPosition().beginColumn);
 		}
@@ -401,8 +429,7 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 		else {
 			if (x.getPosition().kind == RelationalQueryLanguageConstants.IDENTIFIER) {
 				if (!schema.getRelation("temporaryRelation" + scope).hasAttribute(x.getPosition().image)) {
-					semanticErrors++;
-					System.out.println("\tAttribute does not exist: \"" + x.getPosition().image + "\" at the line "
+					throwSemanticError("\tAttribute does not exist: \"" + x.getPosition().image + "\" at the line "
 							+ x.getPosition().beginLine + ", column " + x.getPosition().beginColumn);
 				}
 			}
@@ -432,8 +459,7 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 		if (r.hasAttribute(toRename)) {
 			schema.getRelation("temporaryRelation" + scope).renameAttribute(toRename, renamed);
 		} else {
-			semanticErrors++;
-			System.out.println("\tAttribute does not exist: \"" + x.getToRenameAttributeNode().getPosition().image
+			throwSemanticError("\tAttribute does not exist: \"" + x.getToRenameAttributeNode().getPosition().image
 					+ "\" at the line " + x.getToRenameAttributeNode().getPosition().beginLine + ", column "
 					+ x.getToRenameAttributeNode().getPosition().beginColumn);
 		}
@@ -446,8 +472,7 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 		if (schema.hasRelation(x.getPosition().image)) {
 			schema.replaceRelation("temporaryRelation" + scope, schema.getRelation(x.getPosition().image));
 		} else {
-			semanticErrors++;
-			System.out.println("\tRelation does not exist: \"" + x.getPosition().image + "\" at the line "
+			throwSemanticError("\tRelation does not exist: \"" + x.getPosition().image + "\" at the line "
 					+ x.getPosition().beginLine + ", column " + x.getPosition().beginColumn);
 		}
 	}

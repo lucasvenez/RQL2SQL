@@ -53,4 +53,13 @@ public class SymbolTable {
     public Set<String> getRelationNames(){
 		return relations.keySet();
 	}
+    
+    public void printTable(){
+    	for(String relation : this.getRelationNames()){
+    		System.out.println(relation+":");
+    		for(String attribute : this.getRelation(relation).getAttributeNames()){
+    			System.out.println("  -->"+attribute);
+    		}
+    	}
+    }
 }
