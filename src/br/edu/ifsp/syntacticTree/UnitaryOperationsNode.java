@@ -20,6 +20,12 @@ public class UnitaryOperationsNode extends Node implements ReadyOnlyOperationsNo
 		super(rn.getFirstToken());
 		this.rn = rn;
 	}
+	
+	public UnitaryOperationsNode( UnitaryOperationsNodeChildren uonc, RelationNode rn){
+		super(rn.getFirstToken());
+		this.rn=rn;
+		this.uonc = uonc;
+	}
 
 	@Override
 	public Token getFirstToken() {

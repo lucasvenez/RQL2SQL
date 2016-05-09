@@ -591,7 +591,7 @@ TOKEN: {
    |	< RENAME_TOKEN	:   "§" >
    |	< EXTEND_TOKEN	:   < AMPERSAND > >
    |	< CROSS_TOKEN	:	"x" >
-   |	< NATURAL_JOIN_TOKEN	: "[]" >
+   |	< NATURAL_JOIN_TOKEN		: "[]" >
    |	< TRANSITIVE_CLOSE_LEFT		: "<<" >
    |	< TRANSITIVE_CLOSE_RIGHT	: ">>" >
 }
@@ -646,8 +646,8 @@ TOKEN: {
    |  < OCT	    : (< PLUS_SIGN > | < MINUS_SIGN >)? ["0"-"7"] (["0"-"7"])* ["o", "O"]									    >
    |  < BIN	    : ( ["0"-"1"] ( ["0"-"1"] )* ["b", "B"] )												                    >
    |  < STRING  : < DOUBLE_QUOTE >( ~[ "\"", "\n", "\r" ] )* < DOUBLE_QUOTE >												>
-   |  < TRUE    : "TRUE" 																				                    >
-   |  < FALSE   : "FALSE"	 																			                    >
+   |  < TRUE    : "TRUE" | "true" 																		                    >
+   |  < FALSE   : "FALSE" | "false"																		                    >
 }
 
 /**
@@ -905,14 +905,25 @@ UnitaryOperationsNode unitaryOperations() : {
 	UnitaryOperationsNodeChildren uonc = null;
 	ReadyOnlyOperationsNode roon = null;
 	RelationNode rn = null;
+	UnitaryOperationsNode uon = null;
 } {
-
-	( uonc = project()
+	uon = transitiveClose() { return uon; }
+	|(rn = relation() { return new UnitaryOperationsNode( rn );} )
+	|(((uonc = project()
 	| uonc = select()
-	| uonc = rename() )
-	
-	(< LEFT_PARENTHESIS > roon = readyOnlyOperations() < RIGHT_PARENTHESIS > { return new UnitaryOperationsNode(uonc, roon); } )
-	| (rn = relation() { return new UnitaryOperationsNode( rn );} )
+	| uonc = rename())
+	(< LEFT_PARENTHESIS > roon = readyOnlyOperations() < RIGHT_PARENTHESIS > { return new UnitaryOperationsNode(uonc, roon); } ))
+	)
+}
+
+UnitaryOperationsNode transitiveClose() : {
+	UnitaryOperationsNodeChildren uonc = null;
+	ReadyOnlyOperationsNode roon = null;
+	RelationNode rn = null;
+	Token t = null;
+}{
+	t = < TRANSITIVE_CLOSE_LEFT > ( LOOKAHEAD(2) rn = relation() | roon = readyOnlyOperations()) < TRANSITIVE_CLOSE_RIGHT >
+	{ uonc = new TransitiveCloseNode(t); if(rn==null) return new UnitaryOperationsNode(uonc, roon); else return new UnitaryOperationsNode(uonc, rn); }
 }
 
 ProjectNode project() : {

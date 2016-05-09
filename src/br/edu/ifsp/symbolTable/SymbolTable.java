@@ -58,7 +58,20 @@ public class SymbolTable {
     	for(String relation : this.getRelationNames()){
     		System.out.println(relation+":");
     		for(String attribute : this.getRelation(relation).getAttributeNames()){
-    			System.out.println("  -->"+attribute);
+    			System.out.println("-->"+attribute);
+    		}
+    	}
+    }
+    
+    public void printCompleteTable(){
+    	for(String relation : this.getRelationNames()){
+    		System.out.println(relation+":");
+    		for(String attribute : this.getRelation(relation).getAttributeNames()){
+    			System.out.println("-->"+attribute);
+    			for(String feature : this.getRelation(relation).getAttribute(attribute).getFeatureNames()){
+    				Object featureValue = this.getRelation(relation).getAttribute(attribute).getFeature(feature);
+    				System.out.println("---->"+feature + featureValue);
+    			}
     		}
     	}
     }

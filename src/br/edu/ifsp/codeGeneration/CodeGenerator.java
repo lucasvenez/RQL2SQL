@@ -103,6 +103,7 @@ public class CodeGenerator {
 		int outputLength = output.length();
 		generateFirstBinaryRelation(x.getBinarySetNode(), first);
 		binaryRelation[0] = output.substring(outputLength, output.length());
+		output = output.substring(0, outputLength);
 		globalScope++;
 		binaryScopes[1] = globalScope;
 
@@ -110,10 +111,11 @@ public class CodeGenerator {
 			outputLength = output.length();
 			generateSecondBinaryRelation(x.getBinarySetNode(), first);
 			binaryRelation[1] = output.substring(outputLength, output.length());
-			// Clear the line to write the division code
-			output = output.substring(0, output.lastIndexOf("\n"));
+			output = output.substring(0, outputLength);
 			generateBinaryDivisionNode(x, scope, binaryScopes, binaryRelation, first);
 			return;
+		} else {
+			output += binaryRelation[0];
 		}
 
 		if (x.getBinaryOperationsNodeChildren() instanceof UnionNode)
@@ -132,7 +134,7 @@ public class CodeGenerator {
 			output += " CROSS JOIN ";
 			generateSecondBinaryRelation(x.getBinarySetNode(), first);
 		} else {
-			output += "SELECT DINSTINC * FROM ";
+			output += "SELECT DISTINCT * FROM ";
 			generateSecondBinaryRelation(x.getBinarySetNode(), first);
 		}
 	}
@@ -145,9 +147,9 @@ public class CodeGenerator {
 		Relation relation2 = schema.getRelation("temporaryRelation" + binaryScopes[1]);
 		Set<String> intersection = new HashSet<String>();
 		Set<String> exception = new HashSet<String>();
-		
-		//schema.printTable();
-		
+
+		// schema.printTable();
+
 		for (String attribute : relation1.getAttributeNames()) {
 			if (relation2.hasAttribute(attribute)) {
 				intersection.add(attribute);// direita
@@ -156,27 +158,26 @@ public class CodeGenerator {
 			}
 		}
 
-		output += "SELECT DISTINCT ";
+		output += "(SELECT DISTINCT ";
 		for (String attribute : exception) {
 			output += attribute + ", ";
 		}
-		
+
 		output = output.substring(0, output.length() - 2) + " FROM " + binaryRelation[0] + " AS temporaryRelation1"
 				+ " WHERE ( SELECT COUNT(DISTINCT ";
 
-		System.out.println("Intersection"+intersection.size());
 		for (String attribute : intersection) {
 			output += attribute + ", ";
 		}
 
 		output = output.substring(0, output.length() - 2) + ") FROM " + binaryRelation[1]
 				+ ") = ( SELECT COUNT(*) FROM " + binaryRelation[0] + " AS temporaryRelation2 WHERE ";
-		
+
 		for (String attribute : exception) {
 			output += "temporaryRelation1." + attribute + " = temporaryRelation2." + attribute + " AND ";
 		}
-		
-		output = output.substring(0, output.length()-5) + ")";
+
+		output = output.substring(0, output.length() - 5) + ")) AS temporaryRelation" + scope;
 	}
 
 	private void generateJoinNode(JoinNode x) {
@@ -205,7 +206,7 @@ public class CodeGenerator {
 		if (x.getReadyOnlyOperationsNode2() != null) {
 			output += "(";
 			generateReadyOnlyOperationsNode(x.getReadyOnlyOperationsNode2(), first);
-			output += ")";
+			output += ") AS temporaryRelation" + globalScope;
 		} else
 			output += x.getRelationNode2().getImage();
 	}
@@ -223,20 +224,65 @@ public class CodeGenerator {
 		output += " FROM ";
 
 		if (x.getRelationNode() != null) {
-			if (first)
+			if (x.getUnitaryOperationsChildrenNode() instanceof TransitiveCloseNode)
+				generateTransitiveCloseNode((TransitiveCloseNode) x.getUnitaryOperationsChildrenNode(), globalScope,
+						x.getRelationNode().getPosition().image);
+			else if (first)
 				output += x.getRelationNode().getPosition().image;
 			else {
 				output = output.substring(0, output.length() - 23) + x.getRelationNode().getPosition().image;
 			}
+
 		} else {
 			globalScope++;
 			output += "(";
+
+			int outputLength = output.length();
+			boolean onlyRelation = false;
 			generateReadyOnlyOperationsNode(x.getReadyOnlyOperationsNode(), false);
-			output += ")";
+			if (x.getUnitaryOperationsChildrenNode() instanceof TransitiveCloseNode) {
+				String relation = output.substring(outputLength, output.length());
+				output = output.substring(0, outputLength);
+				generateTransitiveCloseNode((TransitiveCloseNode) x.getUnitaryOperationsChildrenNode(), globalScope,
+						relation);
+			}
+			if (!output.substring(outputLength).startsWith("SELECT")) {
+				String relation = output.substring(outputLength, output.length());
+				output = output.substring(0, outputLength - 1);
+				output += relation;
+				onlyRelation = true;
+			}
+			output += (onlyRelation ? "" : ")")
+					+ (x.getUnitaryOperationsChildrenNode() instanceof TransitiveCloseNode ? "" : " AS temporaryRelation" + (scope + 1));
+
 		}
 
 		if (x.getUnitaryOperationsChildrenNode() instanceof SelectNode)
 			generateSelectNode((SelectNode) x.getUnitaryOperationsChildrenNode());
+	}
+
+	private void generateTransitiveCloseNode(TransitiveCloseNode x, int scope, String scopeRelation) {
+		if (x == null)
+			return;
+		int localScope = 0;
+		Relation relation = schema.getRelation("temporaryRelation" + scope);
+		String attributes[] = new String[relation.getAttributeNames().size()];
+		attributes = relation.getAttributeNames().toArray(attributes);
+		String leftAttribute = attributes[0];
+		String rightAttribute = attributes[1];
+		String scopeParenthesysRelation;
+		String alias = "";
+
+		if (scopeRelation.startsWith("SELECT")) {
+			scopeRelation = "(" + scopeRelation + ")";
+			alias = "AS temporaryRelation" + (scope + 1) + "_" + localScope;
+		}
+		output += "(SELECT DISTINCT * FROM " + scopeRelation + alias + " UNION SELECT temporaryRelation" + scope + "_1."
+				+ rightAttribute + ", temporaryRelation" + scope + "_2." + leftAttribute + " FROM " + scopeRelation
+				+ " AS temporaryRelation" + scope + "_1 INNER JOIN " + scopeRelation + " AS temporaryRelation" + scope
+				+ "_2 ON temporaryRelation" + scope + "_1." + leftAttribute + " = temporaryRelation" + scope + "_2."
+				+ rightAttribute + " WHERE temporaryRelation" + scope + "_2." + leftAttribute
+				+ " IS NOT NULL) AS temporaryRelation" + scope;
 	}
 
 	private void generateProjectNode(ProjectNode x) {
