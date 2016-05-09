@@ -175,11 +175,19 @@ public class PrintTree {
 		x.number = kk++;
 		if (x.getUnitaryOperationsChildrenNode() instanceof ProjectNode)
 			numberProjectNode((ProjectNode) x.getUnitaryOperationsChildrenNode());
-		if (x.getUnitaryOperationsChildrenNode() instanceof RenameNode)
+		else if (x.getUnitaryOperationsChildrenNode() instanceof RenameNode)
 			numberRenameNode((RenameNode) x.getUnitaryOperationsChildrenNode());
-		if (x.getUnitaryOperationsChildrenNode() instanceof SelectNode)
+		else if (x.getUnitaryOperationsChildrenNode() instanceof SelectNode)
 			numberSelectNode((SelectNode) x.getUnitaryOperationsChildrenNode());
+		else if (x.getUnitaryOperationsChildrenNode() instanceof TransitiveCloseNode)
+			numberTransitiveCloseNode((TransitiveCloseNode) x.getUnitaryOperationsChildrenNode());
 		numberReadyOnlyOperationsNode(x.getReadyOnlyOperationsNode());
+	}
+
+	private void numberTransitiveCloseNode(TransitiveCloseNode x) {
+		if (x == null)
+			return;
+		x.number = kk++;
 	}
 
 	private void numberProjectNode(ProjectNode x) {
@@ -462,7 +470,15 @@ public class PrintTree {
 			printRenameNode((RenameNode) x.getUnitaryOperationsChildrenNode());
 		else if (x.getUnitaryOperationsChildrenNode() instanceof SelectNode)
 			printSelectNode((SelectNode) x.getUnitaryOperationsChildrenNode());
+		else if (x.getUnitaryOperationsChildrenNode() instanceof TransitiveCloseNode)
+			printTransitiveCloseNode((TransitiveCloseNode) x.getUnitaryOperationsChildrenNode());
 		printReadyOnlyOperationsNode(x.getReadyOnlyOperationsNode());
+	}
+	
+	private void printTransitiveCloseNode(TransitiveCloseNode x) {
+		if (x == null)
+			return;
+		System.out.println(x.number + ": TransitiveCloseNode");
 	}
 
 	private void printProjectNode(ProjectNode x) {
@@ -821,7 +837,7 @@ public class PrintTree {
 			return "";
 		return x.number + " [label=\"-\"];";
 	}
-	
+
 	private String toGraphCrossJoinNode(CrossJoinNode x) {
 		if (x == null)
 			return "";
@@ -863,7 +879,16 @@ public class PrintTree {
 			temp += toGraphRenameNode((RenameNode) x.getUnitaryOperationsChildrenNode());
 		else if (x.getUnitaryOperationsChildrenNode() instanceof SelectNode)
 			temp += toGraphSelectNode((SelectNode) x.getUnitaryOperationsChildrenNode());
+		else if (x.getUnitaryOperationsChildrenNode() instanceof TransitiveCloseNode)
+			temp += toGraphTransitiveCloseNode((TransitiveCloseNode) x.getUnitaryOperationsChildrenNode());
 		return temp + toGraphReadyOnlyOperationsNode(x.getReadyOnlyOperationsNode());
+	}
+	
+	private String toGraphTransitiveCloseNode(TransitiveCloseNode x) {
+		if (x == null)
+			return "";
+		String temp = "\n" + x.number + " [label=\"TransitiveCloseNode\"];" ;
+		return temp;
 	}
 
 	private String toGraphProjectNode(ProjectNode x) {

@@ -505,6 +505,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
         case PROJECT_TOKEN:
         case SELECT_TOKEN:
         case RENAME_TOKEN:
+        case TRANSITIVE_CLOSE_LEFT:
         case IDENTIFIER:
           ;
           break;
@@ -560,6 +561,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
         case PROJECT_TOKEN:
         case SELECT_TOKEN:
         case RENAME_TOKEN:
+        case TRANSITIVE_CLOSE_LEFT:
         case IDENTIFIER:
           roonc = unitaryOperations();
           break;
@@ -757,7 +759,16 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
         UnitaryOperationsNodeChildren uonc = null;
         ReadyOnlyOperationsNode roon = null;
         RelationNode rn = null;
+        UnitaryOperationsNode uon = null;
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case TRANSITIVE_CLOSE_LEFT:
+        uon = transitiveClose();
+                                  {if (true) return uon;}
+        break;
+      case IDENTIFIER:
+        rn = relation();
+                            {if (true) return new UnitaryOperationsNode( rn );}
+        break;
       case PROJECT_TOKEN:
       case SELECT_TOKEN:
       case RENAME_TOKEN:
@@ -781,10 +792,6 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
         jj_consume_token(RIGHT_PARENTHESIS);
                                                                                    {if (true) return new UnitaryOperationsNode(uonc, roon);}
         break;
-      case IDENTIFIER:
-        rn = relation();
-                             {if (true) return new UnitaryOperationsNode( rn );}
-        break;
       default:
         jj_la1[8] = jj_gen;
         jj_consume_token(-1);
@@ -793,6 +800,40 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
     throw new Error("Missing return statement in function");
     } finally {
       trace_return("unitaryOperations");
+    }
+  }
+
+  final public UnitaryOperationsNode transitiveClose() throws ParseException {
+    trace_call("transitiveClose");
+    try {
+        UnitaryOperationsNodeChildren uonc = null;
+        ReadyOnlyOperationsNode roon = null;
+        RelationNode rn = null;
+        Token t = null;
+      t = jj_consume_token(TRANSITIVE_CLOSE_LEFT);
+      if (jj_2_2(2)) {
+        rn = relation();
+      } else {
+        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+        case LEFT_PARENTHESIS:
+        case PROJECT_TOKEN:
+        case SELECT_TOKEN:
+        case RENAME_TOKEN:
+        case TRANSITIVE_CLOSE_LEFT:
+        case IDENTIFIER:
+          roon = readyOnlyOperations();
+          break;
+        default:
+          jj_la1[9] = jj_gen;
+          jj_consume_token(-1);
+          throw new ParseException();
+        }
+      }
+      jj_consume_token(TRANSITIVE_CLOSE_RIGHT);
+          uonc = new TransitiveCloseNode(t); if(rn==null) {if (true) return new UnitaryOperationsNode(uonc, roon);} else {if (true) return new UnitaryOperationsNode(uonc, rn);}
+    throw new Error("Missing return statement in function");
+    } finally {
+      trace_return("transitiveClose");
     }
   }
 
@@ -811,7 +852,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
           ;
           break;
         default:
-          jj_la1[9] = jj_gen;
+          jj_la1[10] = jj_gen;
           break label_2;
         }
         jj_consume_token(COMMA);
@@ -855,7 +896,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
           ;
           break;
         default:
-          jj_la1[10] = jj_gen;
+          jj_la1[11] = jj_gen;
           break label_3;
         }
         jj_consume_token(COMMA);
@@ -901,7 +942,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
           ;
           break;
         default:
-          jj_la1[11] = jj_gen;
+          jj_la1[12] = jj_gen;
           break label_4;
         }
         t = logicalOperator();
@@ -937,7 +978,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
           ;
           break;
         default:
-          jj_la1[12] = jj_gen;
+          jj_la1[13] = jj_gen;
           break label_5;
         }
         t = jj_consume_token(IF);
@@ -974,7 +1015,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
           ;
           break;
         default:
-          jj_la1[13] = jj_gen;
+          jj_la1[14] = jj_gen;
           break label_6;
         }
         t = comparisonOperator();
@@ -1007,7 +1048,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
         type = type();
         break;
       default:
-        jj_la1[14] = jj_gen;
+        jj_la1[15] = jj_gen;
         ;
       }
      if(type != null) {if (true) return new InstanceofSentenceNode(asn);}
@@ -1035,7 +1076,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
           ;
           break;
         default:
-          jj_la1[15] = jj_gen;
+          jj_la1[16] = jj_gen;
           break label_7;
         }
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -1046,7 +1087,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
           t = jj_consume_token(MINUS_SIGN);
           break;
         default:
-          jj_la1[16] = jj_gen;
+          jj_la1[17] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
@@ -1086,7 +1127,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
           ;
           break;
         default:
-          jj_la1[17] = jj_gen;
+          jj_la1[18] = jj_gen;
           break label_8;
         }
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -1103,7 +1144,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
           t = jj_consume_token(PERCENT);
           break;
         default:
-          jj_la1[18] = jj_gen;
+          jj_la1[19] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
@@ -1135,7 +1176,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
         not = jj_consume_token(NOT);
         break;
       default:
-        jj_la1[19] = jj_gen;
+        jj_la1[20] = jj_gen;
         ;
       }
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -1158,7 +1199,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
         jj_consume_token(RIGHT_PARENTHESIS);
         break;
       default:
-        jj_la1[20] = jj_gen;
+        jj_la1[21] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -1184,7 +1225,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
         t = jj_consume_token(XOR);
         break;
       default:
-        jj_la1[21] = jj_gen;
+        jj_la1[22] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -1219,7 +1260,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
         t = jj_consume_token(NOT_EQUALS);
         break;
       default:
-        jj_la1[22] = jj_gen;
+        jj_la1[23] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -1260,7 +1301,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
         t = jj_consume_token(FALSE);
         break;
       default:
-        jj_la1[23] = jj_gen;
+        jj_la1[24] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -1307,7 +1348,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
         t = jj_consume_token(IDENTIFIER);
         break;
       default:
-        jj_la1[24] = jj_gen;
+        jj_la1[25] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -1325,10 +1366,11 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
     finally { jj_save(0, xla); }
   }
 
-  private boolean jj_3R_35() {
-    if (!jj_rescan) trace_call("select(LOOKING AHEAD...)");
-    if (jj_scan_token(SELECT_TOKEN)) { if (!jj_rescan) trace_return("select(LOOKAHEAD FAILED)"); return true; }
-    { if (!jj_rescan) trace_return("select(LOOKAHEAD SUCCEEDED)"); return false; }
+  private boolean jj_2_2(int xla) {
+    jj_la = xla; jj_lastpos = jj_scanpos = token;
+    try { return !jj_3_2(); }
+    catch(LookaheadSuccess ls) { return true; }
+    finally { jj_save(1, xla); }
   }
 
   private boolean jj_3R_24() {
@@ -1337,15 +1379,15 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
     { if (!jj_rescan) trace_return("crossjoin(LOOKAHEAD SUCCEEDED)"); return false; }
   }
 
+  private boolean jj_3R_32() {
+    if (!jj_rescan) trace_call("transitiveClose(LOOKING AHEAD...)");
+    if (jj_scan_token(TRANSITIVE_CLOSE_LEFT)) { if (!jj_rescan) trace_return("transitiveClose(LOOKAHEAD FAILED)"); return true; }
+    { if (!jj_rescan) trace_return("transitiveClose(LOOKAHEAD SUCCEEDED)"); return false; }
+  }
+
   private boolean jj_3R_26() {
     if (jj_3R_28()) return true;
     return false;
-  }
-
-  private boolean jj_3R_34() {
-    if (!jj_rescan) trace_call("project(LOOKING AHEAD...)");
-    if (jj_scan_token(PROJECT_TOKEN)) { if (!jj_rescan) trace_return("project(LOOKAHEAD FAILED)"); return true; }
-    { if (!jj_rescan) trace_return("project(LOOKAHEAD SUCCEEDED)"); return false; }
   }
 
   private boolean jj_3_1() {
@@ -1359,7 +1401,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
     { if (!jj_rescan) trace_return("difference(LOOKAHEAD SUCCEEDED)"); return false; }
   }
 
-  private boolean jj_3R_18() {
+  private boolean jj_3R_19() {
     if (!jj_rescan) trace_call("readyOnlyOperations(LOOKING AHEAD...)");
     Token xsp;
     xsp = jj_scanpos;
@@ -1370,13 +1412,29 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
     { if (!jj_rescan) trace_return("readyOnlyOperations(LOOKAHEAD SUCCEEDED)"); return false; }
   }
 
-  private boolean jj_3R_11() {
-    if (jj_3R_19()) return true;
+  private boolean jj_3R_12() {
+    if (jj_3R_10()) return true;
     return false;
   }
 
-  private boolean jj_3R_30() {
-    if (jj_3R_19()) return true;
+  private boolean jj_3R_35() {
+    if (jj_3R_38()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_33() {
+    if (jj_3R_36()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_10() {
+    if (!jj_rescan) trace_call("relation(LOOKING AHEAD...)");
+    if (jj_scan_token(IDENTIFIER)) { if (!jj_rescan) trace_return("relation(LOOKAHEAD FAILED)"); return true; }
+    { if (!jj_rescan) trace_return("relation(LOOKAHEAD SUCCEEDED)"); return false; }
+  }
+
+  private boolean jj_3R_34() {
+    if (jj_3R_37()) return true;
     return false;
   }
 
@@ -1386,31 +1444,26 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
     { if (!jj_rescan) trace_return("intersection(LOOKAHEAD SUCCEEDED)"); return false; }
   }
 
-  private boolean jj_3R_33() {
-    if (jj_3R_36()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_32() {
-    if (jj_3R_35()) return true;
-    return false;
-  }
-
   private boolean jj_3R_31() {
-    if (jj_3R_34()) return true;
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_33()) {
+    jj_scanpos = xsp;
+    if (jj_3R_34()) {
+    jj_scanpos = xsp;
+    if (jj_3R_35()) return true;
+    }
+    }
+    return false;
+  }
+
+  private boolean jj_3R_30() {
+    if (jj_3R_10()) return true;
     return false;
   }
 
   private boolean jj_3R_29() {
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3R_31()) {
-    jj_scanpos = xsp;
-    if (jj_3R_32()) {
-    jj_scanpos = xsp;
-    if (jj_3R_33()) return true;
-    }
-    }
+    if (jj_3R_32()) return true;
     return false;
   }
 
@@ -1420,9 +1473,17 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
     xsp = jj_scanpos;
     if (jj_3R_29()) {
     jj_scanpos = xsp;
-    if (jj_3R_30()) { if (!jj_rescan) trace_return("unitaryOperations(LOOKAHEAD FAILED)"); return true; }
+    if (jj_3R_30()) {
+    jj_scanpos = xsp;
+    if (jj_3R_31()) { if (!jj_rescan) trace_return("unitaryOperations(LOOKAHEAD FAILED)"); return true; }
+    }
     }
     { if (!jj_rescan) trace_return("unitaryOperations(LOOKAHEAD SUCCEEDED)"); return false; }
+  }
+
+  private boolean jj_3_2() {
+    if (jj_3R_10()) return true;
+    return false;
   }
 
   private boolean jj_3R_20() {
@@ -1431,10 +1492,10 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
     { if (!jj_rescan) trace_return("union(LOOKAHEAD SUCCEEDED)"); return false; }
   }
 
-  private boolean jj_3R_19() {
-    if (!jj_rescan) trace_call("relation(LOOKING AHEAD...)");
-    if (jj_scan_token(IDENTIFIER)) { if (!jj_rescan) trace_return("relation(LOOKAHEAD FAILED)"); return true; }
-    { if (!jj_rescan) trace_return("relation(LOOKAHEAD SUCCEEDED)"); return false; }
+  private boolean jj_3R_38() {
+    if (!jj_rescan) trace_call("rename(LOOKING AHEAD...)");
+    if (jj_scan_token(RENAME_TOKEN)) { if (!jj_rescan) trace_return("rename(LOOKAHEAD FAILED)"); return true; }
+    { if (!jj_rescan) trace_return("rename(LOOKAHEAD SUCCEEDED)"); return false; }
   }
 
   private boolean jj_3R_25() {
@@ -1443,7 +1504,13 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
     { if (!jj_rescan) trace_return("division(LOOKAHEAD SUCCEEDED)"); return false; }
   }
 
-  private boolean jj_3R_16() {
+  private boolean jj_3R_37() {
+    if (!jj_rescan) trace_call("select(LOOKING AHEAD...)");
+    if (jj_scan_token(SELECT_TOKEN)) { if (!jj_rescan) trace_return("select(LOOKAHEAD FAILED)"); return true; }
+    { if (!jj_rescan) trace_return("select(LOOKAHEAD SUCCEEDED)"); return false; }
+  }
+
+  private boolean jj_3R_17() {
     if (jj_3R_24()) return true;
     return false;
   }
@@ -1453,29 +1520,28 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
     return false;
   }
 
-  private boolean jj_3R_15() {
+  private boolean jj_3R_16() {
     if (jj_3R_23()) return true;
     return false;
   }
 
-  private boolean jj_3R_14() {
+  private boolean jj_3R_15() {
     if (jj_3R_22()) return true;
     return false;
   }
 
-  private boolean jj_3R_36() {
-    if (!jj_rescan) trace_call("rename(LOOKING AHEAD...)");
-    if (jj_scan_token(RENAME_TOKEN)) { if (!jj_rescan) trace_return("rename(LOOKAHEAD FAILED)"); return true; }
-    { if (!jj_rescan) trace_return("rename(LOOKAHEAD SUCCEEDED)"); return false; }
-  }
-
-  private boolean jj_3R_13() {
+  private boolean jj_3R_14() {
     if (jj_3R_21()) return true;
     return false;
   }
 
-  private boolean jj_3R_17() {
+  private boolean jj_3R_18() {
     if (jj_3R_25()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_13() {
+    if (jj_3R_20()) return true;
     return false;
   }
 
@@ -1490,28 +1556,27 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
     { if (!jj_rescan) trace_return("join(LOOKAHEAD SUCCEEDED)"); return false; }
   }
 
-  private boolean jj_3R_12() {
-    if (jj_3R_20()) return true;
+  private boolean jj_3R_11() {
+    if (jj_scan_token(LEFT_PARENTHESIS)) return true;
+    if (jj_3R_19()) return true;
     return false;
   }
 
-  private boolean jj_3R_10() {
-    if (jj_scan_token(LEFT_PARENTHESIS)) return true;
-    if (jj_3R_18()) return true;
-    return false;
+  private boolean jj_3R_36() {
+    if (!jj_rescan) trace_call("project(LOOKING AHEAD...)");
+    if (jj_scan_token(PROJECT_TOKEN)) { if (!jj_rescan) trace_return("project(LOOKAHEAD FAILED)"); return true; }
+    { if (!jj_rescan) trace_return("project(LOOKAHEAD SUCCEEDED)"); return false; }
   }
 
   private boolean jj_3R_9() {
     if (!jj_rescan) trace_call("binaryOperations(LOOKING AHEAD...)");
     Token xsp;
     xsp = jj_scanpos;
-    if (jj_3R_10()) {
+    if (jj_3R_11()) {
     jj_scanpos = xsp;
-    if (jj_3R_11()) { if (!jj_rescan) trace_return("binaryOperations(LOOKAHEAD FAILED)"); return true; }
+    if (jj_3R_12()) { if (!jj_rescan) trace_return("binaryOperations(LOOKAHEAD FAILED)"); return true; }
     }
     xsp = jj_scanpos;
-    if (jj_3R_12()) {
-    jj_scanpos = xsp;
     if (jj_3R_13()) {
     jj_scanpos = xsp;
     if (jj_3R_14()) {
@@ -1520,7 +1585,9 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
     jj_scanpos = xsp;
     if (jj_3R_16()) {
     jj_scanpos = xsp;
-    if (jj_3R_17()) { if (!jj_rescan) trace_return("binaryOperations(LOOKAHEAD FAILED)"); return true; }
+    if (jj_3R_17()) {
+    jj_scanpos = xsp;
+    if (jj_3R_18()) { if (!jj_rescan) trace_return("binaryOperations(LOOKAHEAD FAILED)"); return true; }
     }
     }
     }
@@ -1540,7 +1607,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
   private Token jj_scanpos, jj_lastpos;
   private int jj_la;
   private int jj_gen;
-  final private int[] jj_la1 = new int[25];
+  final private int[] jj_la1 = new int[26];
   static private int[] jj_la1_0;
   static private int[] jj_la1_1;
   static private int[] jj_la1_2;
@@ -1550,15 +1617,15 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
       jj_la1_init_2();
    }
    private static void jj_la1_init_0() {
-      jj_la1_0 = new int[] {0x200,0x0,0x200,0x10014000,0x200,0x200,0x10000000,0x0,0x0,0x2000,0x2000,0x0,0x0,0x1f80000,0x0,0x5000,0x5000,0x10880,0x10880,0x0,0x200,0x0,0x1f80000,0x0,0x0,};
+      jj_la1_0 = new int[] {0x200,0x0,0x200,0x10014000,0x200,0x200,0x10000000,0x0,0x0,0x200,0x2000,0x2000,0x0,0x0,0x1f80000,0x0,0x5000,0x5000,0x10880,0x10880,0x0,0x200,0x0,0x1f80000,0x0,0x0,};
    }
    private static void jj_la1_init_1() {
-      jj_la1_1 = new int[] {0x38,0x38,0x0,0xc180,0x0,0xf8020000,0x100,0x38,0x38,0x0,0x0,0x1c000,0x2,0x0,0x1,0x0,0x0,0x4,0x4,0x20000,0xf8000000,0x1c000,0x0,0xf8000000,0x7fc0000,};
+      jj_la1_1 = new int[] {0x238,0x238,0x0,0x30180,0x0,0xe0080000,0x100,0x38,0x238,0x238,0x0,0x0,0x70000,0x2,0x0,0x1,0x0,0x0,0x4,0x4,0x80000,0xe0000000,0x70000,0x0,0xe0000000,0x1ff00000,};
    }
    private static void jj_la1_init_2() {
-      jj_la1_2 = new int[] {0x8,0x8,0x8,0x0,0x8,0xf,0x0,0x0,0x8,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0xf,0x0,0x0,0x7,0x8,};
+      jj_la1_2 = new int[] {0x20,0x20,0x20,0x0,0x20,0x3f,0x0,0x0,0x20,0x20,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x3f,0x0,0x0,0x1f,0x20,};
    }
-  final private JJCalls[] jj_2_rtns = new JJCalls[1];
+  final private JJCalls[] jj_2_rtns = new JJCalls[2];
   private boolean jj_rescan = false;
   private int jj_gc = 0;
 
@@ -1573,7 +1640,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 25; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 26; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -1588,7 +1655,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 25; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 26; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -1599,7 +1666,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 25; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 26; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -1610,7 +1677,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 25; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 26; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -1620,7 +1687,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 25; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 26; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -1630,7 +1697,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 25; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 26; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -1746,12 +1813,12 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
   /** Generate ParseException. */
   public ParseException generateParseException() {
     jj_expentries.clear();
-    boolean[] la1tokens = new boolean[81];
+    boolean[] la1tokens = new boolean[83];
     if (jj_kind >= 0) {
       la1tokens[jj_kind] = true;
       jj_kind = -1;
     }
-    for (int i = 0; i < 25; i++) {
+    for (int i = 0; i < 26; i++) {
       if (jj_la1[i] == jj_gen) {
         for (int j = 0; j < 32; j++) {
           if ((jj_la1_0[i] & (1<<j)) != 0) {
@@ -1766,7 +1833,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
         }
       }
     }
-    for (int i = 0; i < 81; i++) {
+    for (int i = 0; i < 83; i++) {
       if (la1tokens[i]) {
         jj_expentry = new int[1];
         jj_expentry[0] = i;
@@ -1836,7 +1903,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
 
   private void jj_rescan_token() {
     jj_rescan = true;
-    for (int i = 0; i < 1; i++) {
+    for (int i = 0; i < 2; i++) {
     try {
       JJCalls p = jj_2_rtns[i];
       do {
@@ -1844,6 +1911,7 @@ public class RelationalQueryLanguage implements RelationalQueryLanguageConstants
           jj_la = p.arg; jj_lastpos = jj_scanpos = p.first;
           switch (i) {
             case 0: jj_3_1(); break;
+            case 1: jj_3_2(); break;
           }
         }
         p = p.next;

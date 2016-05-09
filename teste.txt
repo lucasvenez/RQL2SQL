@@ -1,48 +1,51 @@
 //-------------TESTES ADICIONAIS-----------------------------------------------------//
-//A v (B ^ C);
-//§ idPessoa codPessoa (Pessoa [] (A [] (B [] C)));
-//£ TRUE ^ 5 > 6 + 7 * 3 (Pessoa); //Não gera erro semântico
+§ idPessoa codPessoa (Pessoa [] (A [] (B [] C)));
+£ TRUE ^ 5 > 6 + 7 * 3 (Pessoa);
 //£ TRUE ^ 5 > 6 + "teste" * 3 (Pessoa); //Gera erro semântico
+£ cod = 5 (§ idPessoa cod (¢ idPessoa (Pessoa)));
 
 //-------------OPERAÇÕES UNIÁRIAS----------------------------------------------------//
 //--RELAÇÃO (RELVAR)--//
 Pessoa;
 
 //--PROJEÇÃO (SELECT)--//
-//¢ idPessoa, nome (Pessoa);
+¢ idPessoa (Pessoa);
+¢ idPessoa, nome (Pessoa);
 
 //--SELEÇÃO (WHERE)--//
-//£ id * (5 + 3) > key ^ nome = ("True" -> 5 > 6 : "False") v id / atributo (Pessoa);
-//£ idPessoa = 5 * 4 + 3 ^ true (Pessoa);
-//£ idPessoa = 5 (Pessoa);
+£ idPessoa = 5 (Pessoa);
+£ idPessoa = 5 * 4 + 3 ^ TRUE (Pessoa);
+//£ idPessoa * (5 + 3) > idPessoa ^ nome = ("True" -> 5 > 6 : "False") v id / atributo (Pessoa); //Gera erro semântico
 
 //--RENOMEAR--//
-//§ idPessoa id, nome name (Pessoa);
+§ idPessoa id, nome name (Pessoa);
 
 //--FECHO TRANSITIVO--//
-//<<Pessoa>>
+<<C>>;
+<< ¢ idC, recursiveIdC (C) >>;
 
 //-------------OPERAÇÕES BINÁRIAS----------------------------------------------------//
 //--UNIÃO--//
-//A v B;
+A v B;
+A v (A v B); //SQL pelo PhpMyAdmin não aceita aninhamento de consultas binárias
 
 //--INTERSECÇÃO--//
-//A ^ B;
+A ^ B;
 
 //--DIFERENÇA--//
-//A - B;
+A - B;
 
 //--PRODUTO CARTESIANO--//
-//A x B; 
+A x B; 
 
 //--JUNÇÃO NATURAL--//
-//A[]B;
+A[]B;
 
 //--JUNÇÃO--//
-//A[ a1 = b2 ]B;
+A[ idA = idB ]B;
 
 //--divisão--//
-//Produto / Venda;
+Produto / Venda;
 
 //--SEMIDIFERENÇA--//
 //A -- B; IMPLEMENTAR

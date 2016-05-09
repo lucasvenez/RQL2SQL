@@ -68,7 +68,6 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 		if (x == null)
 			return;
 		if (x.getNode() instanceof ReadyOnlyOperationsNode) {
-			globalScope++;
 			readyOnlyOperationsNodeCheck((ReadyOnlyOperationsNode) x.getNode());
 		}
 	}
@@ -76,50 +75,19 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 	private void readyOnlyOperationsNodeCheck(ReadyOnlyOperationsNode x) {
 		if (x == null)
 			return;
+		globalScope++;
 		schema.addRelation("temporaryRelation" + globalScope);
 		if (x.getNode() instanceof UnitaryOperationsNode) {
-			// System.out.println("Defining: temporaryRelation" + globalScope +
-			// " Unitary");
-			unitaryOperationsNodeCheck((UnitaryOperationsNode) x.getNode(), globalScope);
+			unitaryOperationsNodeCheck((UnitaryOperationsNode) x.getNode());
 		} else {
-			// System.out.println("Defining: temporaryRelation" + globalScope +
-			// " Binary");
-			binaryOperationsNodeCheck((BinaryOperationsNode) x.getNode(), globalScope);
+			binaryOperationsNodeCheck((BinaryOperationsNode) x.getNode());
 		}
 	}
 
-	private int[] binarySetNodeCheck(BinarySetNode x) {
-		if (x == null)
-			return null;
-		int binaryScopes[] = new int[2];
-
-		globalScope++;
-		binaryScopes[0] = globalScope;
-		if (x.getReadyOnlyOperationsNode1() != null) {
-			readyOnlyOperationsNodeCheck(x.getReadyOnlyOperationsNode1());
-		} else {
-			// System.out.println("Defining: temporaryRelation" + globalScope +
-			// " BinaryRelation1");
-			schema.addRelation("temporaryRelation" + globalScope);
-			relationNodeCheck(x.getRelationNode1(), globalScope);
-		}
-
-		globalScope++;
-		binaryScopes[1] = globalScope;
-		if (x.getReadyOnlyOperationsNode2() != null) {
-			readyOnlyOperationsNodeCheck(x.getReadyOnlyOperationsNode2());
-		} else {
-			// System.out.println("Defining: temporaryRelation" + globalScope +
-			// " BinaryRelation2");
-			schema.addRelation("temporaryRelation" + globalScope);
-			relationNodeCheck(x.getRelationNode2(), globalScope);
-		}
-		return binaryScopes;
-	}
-
-	private void binaryOperationsNodeCheck(BinaryOperationsNode x, int scope) {
+	private void binaryOperationsNodeCheck(BinaryOperationsNode x) {
 		if (x == null)
 			return;
+		int scope = globalScope;
 		int binaryScopes[] = binarySetNodeCheck(x.getBinarySetNode());
 		if (x.getBinaryOperationsNodeChildren() instanceof JoinNode)
 			joinNodeCheck((JoinNode) x.getBinaryOperationsNodeChildren(), scope, binaryScopes);
@@ -135,6 +103,31 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 			divisionNodeCheck((DivisionNode) x.getBinaryOperationsNodeChildren(), scope, binaryScopes);
 	}
 
+	private int[] binarySetNodeCheck(BinarySetNode x) {
+		if (x == null)
+			return null;
+		int binaryScopes[] = new int[2];
+
+		binaryScopes[0] = globalScope + 1;
+		if (x.getReadyOnlyOperationsNode1() != null) {
+			readyOnlyOperationsNodeCheck(x.getReadyOnlyOperationsNode1());
+		} else {
+			globalScope++;
+			schema.addRelation("temporaryRelation" + globalScope);
+			relationNodeCheck(x.getRelationNode1());
+		}
+
+		binaryScopes[1] = globalScope + 1;
+		if (x.getReadyOnlyOperationsNode2() != null) {
+			readyOnlyOperationsNodeCheck(x.getReadyOnlyOperationsNode2());
+		} else {
+			globalScope++;
+			schema.addRelation("temporaryRelation" + globalScope);
+			relationNodeCheck(x.getRelationNode2());
+		}
+		return binaryScopes;
+	}
+
 	private void unionNodeCheck(UnionNode x, int scope, int[] binaryScopes) {
 		if (x == null)
 			return;
@@ -144,6 +137,8 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 			throwSemanticError(
 					"\tfor the union operation, the relations must have the same number of attributes : At the line "
 							+ x.getPosition().beginLine + ", column " + x.getPosition().beginColumn);
+		} else {
+			schema.replaceRelation("temporaryRelation" + scope, relation1);
 		}
 	}
 
@@ -156,6 +151,8 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 			throwSemanticError(
 					"\tfor the intersection operation, the relations must have the same number of attributes : At the line "
 							+ x.getPosition().beginLine + ", column " + x.getPosition().beginColumn);
+		}else{
+			schema.replaceRelation("temporaryRelation" + scope, relation1);
 		}
 	}
 
@@ -168,6 +165,8 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 			throwSemanticError(
 					"\tfor the difference operation, the relations must have the same number of attributes : At the line "
 							+ x.getPosition().beginLine + ", column " + x.getPosition().beginColumn);
+		}else{
+			schema.replaceRelation("temporaryRelation" + scope, relation1);
 		}
 	}
 
@@ -208,9 +207,8 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 			return;
 		Relation relation1 = schema.getRelation("temporaryRelation" + (binaryScopes[0]));
 		Relation relation2 = schema.getRelation("temporaryRelation" + (binaryScopes[1]));
-		System.out.println("temporaryRelation" + scope);
 		Relation division = schema.getRelation("temporaryRelation" + scope);
-		
+
 		if (relation1.getNumberOfAttributes() > relation2.getNumberOfAttributes()) {
 			Set<String> relation1Attributes = relation1.getAttributeNames();
 			Set<String> relation2Attributes = relation2.getAttributeNames();
@@ -222,9 +220,9 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 					break;
 				}
 			}
-			for(String attribute : relation1Attributes){
-				if(!relation2Attributes.contains(attribute))
-				division.addAttribute(attribute, relation1.getAttribute(attribute));
+			for (String attribute : relation1Attributes) {
+				if (!relation2Attributes.contains(attribute))
+					division.addAttribute(attribute, relation1.getAttribute(attribute));
 			}
 		} else {
 			throwSemanticError("\tThe divisor of the operation must be a subset of the dividend: \""
@@ -233,22 +231,36 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 		}
 	}
 
-	private void unitaryOperationsNodeCheck(UnitaryOperationsNode x, int scope) {
+	private void unitaryOperationsNodeCheck(UnitaryOperationsNode x) {
 		if (x == null)
 			return;
-
+		int scope = globalScope;
 		if (x.getRelationNode() != null) {
-			relationNodeCheck(x.getRelationNode(), scope);
+			relationNodeCheck(x.getRelationNode());
 		} else {
-			globalScope++;
 			readyOnlyOperationsNodeCheck(x.getReadyOnlyOperationsNode());
 		}
 		if (x.getUnitaryOperationsChildrenNode() instanceof ProjectNode)
 			projectNodeCheck((ProjectNode) x.getUnitaryOperationsChildrenNode(), scope);
-		if (x.getUnitaryOperationsChildrenNode() instanceof RenameNode)
+		else if (x.getUnitaryOperationsChildrenNode() instanceof RenameNode)
 			renameNodeCheck((RenameNode) x.getUnitaryOperationsChildrenNode(), scope);
-		if (x.getUnitaryOperationsChildrenNode() instanceof SelectNode)
+		else if (x.getUnitaryOperationsChildrenNode() instanceof SelectNode) {
 			selectNodeCheck((SelectNode) x.getUnitaryOperationsChildrenNode(), scope);
+		} else if (x.getUnitaryOperationsChildrenNode() instanceof TransitiveCloseNode)
+			if (x.getRelationNode() == null)
+				transitiveCloseNodeCheck((TransitiveCloseNode) x.getUnitaryOperationsChildrenNode(), (scope + 1));
+			else
+				transitiveCloseNodeCheck((TransitiveCloseNode) x.getUnitaryOperationsChildrenNode(), scope);
+	}
+
+	private void transitiveCloseNodeCheck(TransitiveCloseNode x, int scope) {
+		if (x == null)
+			return;
+		Relation r = schema.getRelation("temporaryRelation" + scope);
+		if (r.getNumberOfAttributes() != 2) {
+			throwSemanticError("\tTransitive closure requires a binary relation: At the line "
+					+ x.getPosition().beginLine + ", column " + x.getPosition().beginColumn);
+		}
 	}
 
 	private void projectNodeCheck(ProjectNode x, int scope) {
@@ -428,13 +440,29 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 			return conditionalSentenceNodeCheck(x.getConditionalSentenceNode(), scope);
 		else {
 			if (x.getPosition().kind == RelationalQueryLanguageConstants.IDENTIFIER) {
-				if (!schema.getRelation("temporaryRelation" + scope).hasAttribute(x.getPosition().image)) {
+				if (!schema.getRelation("temporaryRelation" + (scope + 1)).hasAttribute(x.getPosition().image)) {
 					throwSemanticError("\tAttribute does not exist: \"" + x.getPosition().image + "\" at the line "
 							+ x.getPosition().beginLine + ", column " + x.getPosition().beginColumn);
 				}
+				Attribute attribute = schema.getRelation("temporaryRelation" + (scope + 1))
+						.getAttribute(x.getPosition().image);
+				String type = attribute.getType();
+				return symbolTableTypeConvert(type);
 			}
 		}
 		return x.getPosition().kind;
+	}
+
+	private int symbolTableTypeConvert(String type) {
+		if (type.equals("VARCHAR") || type.equals("VARCHAR"))
+			return RelationalQueryLanguageConstants.STRING;
+		else if (type.equals("INT") || type.equals("INTEGER"))
+			return RelationalQueryLanguageConstants.INTEGER;
+		else if (type.equals("DOUBLE") || type.equals("DECIMAL") || type.equals("FLOAT") || type.equals("LONG")
+				|| type.equals("BLOB"))
+			return RelationalQueryLanguageConstants.DECIMAL;
+		else
+			return 0;
 	}
 
 	private void renameNodeCheck(RenameNode x, int scope) {
@@ -457,7 +485,7 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 		String toRename = x.getToRenameAttributeNode().getPosition().image;
 		String renamed = x.getRenamedAttributeNode().getPosition().image;
 		if (r.hasAttribute(toRename)) {
-			schema.getRelation("temporaryRelation" + scope).renameAttribute(toRename, renamed);
+			schema.getRelation("temporaryRelation" + scope).addAttribute(renamed, r.getAttribute(toRename));
 		} else {
 			throwSemanticError("\tAttribute does not exist: \"" + x.getToRenameAttributeNode().getPosition().image
 					+ "\" at the line " + x.getToRenameAttributeNode().getPosition().beginLine + ", column "
@@ -466,11 +494,12 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 
 	}
 
-	private void relationNodeCheck(RelationNode x, int scope) {
+	private void relationNodeCheck(RelationNode x) {
 		if (x == null)
 			return;
 		if (schema.hasRelation(x.getPosition().image)) {
-			schema.replaceRelation("temporaryRelation" + scope, schema.getRelation(x.getPosition().image));
+			//System.out.println("DEFINING: temporaryRelation" + globalScope + " AS " + x.getPosition().image);
+			schema.replaceRelation("temporaryRelation" + globalScope, schema.getRelation(x.getPosition().image));
 		} else {
 			throwSemanticError("\tRelation does not exist: \"" + x.getPosition().image + "\" at the line "
 					+ x.getPosition().beginLine + ", column " + x.getPosition().beginColumn);
