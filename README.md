@@ -8,7 +8,7 @@
 
 Relational Query Language (RQL) is a query language created by Lucas Venezian Povoa [1] based on the Original Relational Algebra by E.F. Codd and the A Relational Algebra by C.J. Date and H. Darwen. It aims at defining an actual abstract and mathematical-based query language for the actual Relational Model defined in [2].
 
-RQL2SQL is a Java framework developed by Dérick Welman and Lucas Venezian Povoa [3] that aims at translating Relational Query Language [1] sentences into Structured Query Language.
+RQL2SQL is a Java framework developed by Dérick Welman and Lucas Venezian Povoa [3] that aims at translating RQL sentences into Structured Query Language (SQL).
 
 ### Exemples
 
