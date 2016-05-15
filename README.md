@@ -1,10 +1,10 @@
-# Relational Query Language (RQL)
+# Relational Query Language
 
-## Introduction
+### Introduction
 
-RQL is a query language created by Lucas Venezian Povoa [1] based on the Original Relational Algebra by E.F. Codd and the A Relational Algebra by C.J. Date and H. Darwen. It aims at defining an actual abstract, mathematical based query language for the actual Relational Model.
+Relational Query Language (RQL) is a query language created by Lucas Venezian Povoa [1] based on the Original Relational Algebra by E.F. Codd and the A Relational Algebra by C.J. Date and H. Darwen. It aims at defining an actual abstract and mathematical-based query language for the actual Relational Model defined in [2].
 
-RQL2SQL is a framework wrote in Java that aims at translating Relational Query Language [1] code into Structured Query Language code.
+RQL2SQL is a Java framework developed by Dérick Welman and Lucas Venezian Povoa [3] that aims at translating Relational Query Language [1] sentences into Structured Query Language.
 
 ### Exemples
 
@@ -17,7 +17,7 @@ Sale(idSale, date, time, idClient) -[1:n]- SaleItem(idSale, idProduct) -[n:1]- P
 The question "Which are the Products related to all Sales?" could be answer in SQL as: 
 
 ```SQL
-SELECT DISTINCT idProdut
+SELECT DISTINCT idProduct
 FROM SaleItem
 WHERE 
     (
@@ -27,15 +27,19 @@ WHERE
     (
 	SELECT COUNT(*)
 	FROM SaleItem AS si
-	WHERE si.idProduto = SaleItem.idProdut
+	WHERE si.idProduct = SaleItem.idProduct
     )
 ```
 
 and in RQL as:
 
 ```SQL
-¢ idProduto, idVenda (ItensVenda) / ¢ idVenda (Venda)
+¢ idProduct, idSale (SaleItem) / ¢ idSale (Sale)
 ```
 ## References
 
 [1] Lucas Venezian Povoa. Relational Query Language: a purely relational query language (portuguese). Graduation Thesis. Supervisor: João Maurício Hipólito. 2011.
+
+[2] [C.J. Date. Introduction to Database Systems, 8th edition. 2003. ISBN: 978-0321197849.](http://dl.acm.org/citation.cfm?id=861613&CFID=615788245&CFTOKEN=38751876)
+
+[3] Dérick Welman. Towards a Purely Relational Query Language: comparison between the structured and relational query languages (portuguese). Graduation Thesis. Supervisor: Lucas Venezian Povoa. 2016.
