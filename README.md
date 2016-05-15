@@ -1,9 +1,7 @@
 # Relational Query Language
 
 <p align="center">
-
-![alt tag](https://raw.githubusercontent.com/lucasvenez/RQL2SQL/images/rql-logo.png)
-
+<img src="https://raw.githubusercontent.com/lucasvenez/RQL2SQL/images/rql-logo.png"/>
 </p>
 
 ### Introduction
