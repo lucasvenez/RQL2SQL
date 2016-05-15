@@ -1,16 +1,25 @@
-package Tests;
+package br.edu.ifsp;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
-import java.io.IOException;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import br.edu.ifsp.parser.ParseException;
-import br.edu.ifsp.parser.RelationalQueryLanguage;
+
 import br.edu.ifsp.parser.Token;
 import br.edu.ifsp.semanticAnalysis.RelationCheck;
-import br.edu.ifsp.symbolTable.*;
-import br.edu.ifsp.syntacticTree.*;
+import br.edu.ifsp.symbolTable.Attribute;
+import br.edu.ifsp.symbolTable.Relation;
+import br.edu.ifsp.symbolTable.SymbolTable;
+import br.edu.ifsp.syntacticTree.AttributeNode;
+import br.edu.ifsp.syntacticTree.ListNode;
+import br.edu.ifsp.syntacticTree.ProjectNode;
+import br.edu.ifsp.syntacticTree.QueryNode;
+import br.edu.ifsp.syntacticTree.ReadyOnlyOperationsNode;
+import br.edu.ifsp.syntacticTree.RelationNode;
+import br.edu.ifsp.syntacticTree.RelationalOperationsNode;
+import br.edu.ifsp.syntacticTree.RenameNode;
+import br.edu.ifsp.syntacticTree.RenameSetNode;
+import br.edu.ifsp.syntacticTree.UnitaryOperationsNode;
 
 public class RelationCheckTest {
 
@@ -85,7 +94,7 @@ public class RelationCheckTest {
 		
 		/* One attribute successful projection
 		 * Equivalent query:
-		 * ¢ idPessoa (Pessoa);
+		 * ï¿½ idPessoa (Pessoa);
 		 *  */
 		ListNode root = new ListNode(
 				new RelationalOperationsNode(
@@ -106,7 +115,7 @@ public class RelationCheckTest {
 		
 		/* One attribute failed projection
 		 * Equivalent query:
-		 * ¢ nome (Telefone);
+		 * ï¿½ nome (Telefone);
 		 *  */
 		root = new ListNode(
 				new RelationalOperationsNode(
@@ -127,7 +136,7 @@ public class RelationCheckTest {
 		
 		/* Two attribute successful projection
 		 * Equivalent query:
-		 * ¢ idPessoa, nome (Pessoa));
+		 * ï¿½ idPessoa, nome (Pessoa));
 		 *  */
 		ListNode list = new ListNode(new AttributeNode(new Token(0, "idPessoa")));
 		list.add(new AttributeNode(new Token(0, "nome")));
@@ -147,7 +156,7 @@ public class RelationCheckTest {
 		
 		/* Two attribute failed projection
 		 * Equivalent query:
-		 * ¢ idTelefone, numero (Pessoa));
+		 * ï¿½ idTelefone, numero (Pessoa));
 		 *  */
 		list = new ListNode(new AttributeNode(new Token(0, "idTelefone")));
 		list.add(new AttributeNode(new Token(0, "numero")));
@@ -167,7 +176,7 @@ public class RelationCheckTest {
 		
 		/* Two chained projection
 		 * Equivalent query:
-		 * ¢ nome (¢ idPessoa (Pessoa));
+		 * ï¿½ nome (ï¿½ idPessoa (Pessoa));
 		 *  */
 		root = new ListNode(
 				new RelationalOperationsNode(
@@ -200,7 +209,7 @@ public class RelationCheckTest {
 		
 		/* One attribute successful rename
 		 * Equivalent query:
-		 * § idPessoa id (Pessoa);
+		 * ï¿½ idPessoa id (Pessoa);
 		 *  */
 		ListNode root = new ListNode(
 				new RelationalOperationsNode(
@@ -221,7 +230,7 @@ public class RelationCheckTest {
 		
 		/* One attribute failed rename
 		 * Equivalent query:
-		 * § numero num (Pessoa);
+		 * ï¿½ numero num (Pessoa);
 		 *  */
 		root = new ListNode(
 				new RelationalOperationsNode(
@@ -242,7 +251,7 @@ public class RelationCheckTest {
 		
 		/* Two attribute successful rename
 		 * Equivalent query:
-		 * § idPessoa id, nome nomePessoa (Pessoa));
+		 * ï¿½ idPessoa id, nome nomePessoa (Pessoa));
 		 *  */
 		ListNode list = new ListNode(new RenameSetNode(new Token(0, "idPessoa"), new Token(0, "id")));
 		list.add(new RenameSetNode(new Token(0, "nome"), new Token(0, "nomePessoa")));
@@ -263,7 +272,7 @@ public class RelationCheckTest {
 		
 		/* Two attribute failed rename
 		 * Equivalent query:
-		 * § numero num, id iidPessoa (Pessoa));
+		 * ï¿½ numero num, id iidPessoa (Pessoa));
 		 *  */
 		list = new ListNode(new RenameSetNode(new Token(0, "numero"), new Token(0, "num")));
 		list.add(new RenameSetNode(new Token(0, "id"), new Token(0, "idPessoa")));
@@ -284,7 +293,7 @@ public class RelationCheckTest {
 		
 		/* Two chained renames
 		 * Equivalent query:
-		 * § id cod (§ idPessoa id (Pessoa));
+		 * ï¿½ id cod (ï¿½ idPessoa id (Pessoa));
 		 *  */
 		root = new ListNode(
 				new RelationalOperationsNode(
@@ -317,7 +326,7 @@ public class RelationCheckTest {
 		
 		/* One attribute successful rename
 		 * Equivalent query:
-		 * § idPessoa id (¢ idPessoa (Pessoa));
+		 * ï¿½ idPessoa id (ï¿½ idPessoa (Pessoa));
 		 *  */
 		ListNode root = new ListNode(
 				new RelationalOperationsNode(
@@ -344,7 +353,7 @@ public class RelationCheckTest {
 		
 		/* One attribute successful rename
 		 * Equivalent query:
-		 * ¢ id (§ idPessoa id (Pessoa));
+		 * ï¿½ id (ï¿½ idPessoa id (Pessoa));
 		 *  */
 		root = new ListNode(
 				new RelationalOperationsNode(
