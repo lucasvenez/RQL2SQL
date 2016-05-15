@@ -1,6 +1,6 @@
 # Relational Query Language
 
-[[https://raw.githubusercontent.com/lucasvenez/RQL2SQL/images/rql-logo.png|alt=octocat]]
+-> ![alt tag](https://raw.githubusercontent.com/lucasvenez/RQL2SQL/images/rql-logo.png) <-
 
 ### Introduction
 
