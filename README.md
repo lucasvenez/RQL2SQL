@@ -1,6 +1,10 @@
 # Relational Query Language
 
--> ![alt tag](https://raw.githubusercontent.com/lucasvenez/RQL2SQL/images/rql-logo.png) <-
+<p align="center">
+
+![alt tag](https://raw.githubusercontent.com/lucasvenez/RQL2SQL/images/rql-logo.png)
+
+</p>
 
 ### Introduction
 
