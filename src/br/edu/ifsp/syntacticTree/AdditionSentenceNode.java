@@ -2,10 +2,14 @@ package br.edu.ifsp.syntacticTree;
 
 import br.edu.ifsp.parser.Token;
 
+/**
+ * Class that represents an addition sentence
+ * @author Dérick Welman
+ */
 public class AdditionSentenceNode extends Node{
 
-	MultiplicationSentenceNode msn = null;
-	AdditionOperatorNode aon = null;
+	private MultiplicationSentenceNode msn = null;
+	private AdditionOperatorNode aon = null;
 	
 	public AdditionSentenceNode(MultiplicationSentenceNode msn){
 		super(msn.getFirstToken());
@@ -23,10 +27,18 @@ public class AdditionSentenceNode extends Node{
 		return null;
 	}
 	
+	/**
+	 * Method that returns the child multiplication sentence
+	 * @return MultiplicationSentenceNode
+	 */
 	public MultiplicationSentenceNode getMultiplicationSentenceNode(){
 		return msn;
 	}
 	
+	/**
+	 * Method that returns the child addition operator
+	 * @return AdditionOperatorNode
+	 */
 	public AdditionOperatorNode getAdditionOperatorNode(){
 		return aon;
 	}

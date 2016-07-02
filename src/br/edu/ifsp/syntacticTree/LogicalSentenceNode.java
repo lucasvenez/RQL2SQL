@@ -2,10 +2,14 @@ package br.edu.ifsp.syntacticTree;
 
 import br.edu.ifsp.parser.Token;
 
+/**
+ * Class that represents a logical sentence
+ * @author Dérick Welman
+ */
 public class LogicalSentenceNode extends Node{
 
-	ConditionalSentenceNode csn = null;
-	LogicalOperatorNode lon = null;
+	private ConditionalSentenceNode csn = null;
+	private LogicalOperatorNode lon = null;
 	
 	public LogicalSentenceNode(ConditionalSentenceNode csn){
 		super(csn.getFirstToken());

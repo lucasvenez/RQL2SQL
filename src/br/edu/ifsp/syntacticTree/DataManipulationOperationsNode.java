@@ -2,6 +2,10 @@ package br.edu.ifsp.syntacticTree;
 
 import br.edu.ifsp.parser.Token;
 
+/**
+ * Class that represents a data manipulation operation
+ * @author Dérick Welman
+ */
 public class DataManipulationOperationsNode  extends Node {
 
 	public DataManipulationOperationsNode(Token position) {

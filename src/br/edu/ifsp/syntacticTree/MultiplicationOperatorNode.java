@@ -2,11 +2,15 @@ package br.edu.ifsp.syntacticTree;
 
 import br.edu.ifsp.parser.Token;
 
+/**
+ * Class that represents a multiplication operator
+ * @author Dérick Welman
+ */
 public class MultiplicationOperatorNode extends Node {
 
-	FactorNode fn1 = null;
-	FactorNode fn2 = null;
-	MultiplicationOperatorNode next = null;
+	private FactorNode fn1 = null;
+	private FactorNode fn2 = null;
+	private MultiplicationOperatorNode next = null;
 	
 	public MultiplicationOperatorNode(Token t, FactorNode fn1, FactorNode fn2) {
 		super(t);

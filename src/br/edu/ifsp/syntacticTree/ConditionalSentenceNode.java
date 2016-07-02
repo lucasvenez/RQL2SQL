@@ -2,10 +2,14 @@ package br.edu.ifsp.syntacticTree;
 
 import br.edu.ifsp.parser.Token;
 
+/**
+ * Class that represents a conditional sentence
+ * @author Dérick Welman
+ */
 public class ConditionalSentenceNode extends Node{
 
-	ComparisonSentenceNode csn = null;
-	ListNode ln = null;
+	private ComparisonSentenceNode csn = null;
+	private ListNode ln = null;
 	
 	public ConditionalSentenceNode(ComparisonSentenceNode csn) {
 		super(csn.getFirstToken());

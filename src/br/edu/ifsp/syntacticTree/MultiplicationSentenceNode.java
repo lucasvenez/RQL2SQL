@@ -2,10 +2,14 @@ package br.edu.ifsp.syntacticTree;
 
 import br.edu.ifsp.parser.Token;
 
+/**
+ * Class that represents a multiplication sentence
+ * @author Dérick Welman
+ */
 public class MultiplicationSentenceNode extends Node{
 
-	FactorNode fn = null;
-	MultiplicationOperatorNode mon = null;
+	private FactorNode fn = null;
+	private MultiplicationOperatorNode mon = null;
 	
 	public MultiplicationSentenceNode(FactorNode fn){
 		super(fn.getFirstToken());

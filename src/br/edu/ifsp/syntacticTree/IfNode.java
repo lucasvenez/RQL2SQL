@@ -2,10 +2,14 @@ package br.edu.ifsp.syntacticTree;
 
 import br.edu.ifsp.parser.Token;
 
+/**
+ * Class that represents an if (ternary operator)
+ * @author Dérick Welman
+ */
 public class IfNode extends Node {
 
-	ComparisonSentenceNode csn1 = null;
-	ComparisonSentenceNode csn2 = null;
+	private ComparisonSentenceNode csn1 = null;
+	private ComparisonSentenceNode csn2 = null;
 
 	public IfNode(Token t, ComparisonSentenceNode csn1, ComparisonSentenceNode csn2) {
 		super(t);

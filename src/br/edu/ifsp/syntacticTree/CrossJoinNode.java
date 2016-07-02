@@ -3,6 +3,10 @@ package br.edu.ifsp.syntacticTree;
 import br.edu.ifsp.parser.Token;
 import br.edu.ifsp.syntacticTree.interfaces.BinaryOperationsNodeChildren;
 
+/**
+ * Class that represents a cross join operation
+ * @author Dérick Welman
+ */
 public class CrossJoinNode extends Node implements BinaryOperationsNodeChildren{
 	
 	public CrossJoinNode(Token position) {

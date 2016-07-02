@@ -3,6 +3,10 @@ package br.edu.ifsp.syntacticTree;
 import br.edu.ifsp.parser.Token;
 import br.edu.ifsp.syntacticTree.interfaces.RelationalOperationsNodeChildren;
 
+/**
+ * Class that represents a relational operation
+ * @author Lucas Venezian
+ */
 public class RelationalOperationsNode extends Node {
 
 	private RelationalOperationsNodeChildren node;

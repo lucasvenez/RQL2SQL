@@ -3,6 +3,10 @@ package br.edu.ifsp.syntacticTree;
 import br.edu.ifsp.parser.Token;
 import br.edu.ifsp.syntacticTree.interfaces.BinaryOperationsNodeChildren;
 
+/**
+ * Class that represents a difference operation
+ * @author Dérick Welman
+ */
 public class DifferenceNode extends Node implements BinaryOperationsNodeChildren{
 	
 	public DifferenceNode(Token position) {

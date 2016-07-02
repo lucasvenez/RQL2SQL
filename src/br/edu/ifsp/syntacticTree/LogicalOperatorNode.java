@@ -2,11 +2,15 @@ package br.edu.ifsp.syntacticTree;
 
 import br.edu.ifsp.parser.Token;
 
+/**
+ * Class that represents a logical operator
+ * @author Dérick Welman
+ */
 public class LogicalOperatorNode extends Node {
 
-	ConditionalSentenceNode csn1 = null;
-	ConditionalSentenceNode csn2 = null;
-	LogicalOperatorNode next = null;
+	private ConditionalSentenceNode csn1 = null;
+	private ConditionalSentenceNode csn2 = null;
+	private LogicalOperatorNode next = null;
 	
 	public LogicalOperatorNode(Token t, ConditionalSentenceNode csn1, ConditionalSentenceNode csn2) {
 		super(t);

@@ -4,6 +4,10 @@ import br.edu.ifsp.parser.Token;
 import br.edu.ifsp.syntacticTree.interfaces.QueryNodeChildren;
 import br.edu.ifsp.syntacticTree.interfaces.RelationalOperationsNodeChildren;
 
+/**
+ * Class that represents a query
+ * @author Lucas Venezian
+ */
 public class QueryNode extends Node implements RelationalOperationsNodeChildren{
 
 	private QueryNodeChildren node = null;

@@ -1,16 +1,20 @@
 package br.edu.ifsp.syntacticTree;
 
 import br.edu.ifsp.parser.Token;
-import br.edu.ifsp.syntacticTree.interfaces.ReadyOnlyOperationsNodeChildren;
+import br.edu.ifsp.syntacticTree.interfaces.ReadOnlyOperationsNodeChildren;
 import br.edu.ifsp.syntacticTree.interfaces.UnitaryOperationsNodeChildren;
 
-public class UnitaryOperationsNode extends Node implements ReadyOnlyOperationsNodeChildren {
+/**
+ * Class that represents an unitary operation
+ * @author Lucas Venezian, Dérick Welman
+ */
+public class UnitaryOperationsNode extends Node implements ReadOnlyOperationsNodeChildren {
 
 	private UnitaryOperationsNodeChildren uonc = null;
-	private ReadyOnlyOperationsNode roon = null;
+	private ReadOnlyOperationsNode roon = null;
 	private RelationNode rn = null;
 	
-	public UnitaryOperationsNode( UnitaryOperationsNodeChildren uonc, ReadyOnlyOperationsNode roon ) {
+	public UnitaryOperationsNode( UnitaryOperationsNodeChildren uonc, ReadOnlyOperationsNode roon ) {
 		super(uonc.getFirstToken());
 		this.uonc = uonc;
 		this.roon = roon;
@@ -41,7 +45,7 @@ public class UnitaryOperationsNode extends Node implements ReadyOnlyOperationsNo
 		return this.uonc;
 	}
 	
-	public ReadyOnlyOperationsNode getReadyOnlyOperationsNode(){
+	public ReadOnlyOperationsNode getReadyOnlyOperationsNode(){
 		return this.roon;
 	}
 	

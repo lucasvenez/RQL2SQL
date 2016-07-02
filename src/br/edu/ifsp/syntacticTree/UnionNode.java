@@ -3,6 +3,10 @@ package br.edu.ifsp.syntacticTree;
 import br.edu.ifsp.parser.Token;
 import br.edu.ifsp.syntacticTree.interfaces.BinaryOperationsNodeChildren;
 
+/**
+ * Class that represents an union operation
+ * @author Dérick Welman
+ */
 public class UnionNode extends Node implements BinaryOperationsNodeChildren{
 	
 	public UnionNode(Token position) {

@@ -2,10 +2,14 @@ package br.edu.ifsp.syntacticTree;
 
 import br.edu.ifsp.parser.Token;
 
+/**
+ * Class that represents a factor
+ * @author Dérick Welman
+ */
 public class FactorNode extends Node{
 
-	Token not = null;
-	ConditionalSentenceNode csn = null;
+	private Token not = null;
+	private ConditionalSentenceNode csn = null;
 	
 	
 	public FactorNode(Token not, Token t) {

@@ -21,7 +21,7 @@ options {
 	 * quais são os não-terminais que estão sendo "executados" e quais são os tokens que
 	 * estão sendo consumidos em cada um deles.
 	 */
-	DEBUG_LOOKAHEAD = true;
+	DEBUG_LOOKAHEAD = false;
 }
  
 PARSER_BEGIN( RelationalQueryLanguage )
@@ -30,490 +30,35 @@ package br.edu.ifsp.parser;
 /*
  * Import session
  */
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import br.edu.ifsp.symbolTable.*;
 import br.edu.ifsp.syntacticTree.*;
 import br.edu.ifsp.syntacticTree.interfaces.*;
-import br.edu.ifsp.symbolTable.exceptions.*;
-import br.edu.ifsp.semanticAnalysis.RelationCheck;
-import br.edu.ifsp.codeGeneration.CodeGenerator;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class RelationalQueryLanguage {
 
 	/**
-	 * Compiler version describe.
-	 */
-	public static final String VERSION = "Relational Query Language Translator 1.0 - 2010";
-
-	/**
-	 * Attribute used to check if there is or there is not abstract output of syntax analysis.
-	 */
-	private static boolean debug_sa = false; //debug lexical syntax analysis process
-
-	/**
-	 * Attribute used to store the syntactic tree from analysis
-	 */
-	private static ListNode root = null; //Store the syntactic tree
-
-	/**
-	 * Attribute used to check if the syntactic tree will be exported to a external file.
-	 */
-	private static boolean export_tree = false; //export a graph from syntactic tree
-
-	/**
-	 * Attribute used to store the symbol table from arguments
-	 */
-	private static SymbolTable symbolTable = null; //Stores the symbol table
-
-	/**
-	 * Method main of Relational Query Language class
-	 * @throws ParseException, IOException
-	 */
-	public static void main ( String args[] ) throws ParseException, IOException {
-
-		/**
-		 * Attribute used to store a reference of a parser object that will do the compilation of source code in Relational Query Language.
-		 */
-		RelationalQueryLanguage parser = null;
-		
-		/**
-		 * Attribute used to store the file name that will be analysis. 
-		 */
-		String fileName = null;
-		
-		/**
-		 * Attribute used to store the output path.
-		 */		
-		String outputPath = "./";
-
-		/**
-		 * Attribute used to store the output file name.
-		 */		
-		String outputFileName = "Output.SQL";
-		
-		/**
-		 * Number of parameters errors.
-		 */
-		int parametersErrors = 0;
-
-		/**
-		 * For clause used to get the parameters that will be used in compiler process.
-		 */
-		for ( int i = 0; i < args.length && parametersErrors == 0; i++ ) { //for 1
-
-			String arg = args[i];
-
-			if ( arg.toLowerCase().equals( "--debug-syntax-analysis" ) || arg.toLowerCase().equals( "-s" ) ) {
-
-				debug_sa = true;
-			}
-			/*
-			 * Checking help parameter
-			 */
-			else if ( arg.equals( "--help " ) || arg.equals( "-h" ) ) {
-
-				helpText();
-				System.exit( 0 );
-			}
-			/*
-			 * Checking attributes parameter
-			 */
-			else if (arg.equals("--attributes-definition") || arg.equals("-a")) {
-				i = checkParameterOfAttributesDefinition(args, i)-1;
-				if (i < 1) {
-					helpText();
-					System.exit(0);
-				}
-			}
-			/*
-			 * Checking output-path parameter
-			 */
-			else if ( arg.toLowerCase().equals( "--output-path" ) || arg.toLowerCase().equals( "-p" ) ) {
-					
-				if ( i + 1 < args.length && checkParameterOfOutputPath( args[i+1] ) )
-					outputPath = args[++i];
-				else {
-						
-					System.out.println( "The value of --output-path parameter is invalid." );
-					parametersErrors++;
-				}
-			}
-			/*
-			 * Checking output name parameter
-			 */
-			else if ( arg.toLowerCase().equals( "--output-name" ) || arg.toLowerCase().equals( "-n" ) ) { 
-					
-				if ( i + 1 < args.length && checkParameterOfOutputName( args[i+1] ) )						
-					outputFileName = args[++i];
-
-				else {
-					
-					System.out.print( "The value of output-name parameter is invalid." );
-					parametersErrors++;
-				}
-			}
-			/*
-			 * Checking target SQL parameter.
-			 */
-			else if ( arg.toLowerCase().equals( "--target-sql" ) || arg.toLowerCase().equals( "-t" ) ) {
-				
-				if ( i + 1 < args.length && checkParameterOfTargetSQL( args[i+1] ) ) i++;
-				
-				else {
-					
-					System.out.print( "The value of output-name parameter is invalid. It's just possible to use the SQL92 option." );
-					parametersErrors++;						
-				}
-			}
-			/*
-			 * Checking export tree parameter
-			 */
-			else if ( arg.equals("--export-tree") || arg.equals("-e")) {
-				export_tree = true;
-			}
-			/*
-			 * Checking if the file is in the last index. 
-			 */				
-			else if ( i != args.length - 1 ) {
-					
-				parametersErrors++;
-			}
-			/*
-			 * All right. Now we go to do the compilation. 	
-			 */				
-			else
-				fileName = arg;
-		} //for 1
-
-		if ( parametersErrors != 0 ) {
-			
-			System.out.println();
-			helpText();
-			System.exit(0);
-		}
-		else {
-			
-			System.out.printf( "Reading from file %s\n", fileName );
-
-			try {
-
-				parser = new RelationalQueryLanguage( new FileInputStream( fileName ) );
-
-				/*
-				 * Disabling/Enabling the syntax analysis debug
-				 */
-				if ( !debug_sa )
-					parser.disable_tracing();
-				else
-					parser.enable_tracing();
-			}	
-			catch ( FileNotFoundException exception ) {
-
-				System.out.printf( "File %s not found.\n", fileName );
-				System.exit(0);
-			}
-
-			/*
-			 * Set a default output name if it is empty
-			 */
-			
-			try {
-				
-				root = parser.program();
-				PrintTree pt = new PrintTree();
-				if (debug_sa)
-					pt.printRoot(root);
-				if (export_tree)
-					pt.exportDotTree(root);
-				RelationCheck rc = null;
-				int semanticErrors = 0;
-				if (symbolTable != null) {
-					rc = new RelationCheck(symbolTable);
-					semanticErrors = rc.semanticAnalysis(root);
-					System.out.println("Semantic Errors: " + semanticErrors);
-				}
-				if (semanticErrors == 0) {
-					CodeGenerator generator = new CodeGenerator(symbolTable, outputPath + outputFileName, VERSION);
-					generator.generate(root);
-				}
-				
-			}
-			catch ( NullPointerException exception ) {
-
-				System.out.println( "A file must be specified." );
-			}
-			finally {
-
-								
-				switch ( parser.token_source.foundLexError() ) 	{
-					case 0:
-						System.out.println( "Lexical errors were not found." );
-					   break;
-					   
-					case 1:
-						System.out.printf( "%c[1m%i%c[0m lexical error was found.\n", 27, 1, 27 );
-					  break;
-					  
-					default:
-						System.out.printf( "%c[1m%i%c[0m lexical errors were found.\n", 27, parser.token_source.foundLexError(), 27 );
-				}
-
-				System.out.println( "Analysis finished." );
-			}
-		}
-		
-	}//main
-	
-	/**
 	 * Method used to link a founded token with his name.
-	 * @see the book DELAMARO, M. E. Como Construir um Compilador: Utilizando Ferramentas Java. São Paulo: Novatec. 2004
+	 * 
+	 * @see the book DELAMARO, M. E. Como Construir um Compilador: Utilizando
+	 *      Ferramentas Java. São Paulo: Novatec. 2004
 	 * @param x
 	 * @return
 	 */
-	public static String im ( int x ) {
-		
+	public static String im(int x) {
+
 		int k;
 		String s;
-		
+
 		s = tokenImage[x];
-		k = s.lastIndexOf( "\"" );
-		
+		k = s.lastIndexOf("\u005c"");
+
 		try {
-		
-			s.substring( 1, k );
+
+			s.substring(1, k);
+		} catch (Exception exception) {
 		}
-		catch( Exception exception ) {}
-		
+
 		return s;
-	}
-	
-	/**
-	 * Method used to print the help text.
-	 */
-	private static void helpText() {
-		
-		System.out.println( "Usage: java -jar rql.jar [options] file" );
-		System.out.println();
-		
-		System.out.println( "[options]" );
-
-		System.out.printf( "%c[1m", 27 );
-		System.out.println( String.format( "\n\t·   %-30s", "-p, --output-path <path-name>" ) );
-		System.out.printf( "%c[0m", 27 );
-		System.out.println( String.format( "\n\t    %s", "Specific output path" ) );
-
-		System.out.printf( "%c[1m", 27 );
-		System.out.println( String.format( "\n\t·   %-30s", "-n, --output-name <file-name>" ) );
-		System.out.printf( "%c[0m", 27 );
-		System.out.println( String.format( "\n\t    %s", "Specific output file name" ) );
-
-		System.out.printf( "%c[1m", 27 );
-		System.out.println( String.format( "\n\t·   %-30s", "-t, --target-sql <sql-type>",   "Target sql type (default: SQL92)" ) );
-		System.out.printf( "%c[0m", 27 );
-		System.out.println( String.format( "\n\t    %s", "Target sql type (default: SQL92)" ) );
-
-		System.out.printf( "%c[1m", 27 );
-		System.out.println( String.format( "\n\t·   %-30s", "-l, --debug-lexical-analysis" ) );
-		System.out.printf( "%c[0m", 27 );
-		System.out.println( String.format( "\n\t    %s", "Show lexical analysis details." ) );
-
-		System.out.printf( "%c[1m", 27 );
-		System.out.println( String.format( "\n\t·   %-30s", "-s, --debug-syntax-analysis" ) );
-		System.out.printf( "%c[0m", 27 );
-		System.out.println( String.format( "\n\t    %s", "Show syntax analysis details." ) );
-
-		System.out.printf( "%c[1m", 27 );
-		System.out.println( String.format( "\n\t·   %-30s", "-a, --attributes-definition" ) );
-		System.out.printf( "%c[0m", 27 );
-		System.out.println( String.format( "\n\t    %s", "Input the attributes definition for semantic analysis" ) );
-
-		System.out.printf( "%c[1m", 27 );
-		System.out.println( String.format( "\n\t·   %-30s", "-e, --export-tree" ) );
-		System.out.printf( "%c[0m", 27 );
-		System.out.println( String.format( "\n\t    %s", "Export the graph of syntactic tree." ) );
-
-		System.out.println();
-	}
-
-	/**
-	 * Method used to check the parameter value of --attributes-definition.
-	 * @param location
-	 *            is the start of parameters definition.
-	 * @return the position of the next argument
-	 */
-	public static int checkParameterOfAttributesDefinition(String args[], int location) {
-
-		boolean result = false;
-		List<String> attributes = new ArrayList<String>();
-		String attributeCheck = "";
-		String identifierRegex = "([a-zA-Z_][a-zA-Z1-9_]*)";
-		String typeRegex = "(VARCHAR|CHAR|INT|INTEGER|DOUBLE|DECIMAL|RATIONAL|FLOAT|LONG|BLOB)(\\([1-9]{1,3}\\))?";
-		String primaryRegex = "(PRIMARY\\s?KEY)?";
-		String foreignRegex = "(REFERENCES\\s?" + identifierRegex + "." + identifierRegex + ")?";
-		String attributeRegex = identifierRegex + "." + identifierRegex + ":" + typeRegex + primaryRegex + foreignRegex
-				+ ";";
-
-		for (int i = location + 1; i < args.length - 1; i++) {
-			String parameter = args[i];
-			if (!parameter.equals("-p") && !parameter.equals("--output-path") && !parameter.equals("-n")
-					&& !parameter.equals("--output-name") && !parameter.equals("-t")
-					&& !parameter.equals("--target-sql") && !parameter.equals("-l")
-					&& !parameter.equals("--debug-lexical-analysis") && !parameter.equals("-s")
-					&& !parameter.equals("--debug-syntax-analysis") && !parameter.equals("-h")
-					&& !parameter.equals("--attributes-definition") && !parameter.equals("-a")
-					&& !parameter.equals("--export-tree") && !parameter.equals("-e")
-					&& !parameter.equals("--help")) {
-				attributes.add(parameter);
-				attributeCheck += parameter;
-				location = i;
-			} else {
-				location = i;
-				break;
-			}
-		}
-		if (!attributeCheck.matches("(" + attributeRegex + ")+")) {
-			return 0;
-		} else {
-			System.out.println("Building symbol table from arguments:");
-			buildSymbolTable(attributeCheck, attributeRegex);
-		}
-		return location;
-	}
-
-	/**
-	 * Method used to build the symbol table from arguments.
-	 * @param definition
-	 *            is the string with the information about the database
-	 * @param regex
-	 * 				is the regular expression that check the information
-	 */
-	public static void buildSymbolTable(String definition, String regex) {
-		Pattern pattern = Pattern.compile(regex);
-		Matcher matcher = pattern.matcher(definition);
-
-		symbolTable = new SymbolTable();
-		while (matcher.find()) {
-			String relation = matcher.group(1);
-			String attribute = matcher.group(2);
-			String type = matcher.group(3);
-
-			Attribute newAttribute = new Attribute(attribute, type);
-
-			int range = 0;
-			if (matcher.group(4) != null) {
-				range = Integer.parseInt(matcher.group(4).replace("(", "").replace(")", ""));
-				newAttribute.addFeature("range", range);
-			}
-
-			boolean primary = false;
-			if (matcher.group(5) != null) {
-				primary = true;
-				newAttribute.addFeature("primary", primary);
-			}
-
-			String referenceRelation = matcher.group(7);
-			String referenceAttribute = matcher.group(8);
-
-			if (referenceRelation != null) {
-				// Checks the foreign key
-				if (symbolTable.hasRelation(referenceRelation)
-						&& symbolTable.getRelation(referenceRelation).hasAttribute(referenceAttribute)) {
-					newAttribute.addFeature("reference", new Reference(referenceRelation, referenceAttribute));
-				} else {
-					// Throw a exception for unexistent foreign key
-					throw new UnexistentForeignKeyException();
-				}
-			}
-
-			System.out.println("  Making a new entry:");
-			System.out.println("    Relation: " + relation);
-			System.out.println("    Attribute: " + attribute);
-			System.out.println("    Type: " + type);
-			System.out.println("    Range: " + range);
-			System.out.println("    Primary: " + primary);
-			System.out.println("    Reference relation: " + referenceRelation);
-			System.out.println("    Reference attribute: " + referenceAttribute);
-			System.out.println("  Closing entry:");
-
-			symbolTable.getRelation(relation).addAttribute(attribute, newAttribute);
-		}
-		System.out.println("Finished the construction of the symbol table");
-	}
-
-	/**
-	 * Method used to check if the parameter value of --output-path, --output-name and target-sql are not equals compiler parameters .
-	 * @param parameter is the value will be checked.
-	 * @return true if the value that's OK
-	 */
-	public static boolean checkParameter ( String parameter ) {
-		
-		boolean result = false;
-		
-		if (
-		  	!parameter.equals( "-p" ) && !parameter.equals( "--output-path" )                    &&
-			!parameter.equals( "-n" ) && !parameter.equals( "--output-name" )                    &&
-			!parameter.equals( "-t" ) && !parameter.equals( "--target-sql" )                     &&
-			!parameter.equals( "-l" ) && !parameter.equals( "--debug-lexical-analysis" )         &&
-			!parameter.equals( "-s" ) && !parameter.equals( "--debug-syntax-analysis"  )         &&
-			!parameter.equals( "-h" ) && !parameter.equals( "--help" )                   
-				
-		) {
-		  
-			result = true;
-		}
-		
-		return result;
-	}	
-
-	/**
-	 * Method used to check the parameter value of --output-name.
-	 * @param parameter is the value will be checked.
-	 * @return true if the value that's OK
-	 */
-	public static boolean checkParameterOfOutputName (String parameter ) {
-			
-		boolean result = false;
-		
-		if ( parameter != null && checkParameter( parameter ) )
-			result = true;
-		
-		return result;
-	}	
-	
-	/**
-	 * Method used to check the parameter value of --output-path.
-	 * @param parameter is the value will be checked.
-	 * @return true if the value that's OK
-	 */
-	public static boolean checkParameterOfOutputPath ( String parameter ) {
-		
-		boolean result = false;
-		
-		if ( parameter.indexOf( "-" ) != 0 && parameter != null && checkParameter( parameter ) )
-			result = true;
-		
-		return result;
-	}
-	
-	/**
-	 * Method used to check the parameter value of --target-sql.
-	 * @param parameter is the value will be checked.
-	 * @return true if the value that's OK
-	 */
-	public static boolean checkParameterOfTargetSQL ( String parameter ) {
-		
-		boolean result = false;
-		
-		if ( parameter.toUpperCase().equals( "SQL92" ) )
-			result = true;
-		
-		return result;
 	}
 	  
 }//RelationalQueryLanguage class
@@ -813,31 +358,31 @@ QueryNode query() : {
    QueryNodeChildren qnc = null;
 } {
    
-   	qnc = readyOnlyOperations() 
+   	qnc = readOnlyOperations() 
 	//|  qnc = dataManipulationOperations()
 	{ return new QueryNode( qnc ); }
    
 }
 
-ReadyOnlyOperationsNode readyOnlyOperations() : {
+ReadOnlyOperationsNode readOnlyOperations() : {
 
-	ReadyOnlyOperationsNodeChildren roonc = null;
+	ReadOnlyOperationsNodeChildren roonc = null;
 } {
  	( LOOKAHEAD(2) roonc = binaryOperations()
 	| roonc = unitaryOperations() 
 	)
-	{ return new ReadyOnlyOperationsNode(roonc); }
+	{ return new ReadOnlyOperationsNode(roonc); }
 }
 
 BinaryOperationsNode binaryOperations() : {
 	BinaryOperationsNodeChildren bonc = null;
 	BinarySetNode bst = null;
-	ReadyOnlyOperationsNode roon1 = null;
-	ReadyOnlyOperationsNode roon2 = null;
+	ReadOnlyOperationsNode roon1 = null;
+	ReadOnlyOperationsNode roon2 = null;
 	RelationNode rn1 = null;
 	RelationNode rn2 = null;
 } {
-	((< LEFT_PARENTHESIS > roon1 = readyOnlyOperations() < RIGHT_PARENTHESIS >) | rn1 = relation())
+	((< LEFT_PARENTHESIS > roon1 = readOnlyOperations() < RIGHT_PARENTHESIS >) | rn1 = relation())
 	( bonc = union()
 	| bonc = intersection()
 	| bonc = difference()
@@ -845,7 +390,7 @@ BinaryOperationsNode binaryOperations() : {
 	| bonc = crossjoin()
     | bonc = division()
 	)
-	((< LEFT_PARENTHESIS > roon2 = readyOnlyOperations() < RIGHT_PARENTHESIS >) | rn2 = relation())
+	((< LEFT_PARENTHESIS > roon2 = readOnlyOperations() < RIGHT_PARENTHESIS >) | rn2 = relation())
 	{
 	
 	bst = new BinarySetNode();
@@ -903,7 +448,7 @@ DivisionNode division() : {
 UnitaryOperationsNode unitaryOperations() : {
 
 	UnitaryOperationsNodeChildren uonc = null;
-	ReadyOnlyOperationsNode roon = null;
+	ReadOnlyOperationsNode roon = null;
 	RelationNode rn = null;
 	UnitaryOperationsNode uon = null;
 } {
@@ -912,17 +457,17 @@ UnitaryOperationsNode unitaryOperations() : {
 	|(((uonc = project()
 	| uonc = select()
 	| uonc = rename())
-	(< LEFT_PARENTHESIS > roon = readyOnlyOperations() < RIGHT_PARENTHESIS > { return new UnitaryOperationsNode(uonc, roon); } ))
+	(< LEFT_PARENTHESIS > roon = readOnlyOperations() < RIGHT_PARENTHESIS > { return new UnitaryOperationsNode(uonc, roon); } ))
 	)
 }
 
 UnitaryOperationsNode transitiveClose() : {
 	UnitaryOperationsNodeChildren uonc = null;
-	ReadyOnlyOperationsNode roon = null;
+	ReadOnlyOperationsNode roon = null;
 	RelationNode rn = null;
 	Token t = null;
 }{
-	t = < TRANSITIVE_CLOSE_LEFT > ( LOOKAHEAD(2) rn = relation() | roon = readyOnlyOperations()) < TRANSITIVE_CLOSE_RIGHT >
+	t = < TRANSITIVE_CLOSE_LEFT > ( LOOKAHEAD(2) rn = relation() | roon = readOnlyOperations()) < TRANSITIVE_CLOSE_RIGHT >
 	{ uonc = new TransitiveCloseNode(t); if(rn==null) return new UnitaryOperationsNode(uonc, roon); else return new UnitaryOperationsNode(uonc, rn); }
 }
 
@@ -992,6 +537,7 @@ LogicalSentenceNode logicalSentence() : {
    	}
 }
 
+//TERNARY OPERATOR (IF) NOT IMPLEMENTED YET
 ConditionalSentenceNode conditionalSentence() : {
 	ComparisonSentenceNode csn = null;
 	ComparisonSentenceNode csn1 = null;
@@ -1029,6 +575,7 @@ ComparisonSentenceNode comparisonSentence() : {
    	}
 }
 
+//NOT IMPLEMENTED YET
 InstanceofSentenceNode instanceofSentence() : {
 	AdditionSentenceNode asn = null;
 	Token type = null;
