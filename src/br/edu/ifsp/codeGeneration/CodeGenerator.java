@@ -1,6 +1,5 @@
 package br.edu.ifsp.codeGeneration;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -11,50 +10,54 @@ import br.edu.ifsp.symbolTable.Relation;
 import br.edu.ifsp.symbolTable.SymbolTable;
 import br.edu.ifsp.syntacticTree.*;
 
+/**
+ * Class responsible for translating the code
+ * @author Dérick Welman
+ */
 public class CodeGenerator {
-
-	File f;
-	PrintWriter pw;
-	String output = "";
-	ArrayList<String> attributes = new ArrayList<String>();
-	SymbolTable schema;
-	int globalScope;
-
+	private PrintWriter pw;
+	private String output = "";
+	private ArrayList<String> attributes = new ArrayList<String>();
+	private SymbolTable schema;
+	private int globalScope;
+	
 	/**
-	 * Method used to initialize the generator
+	 * Constructor used to initialize the generator
 	 */
-	public CodeGenerator(SymbolTable schema, String outputFile, String version) throws IOException {
+	public CodeGenerator(SymbolTable schema, String version) throws IOException {
 		this.schema = schema;
 		globalScope = 0;
-		System.out.println(outputFile);
-		f = new File(outputFile);
-		// if (f.canWrite()) {
-		if (!f.exists())
-			f.createNewFile();
-		pw = new PrintWriter(f);
-		// } else {
-		// System.out.println("Permission denied for output location");
-		// }
-		output = "/*" + version + "*/\r\n\r\n";
+		output = "";
 	}
 
 	/**
 	 * Method used to generate the SQL from analysis
-	 * 
 	 * @param root
+	 * @return String output
 	 */
-	public void generate(ListNode root) {
+	public String generate(ListNode root) {
 		generateRelationalOperationsNodeList(root);
+		return output;
+	}
+	
+	public void printOutput(){
 		System.out.println(output);
+	}
+	
+	public void exportOutput(){
 		pw.println(output);
 		pw.close();
 	}
-
+	
 	/*
 	 * *********************************************************************
 	 * Generate the output SQL from syntactic tree
 	 **********************************************************************/
 
+	/**
+	 * Method that analyzes a list of relational operations
+	 * @param ListNode x - List of Relational Operations
+	 */
 	public void generateRelationalOperationsNodeList(ListNode x) {
 		if (x == null) {
 			return;
@@ -64,6 +67,10 @@ public class CodeGenerator {
 		generateRelationalOperationsNodeList(x.getNext());
 	}
 
+	/**
+	 * Method that analyzes a RelationalOperationsNode
+	 * @param RelationalOperationsNode x - Node that represents a relational operation
+	 */
 	public void generateRelationalOperationsNode(RelationalOperationsNode x) {
 		if (x == null)
 			return;
@@ -71,16 +78,25 @@ public class CodeGenerator {
 			generateQueryNode((QueryNode) x.getNode());
 	}
 
+	/**
+	 * Method that analyzes a QueryNode
+	 * @param QueryNode x - Node that represents a query
+	 */
 	public void generateQueryNode(QueryNode x) {
 		if (x == null)
 			return;
-		if (x.getNode() instanceof ReadyOnlyOperationsNode) {
+		if (x.getNode() instanceof ReadOnlyOperationsNode) {
 			globalScope++;
-			generateReadyOnlyOperationsNode((ReadyOnlyOperationsNode) x.getNode(), true);
+			generateReadyOnlyOperationsNode((ReadOnlyOperationsNode) x.getNode(), true);
 		}
 	}
 
-	private void generateReadyOnlyOperationsNode(ReadyOnlyOperationsNode x, boolean first) {
+	/**
+	 * Method that analyzes a ReadyOnlyOperationsNode
+	 * @param ReadOnlyOperationsNode x - Node that represents a read only operation
+	 * @param Boolean first - verifies if it is the first relation of the query
+	 */
+	private void generateReadyOnlyOperationsNode(ReadOnlyOperationsNode x, boolean first) {
 		if (x == null)
 			return;
 		output += "SELECT DISTINCT ";
@@ -90,6 +106,12 @@ public class CodeGenerator {
 			generateBinaryOperationsNode((BinaryOperationsNode) x.getNode(), first, globalScope);
 	}
 
+	/**
+	 * Method that analyzes a BinaryOperatioinsNode
+	 * @param BinaryOperationsNode x - Node that represents a binary operation
+	 * @param Boolean first - Verifies if it is the first relation of the query
+	 * @param int scope - Indicates the scope of the relationship that this node belongs
+	 */
 	private void generateBinaryOperationsNode(BinaryOperationsNode x, boolean first, int scope) {
 		if (x == null)
 			return;
@@ -115,7 +137,7 @@ public class CodeGenerator {
 			generateBinaryDivisionNode(x, scope, binaryScopes, binaryRelation, first);
 			return;
 		} else {
-			output += binaryRelation[0];
+			output += binaryRelation[0] + " AS temporaryRelation" + binaryScopes[0];
 		}
 
 		if (x.getBinaryOperationsNodeChildren() instanceof UnionNode)
@@ -139,6 +161,14 @@ public class CodeGenerator {
 		}
 	}
 
+	/**
+	 * Method that analyzes a binary division
+	 * @param BinaryOperationsNode x - Node that represents a binary operations
+	 * @param int scope - Indicates the scope of the relationship that this node belongs
+	 * @param int[] binaryScopes - Indicates the scope of two operations that this operations use
+	 * @param String[] binaryRelation - Contains the translate of binary relation analysis
+	 * @param boolean first - Verifies if it is the first relation of the query
+	 */
 	private void generateBinaryDivisionNode(BinaryOperationsNode x, int scope, int binaryScopes[],
 			String binaryRelation[], boolean first) {
 		if (x == null)
@@ -148,38 +178,46 @@ public class CodeGenerator {
 		Set<String> intersection = new HashSet<String>();
 		Set<String> exception = new HashSet<String>();
 
-		// schema.printTable();
-
 		for (String attribute : relation1.getAttributeNames()) {
 			if (relation2.hasAttribute(attribute)) {
-				intersection.add(attribute);// direita
+				intersection.add(attribute);// left
 			} else {
-				exception.add(attribute);// esquerda
+				exception.add(attribute);// right
 			}
 		}
 
 		output += "(SELECT DISTINCT ";
-		for (String attribute : exception) {
-			output += attribute + ", ";
-		}
-
-		output = output.substring(0, output.length() - 2) + " FROM " + binaryRelation[0] + " AS temporaryRelation1"
-				+ " WHERE ( SELECT COUNT(DISTINCT ";
-
 		for (String attribute : intersection) {
 			output += attribute + ", ";
 		}
 
-		output = output.substring(0, output.length() - 2) + ") FROM " + binaryRelation[1]
-				+ ") = ( SELECT COUNT(*) FROM " + binaryRelation[0] + " AS temporaryRelation2 WHERE ";
+		output = output.substring(0, output.length() - 2) + " FROM " + binaryRelation[0] + " AS temporaryRelation"+scope+"_div1"
+				+ " WHERE ( SELECT COUNT(DISTINCT ";
 
 		for (String attribute : exception) {
-			output += "temporaryRelation1." + attribute + " = temporaryRelation2." + attribute + " AND ";
+			output += attribute + ", ";
+		}
+
+		output = output.substring(0, output.length() - 2) + ") FROM " + binaryRelation[0]
+				+ ") = ( SELECT COUNT(DISTINCT ";
+		
+		for (String attribute : exception) {
+			output += "temporaryRelation"+scope+"_div2." + attribute + ", ";
+		}
+		
+		output = output.substring(0, output.length() - 2) + ") FROM " + binaryRelation[0] + " AS temporaryRelation"+scope+"_div2 WHERE ";
+
+		for (String attribute : intersection) {
+			output += "temporaryRelation"+scope+"_div1." + attribute + " = temporaryRelation"+scope+"_div2." + attribute + " AND ";
 		}
 
 		output = output.substring(0, output.length() - 5) + ")) AS temporaryRelation" + scope;
 	}
 
+	/**
+	 * Method that analyzes a JoinNode
+	 * @param JoinNode x - Node that represents a join operation
+	 */
 	private void generateJoinNode(JoinNode x) {
 		if (x == null)
 			return;
@@ -189,6 +227,11 @@ public class CodeGenerator {
 			output += " INNER JOIN ";
 	}
 
+	/**
+	 * Method that analyzes the first relation of a BinarySetNode
+	 * @param BinarySetNode x - Node that represents a binary set of relations
+	 * @param boolean first - Verifies if it is the first relation of the query
+	 */
 	private void generateFirstBinaryRelation(BinarySetNode x, boolean first) {
 		if (x == null)
 			return;
@@ -200,6 +243,11 @@ public class CodeGenerator {
 			output += x.getRelationNode1().getImage();
 	}
 
+	/**
+	 * Method that analyzes the second relation of a BinarySetNode
+	 * @param BinarySetNode x - Node that represents a binary set of relations
+	 * @param boolean first - Verifies if it is the first relation of the query
+	 */
 	private void generateSecondBinaryRelation(BinarySetNode x, boolean first) {
 		if (x == null)
 			return;
@@ -211,6 +259,12 @@ public class CodeGenerator {
 			output += x.getRelationNode2().getImage();
 	}
 
+	/**
+	 * Method that analyzes a UnitaryOperationsNode
+	 * @param UnitaryOperationsNode x - Node that represents a unitary operation
+	 * @param boolean first - Verifies if it is the first relation of the query
+	 * @param int scope - Indicates the scope of the relationship that this node belongs
+	 */
 	private void generateUnitaryOperationsNode(UnitaryOperationsNode x, boolean first, int scope) {
 		if (x == null)
 			return;
@@ -252,8 +306,8 @@ public class CodeGenerator {
 				output += relation;
 				onlyRelation = true;
 			}
-			output += (onlyRelation ? "" : ")")
-					+ (x.getUnitaryOperationsChildrenNode() instanceof TransitiveCloseNode ? "" : " AS temporaryRelation" + (scope + 1));
+			output += (onlyRelation ? "" : ")") + (x.getUnitaryOperationsChildrenNode() instanceof TransitiveCloseNode
+					? "" : " AS temporaryRelation" + (scope + 1));
 
 		}
 
@@ -261,6 +315,12 @@ public class CodeGenerator {
 			generateSelectNode((SelectNode) x.getUnitaryOperationsChildrenNode());
 	}
 
+	/**
+	 * Method that analyzes a TransitiveCloseNode
+	 * @param TransitiveCloseNode x - Node that represents a transitive closure operation
+	 * @param int scope - Indicates the scope of the relationship that this node belongs
+	 * @param String scopeRelation - Contains the relation previous analyzed
+	 */
 	private void generateTransitiveCloseNode(TransitiveCloseNode x, int scope, String scopeRelation) {
 		if (x == null)
 			return;
@@ -270,7 +330,6 @@ public class CodeGenerator {
 		attributes = relation.getAttributeNames().toArray(attributes);
 		String leftAttribute = attributes[0];
 		String rightAttribute = attributes[1];
-		String scopeParenthesysRelation;
 		String alias = "";
 
 		if (scopeRelation.startsWith("SELECT")) {
@@ -285,12 +344,21 @@ public class CodeGenerator {
 				+ " IS NOT NULL) AS temporaryRelation" + scope;
 	}
 
+	/**
+	 * Method that analyzes a ProjectNode
+	 * @param ProjectNode x - Node that represents a projection operation
+	 */
 	private void generateProjectNode(ProjectNode x) {
 		if (x == null)
 			return;
 		generateAttributeNodeList(x.getProjectNodeList(), true);
 	}
 
+	/**
+	 * Method that analyzes a list of projection attributes
+	 * @param ListNode x - A list of AttributeNodeList
+	 * @param boolean first - Verifies if it is the first attribute of the project operation
+	 */
 	private void generateAttributeNodeList(ListNode x, boolean first) {
 		if (x == null)
 			return;
@@ -298,12 +366,23 @@ public class CodeGenerator {
 		generateAttributeNodeList(x.getNext(), false);
 	}
 
+	/**
+	 * Method that analyzes a RenameNode
+	 * @param RenameNode x - Node that represents a rename operation
+	 * @param int scope - Indicates the scope of the relationship that this node belongs
+	 */
 	private void generateRenameNode(RenameNode x, int scope) {
 		if (x == null)
 			return;
 		generateRenameSetNodeList(x.getRenameSetNodeList(), true, scope);
 	}
 
+	/**
+	 * Method that analyzes a list of RenameSetNode
+	 * @param ListNode x - Node that represents a list of rename attributes set
+	 * @param boolean first - Verifies if it is the first attribute of the rename operation
+	 * @param int scope - Indicates the scope of the relationship that this node belongs
+	 */
 	private void generateRenameSetNodeList(ListNode x, boolean first, int scope) {
 		if (x == null)
 			return;
@@ -315,6 +394,10 @@ public class CodeGenerator {
 		}
 	}
 
+	/**
+	 * Method that adds the rest of attributes not renamed for translation
+	 * @param int scope - Indicates the scope of the relationship that this node belongs
+	 */
 	private void generateRemaingAttributes(int scope) {
 		for (String attribute : schema.getRelation("temporaryRelation" + (scope + 1)).getAttributeNames()) {
 			if (!attributes.contains(attribute))
@@ -322,12 +405,21 @@ public class CodeGenerator {
 		}
 	}
 
+	/**
+	 * Method that analyzes a RenameSetNode
+	 * @param RenameSetNode x - Node that represents a set of attributes to be renamed
+	 * @param boolean first - Verifies if it is the first attribute of the rename operation
+	 */
 	private void generateRenameSetNode(RenameSetNode x, boolean first) {
 		output += (first ? "" : ", ") + x.getToRenameAttributeNode().getPosition().image + " AS "
 				+ x.getRenamedAttributeNode().getPosition().image;
 		attributes.add(x.getToRenameAttributeNode().getPosition().image);
 	}
 
+	/**
+	 * Method that analyzes a SelectNode
+	 * @param SelectNode x - Node that represents a selection operation
+	 */
 	private void generateSelectNode(SelectNode x) {
 		if (x == null)
 			return;
@@ -335,6 +427,10 @@ public class CodeGenerator {
 		generateLogicalSentenceNode(x.getLogicalSentenceNode());
 	}
 
+	/**
+	 * Method that analyzes a LogicalSentenceNode
+	 * @param LogicalSentenceNode x - Node that represents a logical sentence
+	 */
 	private void generateLogicalSentenceNode(LogicalSentenceNode x) {
 		if (x == null)
 			return;
@@ -344,6 +440,10 @@ public class CodeGenerator {
 			generateConditionalSentenceNode(x.getConditionalSentenceNode());
 	}
 
+	/**
+	 * Method that analyzes a LogicalOperatorNode
+	 * @param LogicalOperatorNode x - Node that represents a logical operator
+	 */
 	private void generateLogicalOperatorNode(LogicalOperatorNode x) {
 		if (x == null)
 			return;
@@ -355,6 +455,10 @@ public class CodeGenerator {
 			generateLogicalOperatorNode(x.getNextLogicalOperatorNode());
 	}
 
+	/**
+	 * Method that converts the RQL to SQL logical operators 
+	 * @param String x - String that contains the logical operator
+	 */
 	private String convertLogicalOperator(String x) {
 		switch (x) {
 		case "^":
@@ -368,6 +472,10 @@ public class CodeGenerator {
 		}
 	}
 
+	/**
+	 * Method that analyzes a ConditionalSentenceNode
+	 * @param ConditionalSentenceNode x - Node that represents a conditional sentence
+	 */
 	private void generateConditionalSentenceNode(ConditionalSentenceNode x) {
 		if (x == null)
 			return;
@@ -375,6 +483,10 @@ public class CodeGenerator {
 		generateIfNodeList(x.getIfListNode());
 	}
 
+	/**
+	 * Method that analyzes a list of IfNodes
+	 * @param ListNode x - Node that represents a list of IfNodes
+	 */
 	private void generateIfNodeList(ListNode x) {
 		if (x == null)
 			return;
@@ -382,12 +494,21 @@ public class CodeGenerator {
 		generateIfNodeList(x.getNext());
 	}
 
+	/**
+	 * Method that analyzes a IfNode
+	 * NOT IMPLEMENTED YET
+	 * @param IfNode x - Node that represents a conditional test (if)
+	 */
 	private void generateIfNode(IfNode x) {
 		if (x == null)
 			return;
-		// Não sei ainda como fica no SQL
+		//NOT IMPLEMENTED YET
 	}
 
+	/**
+	 * Method that analyzes a ComparisonSentenceNode
+	 * @param ComparisonSentenceNode x - Node that represents a comparison sentence
+	 */
 	private void generateComparisonSentenceNode(ComparisonSentenceNode x) {
 		if (x == null)
 			return;
@@ -397,6 +518,10 @@ public class CodeGenerator {
 			generateInstanceofSentenceNode(x.getInstanceofSentenceNode());
 	}
 
+	/**
+	 * Method that analyzes a ComparisonOperatorNode
+	 * @param ComparisonOperatorNode x - Node that represents a comparison operator
+	 */
 	private void generateComparisonOperatorNode(ComparisonOperatorNode x) {
 		if (x == null)
 			return;
@@ -408,15 +533,21 @@ public class CodeGenerator {
 			generateComparisonOperatorNode(x.getNextComparisonOperatorNode());
 	}
 
+	/**
+	 * Method that analyzes a InstanceofSentenceNode
+	 * NOT IMPLEMENTED YET
+	 * @param InstanceofSentenceNode x - Node that represents a instanceof sentence
+	 */
 	private void generateInstanceofSentenceNode(InstanceofSentenceNode x) {
 		if (x == null)
 			return;
 		generateAdditionSentenceNode(x.getAdditionSentenceNode());
-		if (x.getType() != null) {
-			output += " instanceof " + x.getType().image;
-		}
 	}
 
+	/**
+	 * Method that analyzes a AdditionSentenceNode
+	 * @param AdditionSentenceNode x - Node that represents a addition sentence
+	 */
 	private void generateAdditionSentenceNode(AdditionSentenceNode x) {
 		if (x == null)
 			return;
@@ -426,6 +557,10 @@ public class CodeGenerator {
 			generateMultiplicationSentenceNode(x.getMultiplicationSentenceNode());
 	}
 
+	/**
+	 * Method that analyzes a AdditionOperatorNode
+	 * @param AdditionOperator x - Node that represents a addition operator
+	 */
 	private void generateAdditionOperatorNode(AdditionOperatorNode x) {
 		if (x == null)
 			return;
@@ -437,6 +572,10 @@ public class CodeGenerator {
 			generateAdditionOperatorNode(x.getNextAdditionOperatorNode());
 	}
 
+	/**
+	 * Method that analyzes a MultiplicationSentenceNode
+	 * @param MultiplicationSentenceNode x - Node that represents a multiplication sentence
+	 */
 	private void generateMultiplicationSentenceNode(MultiplicationSentenceNode x) {
 		if (x == null)
 			return;
@@ -446,6 +585,10 @@ public class CodeGenerator {
 			generateFactorNode(x.getFactorNode());
 	}
 
+	/**
+	 * Method that analyzes a MultiplicationOperatorNode
+	 * @param ultiplicationOperatorNode x - Node that represents a multiplication operator
+	 */
 	private void generateMultiplicationOperatorNode(MultiplicationOperatorNode x) {
 		if (x == null)
 			return;
@@ -457,6 +600,10 @@ public class CodeGenerator {
 			generateMultiplicationOperatorNode(x.getNextMultiplicationOperatorNode());
 	}
 
+	/**
+	 * Method that analyzes a FactorNode
+	 * @param FactorNode x - Node that represents a RQL factor
+	 */
 	private void generateFactorNode(FactorNode x) {
 		if (x == null)
 			return;

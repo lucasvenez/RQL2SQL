@@ -7,12 +7,19 @@ import br.edu.ifsp.parser.RelationalQueryLanguageConstants;
 import br.edu.ifsp.symbolTable.*;
 import br.edu.ifsp.syntacticTree.*;
 
+/**
+ * Class responsible for semantic analysis
+ * 
+ * @author Dérick Welman
+ */
 public class RelationCheck implements RelationalQueryLanguageConstants {
 	SymbolTable schema;
 	int semanticErrors;
 	int globalScope;
+	String errorsDescription = "";
 	Set<Integer> numberConstants = new HashSet<Integer>();
 
+	/** Constructor that initializes the variables */
 	public RelationCheck(SymbolTable st) {
 		schema = st;
 		semanticErrors = 0;
@@ -26,14 +33,47 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 		numberConstants.add(RelationalQueryLanguageConstants.OCT);
 	}
 
+	/** Method that resets the semantic error count */
 	public void clearSemanticErrors() {
 		semanticErrors = 0;
+		errorsDescription = "";
 	}
 
+	/**
+	 * Method that returns the semantic error count
+	 * @return int - Semantic errors count
+	 */
 	public int getSemanticErrors() {
 		return semanticErrors;
 	}
+	
+	/**
+	 * Method that returns the semantic errors description
+	 * @return String - Semantic errors description
+	 */
+	public String getSemanticErrorsDescription() {
+		return errorsDescription;
+	}
 
+	/**
+	 * Method that adds a semantic error and prints it
+	 * 
+	 * @param String
+	 *            message - Semantic error to be printed
+	 */
+	private void throwSemanticError(String message) {
+		semanticErrors++;
+		errorsDescription += message + "\n";
+		//System.out.println(message);
+	}
+
+	/**
+	 * Method that starts the semantic analysis
+	 * 
+	 * @param ListNode
+	 *            root - The first node of syntactic tree
+	 * @return int - The number of semantic errors
+	 */
 	public int semanticAnalysis(ListNode root) {
 		if (root == null) {
 			System.out.println("Nothing to be analysed");
@@ -41,14 +81,16 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 		}
 		System.out.println("Starting the semantic analysis");
 		relationalOperationsNodeListCheck(root);
+		System.out.println(getSemanticErrorsDescription());
 		return semanticErrors;
 	}
 
-	private void throwSemanticError(String message) {
-		semanticErrors++;
-		System.out.println(message);
-	}
-
+	/**
+	 * Method that analyzes the RelationalOperationNode list
+	 * 
+	 * @param ListNode
+	 *            x - ListNode that contains a RelationalQueryNode
+	 */
 	private void relationalOperationsNodeListCheck(ListNode x) {
 		if (x == null) {
 			return;
@@ -57,6 +99,12 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 		relationalOperationsNodeListCheck(x.getNext());
 	}
 
+	/**
+	 * Method that analyzes the RelationalOperationNode
+	 * 
+	 * @param RelationalOperationsNode
+	 *            x - Node that represents a relational operation
+	 */
 	private void relationalOperationsNodeCheck(RelationalOperationsNode x) {
 		if (x == null)
 			return;
@@ -64,15 +112,27 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 			queryNodeCheck((QueryNode) x.getNode());
 	}
 
+	/**
+	 * Method that analyzes the QueryNode
+	 * 
+	 * @param QueryNode
+	 *            x - Node that represents a query
+	 */
 	private void queryNodeCheck(QueryNode x) {
 		if (x == null)
 			return;
-		if (x.getNode() instanceof ReadyOnlyOperationsNode) {
-			readyOnlyOperationsNodeCheck((ReadyOnlyOperationsNode) x.getNode());
+		if (x.getNode() instanceof ReadOnlyOperationsNode) {
+			readyOnlyOperationsNodeCheck((ReadOnlyOperationsNode) x.getNode());
 		}
 	}
 
-	private void readyOnlyOperationsNodeCheck(ReadyOnlyOperationsNode x) {
+	/**
+	 * Method that analyzes the ReadyOnlyOperationsNode
+	 * 
+	 * @param ReadOnlyOperationsNode
+	 *            x - Node that represents a read only operation
+	 */
+	private void readyOnlyOperationsNodeCheck(ReadOnlyOperationsNode x) {
 		if (x == null)
 			return;
 		globalScope++;
@@ -84,6 +144,12 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 		}
 	}
 
+	/**
+	 * Method that analyzes the BinaryOperationsNode
+	 * 
+	 * @param BinaryOperationsNode
+	 *            x - Node that represents a binary operation
+	 */
 	private void binaryOperationsNodeCheck(BinaryOperationsNode x) {
 		if (x == null)
 			return;
@@ -103,6 +169,12 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 			divisionNodeCheck((DivisionNode) x.getBinaryOperationsNodeChildren(), scope, binaryScopes);
 	}
 
+	/**
+	 * Method that analyzes the BinarySetNode
+	 * 
+	 * @param BinarySetNode
+	 *            x - Node that represents a binary set
+	 */
 	private int[] binarySetNodeCheck(BinarySetNode x) {
 		if (x == null)
 			return null;
@@ -128,6 +200,18 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 		return binaryScopes;
 	}
 
+	/**
+	 * Method that analyzes the UnionNode
+	 * 
+	 * @param UnionNode
+	 *            x - Node that represents a union operation
+	 * @param int
+	 *            scope - Indicates the scope of the relationship that this node
+	 *            belongs
+	 * @param int[]
+	 *            binaryScopes - Indicates the scope of two operations that this
+	 *            operations use
+	 */
 	private void unionNodeCheck(UnionNode x, int scope, int[] binaryScopes) {
 		if (x == null)
 			return;
@@ -142,6 +226,18 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 		}
 	}
 
+	/**
+	 * Method that analyzes the IntersectionNode
+	 * 
+	 * @param IntersectionNode
+	 *            x - Node that represents a intersection operation
+	 * @param int
+	 *            scope - Indicates the scope of the relationship that this node
+	 *            belongs
+	 * @param int[]
+	 *            binaryScopes - Indicates the scope of two operations that this
+	 *            operations use
+	 */
 	private void intersectionNodeCheck(IntersectionNode x, int scope, int[] binaryScopes) {
 		if (x == null)
 			return;
@@ -151,11 +247,23 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 			throwSemanticError(
 					"\tfor the intersection operation, the relations must have the same number of attributes : At the line "
 							+ x.getPosition().beginLine + ", column " + x.getPosition().beginColumn);
-		}else{
+		} else {
 			schema.replaceRelation("temporaryRelation" + scope, relation1);
 		}
 	}
 
+	/**
+	 * Method that analyzes the DifferenceNode
+	 * 
+	 * @param DifferenceNode
+	 *            x - Node that represents a difference operation
+	 * @param int
+	 *            scope - Indicates the scope of the relationship that this node
+	 *            belongs
+	 * @param int[]
+	 *            binaryScopes - Indicates the scope of two operations that this
+	 *            operations use
+	 */
 	private void differenceNodeCheck(DifferenceNode x, int scope, int[] binaryScopes) {
 		if (x == null)
 			return;
@@ -163,13 +271,25 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 		Relation relation2 = schema.getRelation("temporaryRelation" + (binaryScopes[1]));
 		if (relation1.getNumberOfAttributes() != relation2.getNumberOfAttributes()) {
 			throwSemanticError(
-					"\tfor the difference operation, the relations must have the same number of attributes : At the line "
+					"\tfor the difference operation, the relations must have the same number of attributes: At the line "
 							+ x.getPosition().beginLine + ", column " + x.getPosition().beginColumn);
-		}else{
+		} else {
 			schema.replaceRelation("temporaryRelation" + scope, relation1);
 		}
 	}
 
+	/**
+	 * Method that analyzes the JoinNode
+	 * 
+	 * @param JoinNode
+	 *            x - Node that represents a join operation
+	 * @param int
+	 *            scope - Indicates the scope of the relationship that this node
+	 *            belongs
+	 * @param int[]
+	 *            binaryScopes - Indicates the scope of two operations that this
+	 *            operations use
+	 */
 	private void joinNodeCheck(JoinNode x, int scope, int[] binaryScopes) {
 		if (x == null)
 			return;
@@ -184,8 +304,35 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 		for (String s : relation2.getAttributeNames()) {
 			join.addAttribute(s, relation2.getAttribute(s));
 		}
+		if (x.getLogicalSentenceNode() != null)
+			logicalSentenceNodeCheck(x.getLogicalSentenceNode(), scope);
+		else {
+			boolean valid = false;
+			for (String a1 : relation1.getAttributeNames()) {
+				for (String a2 : relation2.getAttributeNames()) {
+					if (a1.equals(a2)) {
+						valid = true;
+					}
+				}
+			}
+			if (!valid)
+				throwSemanticError("Invalid natural join: At the line " + x.getPosition().beginLine + ", column "
+						+ x.getPosition().beginColumn);
+		}
 	}
 
+	/**
+	 * Method that analyzes the CrossJoinNode
+	 * 
+	 * @param CrossJoinNode
+	 *            x - Node that represents a cross join operation
+	 * @param int
+	 *            scope - Indicates the scope of the relationship that this node
+	 *            belongs
+	 * @param int[]
+	 *            binaryScopes - Indicates the scope of two operations that this
+	 *            operations use
+	 */
 	private void crossJoinNodeCheck(CrossJoinNode x, int scope, int[] binaryScopes) {
 		if (x == null)
 			return;
@@ -202,6 +349,18 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 		}
 	}
 
+	/**
+	 * Method that analyzes the DivisionNode
+	 * 
+	 * @param DivisionNode
+	 *            x - Node that represents a division operation
+	 * @param int
+	 *            scope - Indicates the scope of the relationship that this node
+	 *            belongs
+	 * @param int[]
+	 *            binaryScopes - Indicates the scope of two operations that this
+	 *            operations use
+	 */
 	private void divisionNodeCheck(DivisionNode x, int scope, int[] binaryScopes) {
 		if (x == null)
 			return;
@@ -231,6 +390,12 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 		}
 	}
 
+	/**
+	 * Method that analyzes the UnitaryOperationsNode
+	 * 
+	 * @param UnitaryOperationsNode
+	 *            x - Node that represents a unitary operation
+	 */
 	private void unitaryOperationsNodeCheck(UnitaryOperationsNode x) {
 		if (x == null)
 			return;
@@ -253,6 +418,15 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 				transitiveCloseNodeCheck((TransitiveCloseNode) x.getUnitaryOperationsChildrenNode(), scope);
 	}
 
+	/**
+	 * Method that analyzes the TransitiveCloseNode
+	 * 
+	 * @param TransitiveCloseNode
+	 *            x - Node that represents a transitive closure operation
+	 * @param int
+	 *            scope - Indicates the scope of the relationship that this node
+	 *            belongs
+	 */
 	private void transitiveCloseNodeCheck(TransitiveCloseNode x, int scope) {
 		if (x == null)
 			return;
@@ -263,12 +437,30 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 		}
 	}
 
+	/**
+	 * Method that analyzes the ProjectNode
+	 * 
+	 * @param ProjectNode
+	 *            x - Node that represents a projection operation
+	 * @param int
+	 *            scope - Indicates the scope of the relationship that this node
+	 *            belongs
+	 */
 	private void projectNodeCheck(ProjectNode x, int scope) {
 		if (x == null)
 			return;
 		attributeNodeListCheck(x.getProjectNodeList(), scope);
 	}
 
+	/**
+	 * Method that analyzes the list of projection attributes
+	 * 
+	 * @param ListNode
+	 *            x - Node that represents a list of AttributeNodes
+	 * @param int
+	 *            scope - Indicates the scope of the relationship that this node
+	 *            belongs
+	 */
 	private void attributeNodeListCheck(ListNode x, int scope) {
 		if (x == null)
 			return;
@@ -276,6 +468,15 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 		attributeNodeListCheck(x.getNext(), scope);
 	}
 
+	/**
+	 * Method that analyzes the AttributeNode
+	 * 
+	 * @param AttributeNode
+	 *            x - Node that represents a AttributeNode
+	 * @param int
+	 *            scope - Indicates the scope of the relationship that this node
+	 *            belongs
+	 */
 	private void attributeNodeCheck(AttributeNode x, int scope) {
 		if (x == null)
 			return;
@@ -289,12 +490,32 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 		}
 	}
 
+	/**
+	 * Method that analyzes the SelectNode
+	 * 
+	 * @param SelectNode
+	 *            x - Node that represents a selection operation
+	 * @param int
+	 *            scope - Indicates the scope of the relationship that this node
+	 *            belongs
+	 */
 	private void selectNodeCheck(SelectNode x, int scope) {
 		if (x == null)
 			return;
 		logicalSentenceNodeCheck(x.getLogicalSentenceNode(), scope);
+		schema.addRelation("temporaryRelation" + scope, schema.getRelation("temporaryRelation" + (scope+1)));
 	}
 
+	/**
+	 * Method that analyzes the LogicalSentenceNode
+	 * 
+	 * @param LogicalSentenceNode
+	 *            x - Node that represents a logical sentence
+	 * @param int
+	 *            scope - Indicates the scope of the relationship that this node
+	 *            belongs
+	 * @return int - The type returned by the children operations
+	 */
 	private int logicalSentenceNodeCheck(LogicalSentenceNode x, int scope) {
 		if (x == null)
 			return 0;
@@ -304,6 +525,16 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 			return logicalOperatorNodeCheck(x.getLogicalOperatorNode(), scope);
 	}
 
+	/**
+	 * Method that analyzes the LogicalOperatorNode
+	 * 
+	 * @param LogicalOperatorNode
+	 *            x - Node that represents a logical operator
+	 * @param int
+	 *            scope - Indicates the scope of the relationship that this node
+	 *            belongs
+	 * @return int - The type returned by the children operations
+	 */
 	private int logicalOperatorNodeCheck(LogicalOperatorNode x, int scope) {
 		if (x == null)
 			return 0;
@@ -322,6 +553,16 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 		return kind1;
 	}
 
+	/**
+	 * Method that analyzes the ConditionalSentenceNode
+	 * 
+	 * @param ConditionalSentenceNode
+	 *            x - Node that represents a conditional sentence
+	 * @param int
+	 *            scope - Indicates the scope of the relationship that this node
+	 *            belongs
+	 * @return int - The type returned by the children operations
+	 */
 	private int conditionalSentenceNodeCheck(ConditionalSentenceNode x, int scope) {
 		if (x == null)
 			return 0;
@@ -330,6 +571,16 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 		return kind1;
 	}
 
+	/**
+	 * Method that analyzes the list of IfNodes
+	 * 
+	 * @param ListNode
+	 *            x - Node that represents a list of IfNodes
+	 * @param int
+	 *            scope - Indicates the scope of the relationship that this node
+	 *            belongs
+	 * @return int - The type returned by the children operations
+	 */
 	private int ifNodeListCheck(ListNode x, int scope) {
 		if (x == null)
 			return 0;
@@ -338,6 +589,16 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 		return kind1;
 	}
 
+	/**
+	 * Method that analyzes the list of IfNodes
+	 * 
+	 * @param ListNode
+	 *            x - Node that represents a list of IfNodes
+	 * @param int
+	 *            scope - Indicates the scope of the relationship that this node
+	 *            belongs
+	 * @return int - The type returned by the children operations
+	 */
 	private int ifNodeCheck(IfNode x, int scope) {
 		if (x == null)
 			return 0;
@@ -346,6 +607,16 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 		return kind1;
 	}
 
+	/**
+	 * Method that analyzes the list of ComparisonSentenceNode
+	 * 
+	 * @param ComparisonSentenceNode
+	 *            x - Node that represents a comparison sentence
+	 * @param int
+	 *            scope - Indicates the scope of the relationship that this node
+	 *            belongs
+	 * @return int - The type returned by the children operations
+	 */
 	private int comparisonSentenceNodeCheck(ComparisonSentenceNode x, int scope) {
 		if (x == null)
 			return 0;
@@ -355,6 +626,16 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 			return comparisonOperatorNodeCheck(x.getComparisonOperatorNode(), scope);
 	}
 
+	/**
+	 * Method that analyzes the list of ComparisonOperatorNode
+	 * 
+	 * @param ComparisonOperatorNode
+	 *            x - Node that represents a comparison operator
+	 * @param int
+	 *            scope - Indicates the scope of the relationship that this node
+	 *            belongs
+	 * @return int - The type returned by the children operations
+	 */
 	private int comparisonOperatorNodeCheck(ComparisonOperatorNode x, int scope) {
 		if (x == null)
 			return 0;
@@ -373,6 +654,16 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 		return RelationalQueryLanguageConstants.TRUE;
 	}
 
+	/**
+	 * Method that analyzes the list of InstanceofSentenceNode
+	 * 
+	 * @param InstanceofSentenceNode
+	 *            x - Node that represents a instanceof sentence
+	 * @param int
+	 *            scope - Indicates the scope of the relationship that this node
+	 *            belongs
+	 * @return int - The type returned by the children operations
+	 */
 	private int instanceofSentenceNodeCheck(InstanceofSentenceNode x, int scope) {
 		if (x == null)
 			return 0;
@@ -382,6 +673,16 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 			return RelationalQueryLanguageConstants.TRUE;
 	}
 
+	/**
+	 * Method that analyzes the list of AdditionSentenceNode
+	 * 
+	 * @param AdditionSentenceNode
+	 *            x - Node that represents a addition sentence
+	 * @param int
+	 *            scope - Indicates the scope of the relationship that this node
+	 *            belongs
+	 * @return int - The type returned by the children operations
+	 */
 	private int additionSentenceNodeCheck(AdditionSentenceNode x, int scope) {
 		if (x == null)
 			return 0;
@@ -391,6 +692,16 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 			return additionOperatorNodeCheck(x.getAdditionOperatorNode(), scope);
 	}
 
+	/**
+	 * Method that analyzes the list of AdditionOperator
+	 * 
+	 * @param AdditionOperatorNode
+	 *            x - Node that represents a addition operator
+	 * @param int
+	 *            scope - Indicates the scope of the relationship that this node
+	 *            belongs
+	 * @return int - The type returned by the children operations
+	 */
 	private int additionOperatorNodeCheck(AdditionOperatorNode x, int scope) {
 		if (x == null)
 			return 0;
@@ -407,6 +718,16 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 		return kind1;
 	}
 
+	/**
+	 * Method that analyzes the list of MultiplicationSentenceNode
+	 * 
+	 * @param MultiplicationSentenceNode
+	 *            x - Node that represents a multiplication sentence
+	 * @param int
+	 *            scope - Indicates the scope of the relationship that this node
+	 *            belongs
+	 * @return int - The type returned by the children operations
+	 */
 	private int multiplicationSentenceNodeCheck(MultiplicationSentenceNode x, int scope) {
 		if (x == null)
 			return 0;
@@ -416,6 +737,16 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 			return multiplicationOperatorNode(x.getMultiplicationOperatorNode(), scope);
 	}
 
+	/**
+	 * Method that analyzes the list of MultiplicationOperatorNode
+	 * 
+	 * @param MultiplicationOperatorNode
+	 *            x - Node that represents a multiplication operator
+	 * @param int
+	 *            scope - Indicates the scope of the relationship that this node
+	 *            belongs
+	 * @return int - The type returned by the children operations
+	 */
 	private int multiplicationOperatorNode(MultiplicationOperatorNode x, int scope) {
 		if (x == null)
 			return 0;
@@ -433,6 +764,16 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 		return kind1;
 	}
 
+	/**
+	 * Method that analyzes the list of FactorNode
+	 * 
+	 * @param FactorNode
+	 *            x - Node that represents a factor
+	 * @param int
+	 *            scope - Indicates the scope of the relationship that this node
+	 *            belongs
+	 * @return int - The type returned by the children operations
+	 */
 	private int factorNodeCheck(FactorNode x, int scope) {
 		if (x == null)
 			return 0;
@@ -440,37 +781,65 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 			return conditionalSentenceNodeCheck(x.getConditionalSentenceNode(), scope);
 		else {
 			if (x.getPosition().kind == RelationalQueryLanguageConstants.IDENTIFIER) {
+				String type;
 				if (!schema.getRelation("temporaryRelation" + (scope + 1)).hasAttribute(x.getPosition().image)) {
 					throwSemanticError("\tAttribute does not exist: \"" + x.getPosition().image + "\" at the line "
 							+ x.getPosition().beginLine + ", column " + x.getPosition().beginColumn);
+					type = "";
+				}else{
+					Attribute attribute = schema.getRelation("temporaryRelation" + (scope + 1))
+							.getAttribute(x.getPosition().image);
+					type = attribute.getType();
 				}
-				Attribute attribute = schema.getRelation("temporaryRelation" + (scope + 1))
-						.getAttribute(x.getPosition().image);
-				String type = attribute.getType();
 				return symbolTableTypeConvert(type);
 			}
 		}
 		return x.getPosition().kind;
 	}
 
+	/**
+	 * Method that convert the symbol table types to Relational Query Constants
+	 * 
+	 * @param String
+	 *            type - type to be converted
+	 * @return int - the number of type constant
+	 */
 	private int symbolTableTypeConvert(String type) {
 		if (type.equals("VARCHAR") || type.equals("VARCHAR"))
 			return RelationalQueryLanguageConstants.STRING;
-		else if (type.equals("INT") || type.equals("INTEGER"))
+		else if (type.equals("INT") || type.equals("INTEGER")){
 			return RelationalQueryLanguageConstants.INTEGER;
-		else if (type.equals("DOUBLE") || type.equals("DECIMAL") || type.equals("FLOAT") || type.equals("LONG")
+		}else if (type.equals("DOUBLE") || type.equals("DECIMAL") || type.equals("FLOAT") || type.equals("LONG")
 				|| type.equals("BLOB"))
 			return RelationalQueryLanguageConstants.DECIMAL;
 		else
 			return 0;
 	}
 
+	/**
+	 * Method that analyzes the RenameNode
+	 * 
+	 * @param RenameNode
+	 *            x - Node that represents a rename operation
+	 * @param int
+	 *            scope - Indicates the scope of the relationship that this node
+	 *            belongs
+	 */
 	private void renameNodeCheck(RenameNode x, int scope) {
 		if (x == null)
 			return;
 		renameSetNodeListCheck(x.getRenameSetNodeList(), scope);
 	}
 
+	/**
+	 * Method that analyzes the list of rename attributes set
+	 * 
+	 * @param ListNode
+	 *            x - Node that represents a list of AttributeSetNode
+	 * @param int
+	 *            scope - Indicates the scope of the relationship that this node
+	 *            belongs
+	 */
 	private void renameSetNodeListCheck(ListNode x, int scope) {
 		if (x == null)
 			return;
@@ -478,6 +847,16 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 		renameSetNodeListCheck(x.getNext(), scope);
 	}
 
+	/**
+	 * Method that analyzes the RenameSetNode
+	 * 
+	 * @param RenameSetNode
+	 *            x - Node that represents a set with the old and new name for
+	 *            the attribute
+	 * @param int
+	 *            scope - Indicates the scope of the relationship that this node
+	 *            belongs
+	 */
 	private void renameSetNodeCheck(RenameSetNode x, int scope) {
 		if (x == null)
 			return;
@@ -494,11 +873,18 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 
 	}
 
+	/**
+	 * Method that analyzes the RelationNode
+	 * 
+	 * @param RelationNode
+	 *            x - Node that represents a relation operation
+	 */
 	private void relationNodeCheck(RelationNode x) {
 		if (x == null)
 			return;
 		if (schema.hasRelation(x.getPosition().image)) {
-			//System.out.println("DEFINING: temporaryRelation" + globalScope + " AS " + x.getPosition().image);
+			// System.out.println("DEFINING: temporaryRelation" + globalScope +
+			// " AS " + x.getPosition().image);
 			schema.replaceRelation("temporaryRelation" + globalScope, schema.getRelation(x.getPosition().image));
 		} else {
 			throwSemanticError("\tRelation does not exist: \"" + x.getPosition().image + "\" at the line "

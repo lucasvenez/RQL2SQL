@@ -2,10 +2,14 @@ package br.edu.ifsp.syntacticTree;
 
 import br.edu.ifsp.parser.Token;
 
+/**
+ * Class that represents a relation binary set
+ * @author Dérick Welman
+ */
 public class BinarySetNode extends Node {
 
-	private ReadyOnlyOperationsNode roon1;
-	private ReadyOnlyOperationsNode roon2;
+	private ReadOnlyOperationsNode roon1;
+	private ReadOnlyOperationsNode roon2;
 	private RelationNode rn1;
 	private RelationNode rn2;
 
@@ -21,34 +25,66 @@ public class BinarySetNode extends Node {
 			return rn1.getFirstToken();
 	}
 	
-	public void addFirstRelation(ReadyOnlyOperationsNode roon){
+	/**
+	 * Method that add the first relation of set
+	 * @param ReadOnlyOperationsNode roon
+	 */
+	public void addFirstRelation(ReadOnlyOperationsNode roon){
 		this.roon1 = roon;
 	}
 	
+	/**
+	 * Method that add the first relation of set
+	 * @param RelationNode rn
+	 */
 	public void addFirstRelation(RelationNode rn){
 		this.rn1 = rn;
 	}
 	
-	public void addSecondRelation(ReadyOnlyOperationsNode roon){
+	/**
+	 * Method that add the second relation of set
+	 * @param ReadOnlyOperationsNode roon
+	 */
+	public void addSecondRelation(ReadOnlyOperationsNode roon){
 		this.roon2 = roon;
 	}
 	
+	/**
+	 * Method that add the second relation of set
+	 * @param RelationNode rn
+	 */
 	public void addSecondRelation(RelationNode rn){
 		this.rn2 = rn;
 	}
 	
-	public ReadyOnlyOperationsNode getReadyOnlyOperationsNode1(){
+	/**
+	 * Method that returns the first relation of set
+	 * @return ReadOnlyOperationsNode
+	 */
+	public ReadOnlyOperationsNode getReadyOnlyOperationsNode1(){
 		return roon1;
 	}
 	
-	public ReadyOnlyOperationsNode getReadyOnlyOperationsNode2(){
+	/**
+	 * Method that returns the second relation of set
+	 * @return ReadOnlyOperationsNode
+	 */
+	public ReadOnlyOperationsNode getReadyOnlyOperationsNode2(){
 		return roon2;
 	}
 
+	/**
+	 * Method that returns the first relation of set
+	 * @return RelationNode
+	 */
 	public RelationNode getRelationNode1(){
 		return rn1;
 	}
-
+	
+	/**
+	 * Method that returns the second relation of set
+	 * @return RelationNode
+	 */
 	public RelationNode getRelationNode2(){
 		return rn2;
 	}

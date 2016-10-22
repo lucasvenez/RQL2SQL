@@ -4,9 +4,13 @@ import br.edu.ifsp.parser.RelationalQueryLanguageConstants;
 import br.edu.ifsp.parser.Token;
 import br.edu.ifsp.syntacticTree.interfaces.UnitaryOperationsNodeChildren;
 
+/**
+ * Class that represents a projection operation
+ * @author Lucas Venezian, Dérick Welman
+ */
 public class ProjectNode extends Node implements RelationalQueryLanguageConstants, UnitaryOperationsNodeChildren{
 
-	ListNode ln = null;
+	private ListNode ln = null;
 	
 	public ProjectNode( ListNode ln ) {
 		super( new Token( PROJECT_TOKEN ) );

@@ -2,10 +2,14 @@ package br.edu.ifsp.syntacticTree;
 
 import br.edu.ifsp.parser.Token;
 
+/**
+ * Class that represents a comparison sentence
+ * @author Dérick Welman
+ */
 public class ComparisonSentenceNode extends Node{
 
-	InstanceofSentenceNode isn = null;
-	ComparisonOperatorNode con = null;
+	private InstanceofSentenceNode isn = null;
+	private ComparisonOperatorNode con = null;
 	
 	public ComparisonSentenceNode(InstanceofSentenceNode isn){
 		super(isn.getFirstToken());

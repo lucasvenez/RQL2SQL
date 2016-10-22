@@ -3,19 +3,9 @@ package br.edu.ifsp.parser;
 /*
  * Import session
  */
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import br.edu.ifsp.symbolTable.*;
 import br.edu.ifsp.syntacticTree.*;
 import br.edu.ifsp.syntacticTree.interfaces.*;
-import br.edu.ifsp.symbolTable.exceptions.*;
-import br.edu.ifsp.semanticAnalysis.RelationCheck;
-import br.edu.ifsp.codeGeneration.CodeGenerator;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /** Token Manager. */
 public class RelationalQueryLanguageTokenManager implements RelationalQueryLanguageConstants

@@ -3,14 +3,15 @@ package br.edu.ifsp.syntacticTree;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-
 import javax.swing.JFileChooser;
-import javax.swing.JTextField;
 
-import br.edu.ifsp.syntacticTree.interfaces.UnitaryOperationsNodeChildren;
-
+/**
+ * Class responsible for print the syntactic tree
+ * 
+ * @author Dérick Welman
+ */
 public class PrintTree {
-	int kk;
+	private int kk;
 
 	/**
 	 * Method used to initialize the node count
@@ -22,14 +23,15 @@ public class PrintTree {
 	/**
 	 * Method used to print on standard output the syntactic tree analysis
 	 * 
-	 * @param x
+	 * @param ListNode x - Root of syntactic tree
 	 */
 	public void printRoot(ListNode x) {
 		if (x == null) {
-			String temp = "\n" + ("Empty syntctic tree. Nothing to be printed");
+			System.out.println("Empty syntctic tree. Nothing to be printed");
 		} else {
 			System.out.println("\nPrinting the syntactic analysis:");
-			numberRelationalOperationsNodeList(x);
+			if (kk == 1)
+				numberRelationalOperationsNodeList(x);
 			printRelationalOperationsNodeList(x);
 			System.out.println();
 		}
@@ -38,11 +40,11 @@ public class PrintTree {
 	/**
 	 * Method used to print the .Dot GraphViz extension on a external file
 	 * 
-	 * @param x
+	 * @param ListNode x - Root of syntactic tree
 	 */
 	public void exportDotTree(ListNode x) throws IOException {
 		if (x == null) {
-			String temp = "\n" + ("Empty syntctic tree. Nothing to be printed");
+			System.out.println("Empty syntctic tree. Nothing to be printed");
 		} else {
 			if (kk == 1)
 				numberRelationalOperationsNodeList(x);
@@ -55,10 +57,25 @@ public class PrintTree {
 			} else {
 				File arquivo = file.getSelectedFile();
 				PrintWriter fw = new PrintWriter(arquivo);
-				fw.write("digraph RQL{\n" + toGraphRelationalOperationsNodeList(x) + "\n}");
+				fw.write("digraph RQL{" + toGraphRelationalOperationsNodeList(x) + "\n}");
 				fw.close();
 				arquivo.createNewFile();
 			}
+		}
+	}
+
+	/**
+	 * Method used to print the .Dot GraphViz extension on default output
+	 * 
+	 * @param ListNode x - Root of syntactic tree
+	 */
+	public void printDotTree(ListNode x){
+		if (x == null) {
+			System.out.println("Empty syntctic tree. Nothing to be printed");
+		} else {
+			if (kk == 1)
+				numberRelationalOperationsNodeList(x);
+			System.out.println("digraph RQL{" + toGraphRelationalOperationsNodeList(x) + "\n}");
 		}
 	}
 
@@ -67,7 +84,7 @@ public class PrintTree {
 	 * Number the tree nodes
 	 *********************************************************************/
 
-	public void numberRelationalOperationsNodeList(ListNode x) {
+	private void numberRelationalOperationsNodeList(ListNode x) {
 		if (x == null)
 			return;
 		x.number = kk++;
@@ -75,7 +92,7 @@ public class PrintTree {
 		numberRelationalOperationsNodeList(x.getNext());
 	}
 
-	public void numberRelationalOperationsNode(RelationalOperationsNode x) {
+	private void numberRelationalOperationsNode(RelationalOperationsNode x) {
 		if (x == null)
 			return;
 		x.number = kk++;
@@ -83,15 +100,15 @@ public class PrintTree {
 			numberQueryNode((QueryNode) x.getNode());
 	}
 
-	public void numberQueryNode(QueryNode x) {
+	private void numberQueryNode(QueryNode x) {
 		if (x == null)
 			return;
 		x.number = kk++;
-		if (x.getNode() instanceof ReadyOnlyOperationsNode)
-			numberReadyOnlyOperationsNode((ReadyOnlyOperationsNode) x.getNode());
+		if (x.getNode() instanceof ReadOnlyOperationsNode)
+			numberReadyOnlyOperationsNode((ReadOnlyOperationsNode) x.getNode());
 	}
 
-	private void numberReadyOnlyOperationsNode(ReadyOnlyOperationsNode x) {
+	private void numberReadyOnlyOperationsNode(ReadOnlyOperationsNode x) {
 		if (x == null)
 			return;
 		x.number = kk++;
@@ -215,7 +232,7 @@ public class PrintTree {
 		if (x == null)
 			return;
 		x.number = kk++;
-		if (x.lon == null)
+		if (x.getLogicalOperatorNode() == null)
 			numberConditionalSentenceNode(x.getConditionalSentenceNode());
 		else
 			numberLogicalOperatorNode(x.getLogicalOperatorNode());
@@ -391,11 +408,11 @@ public class PrintTree {
 			return;
 		System.out.println(x.number + ": QueryNode ===> "
 				+ (x.getNode() == null ? "null" : String.valueOf(x.getNode().getNumber())));
-		if (x.getNode() instanceof ReadyOnlyOperationsNode)
-			printReadyOnlyOperationsNode((ReadyOnlyOperationsNode) x.getNode());
+		if (x.getNode() instanceof ReadOnlyOperationsNode)
+			printReadyOnlyOperationsNode((ReadOnlyOperationsNode) x.getNode());
 	}
 
-	private void printReadyOnlyOperationsNode(ReadyOnlyOperationsNode x) {
+	private void printReadyOnlyOperationsNode(ReadOnlyOperationsNode x) {
 		if (x == null)
 			return;
 		System.out.println(x.number + ": ReadyOnlyOperationsNode ===> "
@@ -474,7 +491,7 @@ public class PrintTree {
 			printTransitiveCloseNode((TransitiveCloseNode) x.getUnitaryOperationsChildrenNode());
 		printReadyOnlyOperationsNode(x.getReadyOnlyOperationsNode());
 	}
-	
+
 	private void printTransitiveCloseNode(TransitiveCloseNode x) {
 		if (x == null)
 			return;
@@ -763,12 +780,12 @@ public class PrintTree {
 			return "";
 		String temp = "\n" + (x.number + " [label=\"QueryNode\"];" + (x.getNode() == null ? ""
 				: "\n" + x.number + " -> " + String.valueOf(x.getNode().getNumber()) + ";"));
-		if (x.getNode() instanceof ReadyOnlyOperationsNode)
-			return temp + toGraphReadyOnlyOperationsNode((ReadyOnlyOperationsNode) x.getNode());
+		if (x.getNode() instanceof ReadOnlyOperationsNode)
+			return temp + toGraphReadyOnlyOperationsNode((ReadOnlyOperationsNode) x.getNode());
 		return "";
 	}
 
-	private String toGraphReadyOnlyOperationsNode(ReadyOnlyOperationsNode x) {
+	private String toGraphReadyOnlyOperationsNode(ReadOnlyOperationsNode x) {
 		if (x == null)
 			return "";
 		String temp = "\n" + (x.number + " [label=\"ReadyOnlyOperationsNode\"];" + (x.getNode() == null ? ""
@@ -883,11 +900,11 @@ public class PrintTree {
 			temp += toGraphTransitiveCloseNode((TransitiveCloseNode) x.getUnitaryOperationsChildrenNode());
 		return temp + toGraphReadyOnlyOperationsNode(x.getReadyOnlyOperationsNode());
 	}
-	
+
 	private String toGraphTransitiveCloseNode(TransitiveCloseNode x) {
 		if (x == null)
 			return "";
-		String temp = "\n" + x.number + " [label=\"TransitiveCloseNode\"];" ;
+		String temp = "\n" + x.number + " [label=\"TransitiveCloseNode\"];";
 		return temp;
 	}
 
@@ -921,7 +938,7 @@ public class PrintTree {
 		if (x == null)
 			return "";
 		String temp = "\n" + x.number + " [label=\"LogicalSentenceNode\"];";
-		if (x.lon == null) {
+		if (x.getLogicalOperatorNode() == null) {
 			temp += (x.getConditionalSentenceNode() == null ? ""
 					: "\n" + x.number + " -> " + String.valueOf(x.getConditionalSentenceNode().number) + ";");
 			return temp + toGraphConditionalSentenceNode(x.getConditionalSentenceNode());

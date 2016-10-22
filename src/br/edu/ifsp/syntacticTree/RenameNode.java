@@ -4,9 +4,13 @@ import br.edu.ifsp.parser.RelationalQueryLanguageConstants;
 import br.edu.ifsp.parser.Token;
 import br.edu.ifsp.syntacticTree.interfaces.UnitaryOperationsNodeChildren;
 
+/**
+ * Class that represents a rename operation
+ * @author Dérick Welman
+ */
 public class RenameNode extends Node implements RelationalQueryLanguageConstants, UnitaryOperationsNodeChildren{
 
-	ListNode ln = null;
+	private ListNode ln = null;
 	
 	public RenameNode( ListNode ln ) {
 		super( new Token( RENAME_TOKEN ) );

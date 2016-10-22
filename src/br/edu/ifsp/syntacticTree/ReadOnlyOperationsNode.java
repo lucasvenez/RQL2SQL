@@ -2,13 +2,17 @@ package br.edu.ifsp.syntacticTree;
 
 import br.edu.ifsp.parser.Token;
 import br.edu.ifsp.syntacticTree.interfaces.QueryNodeChildren;
-import br.edu.ifsp.syntacticTree.interfaces.ReadyOnlyOperationsNodeChildren;
+import br.edu.ifsp.syntacticTree.interfaces.ReadOnlyOperationsNodeChildren;
 
-public class ReadyOnlyOperationsNode extends Node implements QueryNodeChildren {
+/**
+ * Class that represents a read only operatioin
+ * @author Lucas Venezian, Dérick Welman
+ */
+public class ReadOnlyOperationsNode extends Node implements QueryNodeChildren {
 
-	private ReadyOnlyOperationsNodeChildren node;
+	private ReadOnlyOperationsNodeChildren node;
 	
-	public ReadyOnlyOperationsNode(ReadyOnlyOperationsNodeChildren node) {
+	public ReadOnlyOperationsNode(ReadOnlyOperationsNodeChildren node) {
 		super(node.getFirstToken());
 		this.node = node;
 	}
@@ -18,7 +22,7 @@ public class ReadyOnlyOperationsNode extends Node implements QueryNodeChildren {
 		return this.node.getFirstToken();
 	}
 	
-	public ReadyOnlyOperationsNodeChildren getNode(){
+	public ReadOnlyOperationsNodeChildren getNode(){
 		return this.node;
 	}
 	

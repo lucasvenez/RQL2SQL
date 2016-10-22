@@ -4,10 +4,13 @@ import br.edu.ifsp.parser.RelationalQueryLanguageConstants;
 import br.edu.ifsp.parser.Token;
 import br.edu.ifsp.syntacticTree.interfaces.UnitaryOperationsNodeChildren;
 
+/**
+ * Class that represents a selection operation
+ * @author Dérick Welman
+ */
 public class SelectNode extends Node implements RelationalQueryLanguageConstants, UnitaryOperationsNodeChildren {
 
-	Token t = null;
-	LogicalSentenceNode lsn = null;
+	private LogicalSentenceNode lsn = null;
 
 	public SelectNode(LogicalSentenceNode lsn) {
 		super(new Token(SELECT_TOKEN));

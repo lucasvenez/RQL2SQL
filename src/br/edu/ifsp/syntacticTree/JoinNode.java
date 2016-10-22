@@ -3,9 +3,13 @@ package br.edu.ifsp.syntacticTree;
 import br.edu.ifsp.parser.Token;
 import br.edu.ifsp.syntacticTree.interfaces.BinaryOperationsNodeChildren;
 
+/**
+ * Class that represents a join operation
+ * @author Dérick Welman
+ */
 public class JoinNode extends Node implements BinaryOperationsNodeChildren{
 	
-	LogicalSentenceNode lsn = null;
+	private LogicalSentenceNode lsn = null;
 	
 	public JoinNode(Token position) {
 		super(position);

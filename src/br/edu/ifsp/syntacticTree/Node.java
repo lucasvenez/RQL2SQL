@@ -2,6 +2,10 @@ package br.edu.ifsp.syntacticTree;
 
 import br.edu.ifsp.parser.Token;
 
+/**
+ * Class that represents a general node
+ * @author Lucas Venezian
+ */
 public abstract class Node {
 
    private Token position;

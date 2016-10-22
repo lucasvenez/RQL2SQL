@@ -2,6 +2,10 @@ package br.edu.ifsp.syntacticTree;
 
 import br.edu.ifsp.parser.Token;
 
+/**
+ * Class that represents a list of any nodes
+ * @author Lucas Venezian, Dérick Welman
+ */
 public class ListNode extends Node {
 
 	private Node node = null;

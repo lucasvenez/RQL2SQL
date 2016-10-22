@@ -2,6 +2,10 @@ package br.edu.ifsp.syntacticTree;
 
 import br.edu.ifsp.parser.Token;
 
+/**
+ * Class that represents a relation
+ * @author Lucas Venezian
+ */
 public class RelationNode extends Node {
 
 	private Token identifier = null;

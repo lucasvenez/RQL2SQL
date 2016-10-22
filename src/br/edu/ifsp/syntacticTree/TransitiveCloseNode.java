@@ -3,6 +3,10 @@ package br.edu.ifsp.syntacticTree;
 import br.edu.ifsp.parser.Token;
 import br.edu.ifsp.syntacticTree.interfaces.UnitaryOperationsNodeChildren;
 
+/**
+ * Class that represents a transitive closure operation
+ * @author Dérick Welman
+ */
 public class TransitiveCloseNode extends Node implements UnitaryOperationsNodeChildren{
 
 	public TransitiveCloseNode(Token t){
