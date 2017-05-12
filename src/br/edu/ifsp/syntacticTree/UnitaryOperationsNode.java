@@ -45,7 +45,7 @@ public class UnitaryOperationsNode extends Node implements ReadOnlyOperationsNod
 		return this.uonc;
 	}
 	
-	public ReadOnlyOperationsNode getReadyOnlyOperationsNode(){
+	public ReadOnlyOperationsNode getReadOnlyOperationsNode(){
 		return this.roon;
 	}
 	

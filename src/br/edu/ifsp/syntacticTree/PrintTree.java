@@ -105,10 +105,10 @@ public class PrintTree {
 			return;
 		x.number = kk++;
 		if (x.getNode() instanceof ReadOnlyOperationsNode)
-			numberReadyOnlyOperationsNode((ReadOnlyOperationsNode) x.getNode());
+			numberReadOnlyOperationsNode((ReadOnlyOperationsNode) x.getNode());
 	}
 
-	private void numberReadyOnlyOperationsNode(ReadOnlyOperationsNode x) {
+	private void numberReadOnlyOperationsNode(ReadOnlyOperationsNode x) {
 		if (x == null)
 			return;
 		x.number = kk++;
@@ -141,10 +141,10 @@ public class PrintTree {
 		if (x == null)
 			return;
 		x.number = kk++;
-		if (x.getReadyOnlyOperationsNode1() != null)
-			numberReadyOnlyOperationsNode(x.getReadyOnlyOperationsNode1());
-		if (x.getReadyOnlyOperationsNode2() != null)
-			numberReadyOnlyOperationsNode(x.getReadyOnlyOperationsNode2());
+		if (x.getReadOnlyOperationsNode1() != null)
+			numberReadOnlyOperationsNode(x.getReadOnlyOperationsNode1());
+		if (x.getReadOnlyOperationsNode2() != null)
+			numberReadOnlyOperationsNode(x.getReadOnlyOperationsNode2());
 	}
 
 	private void numberUnionNode(UnionNode x) {
@@ -198,7 +198,7 @@ public class PrintTree {
 			numberSelectNode((SelectNode) x.getUnitaryOperationsChildrenNode());
 		else if (x.getUnitaryOperationsChildrenNode() instanceof TransitiveCloseNode)
 			numberTransitiveCloseNode((TransitiveCloseNode) x.getUnitaryOperationsChildrenNode());
-		numberReadyOnlyOperationsNode(x.getReadyOnlyOperationsNode());
+		numberReadOnlyOperationsNode(x.getReadOnlyOperationsNode());
 	}
 
 	private void numberTransitiveCloseNode(TransitiveCloseNode x) {
@@ -409,13 +409,13 @@ public class PrintTree {
 		System.out.println(x.number + ": QueryNode ===> "
 				+ (x.getNode() == null ? "null" : String.valueOf(x.getNode().getNumber())));
 		if (x.getNode() instanceof ReadOnlyOperationsNode)
-			printReadyOnlyOperationsNode((ReadOnlyOperationsNode) x.getNode());
+			printReadOnlyOperationsNode((ReadOnlyOperationsNode) x.getNode());
 	}
 
-	private void printReadyOnlyOperationsNode(ReadOnlyOperationsNode x) {
+	private void printReadOnlyOperationsNode(ReadOnlyOperationsNode x) {
 		if (x == null)
 			return;
-		System.out.println(x.number + ": ReadyOnlyOperationsNode ===> "
+		System.out.println(x.number + ": ReadOnlyOperationsNode ===> "
 				+ (x.getNode() == null ? "null" : String.valueOf(x.getNode().getNumber())));
 		if (x.getNode() instanceof UnitaryOperationsNode)
 			printUnitaryOperationsNode((UnitaryOperationsNode) x.getNode());
@@ -460,15 +460,15 @@ public class PrintTree {
 		if (x == null)
 			return;
 		System.out.println(x.number + ": BinaryOperationsNode ===> "
-				+ (x.getReadyOnlyOperationsNode1() == null ? x.getRelationNode1().getPosition().image
-						: x.getReadyOnlyOperationsNode1().number)
-				+ " " + (x.getReadyOnlyOperationsNode2() == null ? x.getRelationNode2().getPosition().image
-						: x.getReadyOnlyOperationsNode2().number)
+				+ (x.getReadOnlyOperationsNode1() == null ? x.getRelationNode1().getPosition().image
+						: x.getReadOnlyOperationsNode1().number)
+				+ " " + (x.getReadOnlyOperationsNode2() == null ? x.getRelationNode2().getPosition().image
+						: x.getReadOnlyOperationsNode2().number)
 				+ " ");
-		if (x.getReadyOnlyOperationsNode1() != null)
-			printReadyOnlyOperationsNode(x.getReadyOnlyOperationsNode1());
-		if (x.getReadyOnlyOperationsNode2() != null)
-			printReadyOnlyOperationsNode(x.getReadyOnlyOperationsNode2());
+		if (x.getReadOnlyOperationsNode1() != null)
+			printReadOnlyOperationsNode(x.getReadOnlyOperationsNode1());
+		if (x.getReadOnlyOperationsNode2() != null)
+			printReadOnlyOperationsNode(x.getReadOnlyOperationsNode2());
 	}
 
 	private void printUnitaryOperationsNode(UnitaryOperationsNode x) {
@@ -478,8 +478,8 @@ public class PrintTree {
 				+ (x.getUnitaryOperationsChildrenNode() == null ? "null"
 						: String.valueOf(x.getUnitaryOperationsChildrenNode().getNumber()))
 				+ " "
-				+ (x.getReadyOnlyOperationsNode() == null ? "null"
-						: String.valueOf(x.getReadyOnlyOperationsNode().number))
+				+ (x.getReadOnlyOperationsNode() == null ? "null"
+						: String.valueOf(x.getReadOnlyOperationsNode().number))
 				+ " " + (x.getRelationNode() == null ? "null" : String.valueOf(x.getRelationNode().getImage())));
 		if (x.getUnitaryOperationsChildrenNode() instanceof ProjectNode)
 			printProjectNode((ProjectNode) x.getUnitaryOperationsChildrenNode());
@@ -489,7 +489,7 @@ public class PrintTree {
 			printSelectNode((SelectNode) x.getUnitaryOperationsChildrenNode());
 		else if (x.getUnitaryOperationsChildrenNode() instanceof TransitiveCloseNode)
 			printTransitiveCloseNode((TransitiveCloseNode) x.getUnitaryOperationsChildrenNode());
-		printReadyOnlyOperationsNode(x.getReadyOnlyOperationsNode());
+		printReadOnlyOperationsNode(x.getReadOnlyOperationsNode());
 	}
 
 	private void printTransitiveCloseNode(TransitiveCloseNode x) {
@@ -781,14 +781,14 @@ public class PrintTree {
 		String temp = "\n" + (x.number + " [label=\"QueryNode\"];" + (x.getNode() == null ? ""
 				: "\n" + x.number + " -> " + String.valueOf(x.getNode().getNumber()) + ";"));
 		if (x.getNode() instanceof ReadOnlyOperationsNode)
-			return temp + toGraphReadyOnlyOperationsNode((ReadOnlyOperationsNode) x.getNode());
+			return temp + toGraphReadOnlyOperationsNode((ReadOnlyOperationsNode) x.getNode());
 		return "";
 	}
 
-	private String toGraphReadyOnlyOperationsNode(ReadOnlyOperationsNode x) {
+	private String toGraphReadOnlyOperationsNode(ReadOnlyOperationsNode x) {
 		if (x == null)
 			return "";
-		String temp = "\n" + (x.number + " [label=\"ReadyOnlyOperationsNode\"];" + (x.getNode() == null ? ""
+		String temp = "\n" + (x.number + " [label=\"ReadOnlyOperationsNode\"];" + (x.getNode() == null ? ""
 				: "\n" + x.number + " -> " + String.valueOf(x.getNode().getNumber()) + ";"));
 		if (x.getNode() instanceof UnitaryOperationsNode)
 			return temp + toGraphUnitaryOperationsNode((UnitaryOperationsNode) x.getNode());
@@ -824,16 +824,16 @@ public class PrintTree {
 	private String toGraphBinarySetNode(BinarySetNode x) {
 		if (x == null)
 			return "";
-		String temp = "\n" + (x.number + " [label=\"BinarySetNode\"];" + (x.getReadyOnlyOperationsNode1() == null
+		String temp = "\n" + (x.number + " [label=\"BinarySetNode\"];" + (x.getReadOnlyOperationsNode1() == null
 				? "\n" + x.number + " -> \"" + x.getRelationNode1().getPosition().image + " (" + x.number + ")\""
-				: "\n" + x.number + " -> " + String.valueOf(x.getReadyOnlyOperationsNode1().getNumber()))
-				+ (x.getReadyOnlyOperationsNode2() == null ? "\n" + x.number + " -> \""
+				: "\n" + x.number + " -> " + String.valueOf(x.getReadOnlyOperationsNode1().getNumber()))
+				+ (x.getReadOnlyOperationsNode2() == null ? "\n" + x.number + " -> \""
 						+ x.getRelationNode2().getPosition().image + " (" + x.number + ")\""
-						: "\n" + x.number + " -> " + String.valueOf(x.getReadyOnlyOperationsNode2().getNumber())));
-		if (x.getReadyOnlyOperationsNode1() != null)
-			temp += toGraphReadyOnlyOperationsNode(x.getReadyOnlyOperationsNode1());
-		if (x.getReadyOnlyOperationsNode2() != null)
-			temp += toGraphReadyOnlyOperationsNode(x.getReadyOnlyOperationsNode2());
+						: "\n" + x.number + " -> " + String.valueOf(x.getReadOnlyOperationsNode2().getNumber())));
+		if (x.getReadOnlyOperationsNode1() != null)
+			temp += toGraphReadOnlyOperationsNode(x.getReadOnlyOperationsNode1());
+		if (x.getReadOnlyOperationsNode2() != null)
+			temp += toGraphReadOnlyOperationsNode(x.getReadOnlyOperationsNode2());
 		return temp;
 	}
 
@@ -884,8 +884,8 @@ public class PrintTree {
 						+ (x.getUnitaryOperationsChildrenNode() == null ? ""
 								: "\n" + x.number + " -> "
 										+ String.valueOf(x.getUnitaryOperationsChildrenNode().getNumber()) + ";")
-						+ (x.getReadyOnlyOperationsNode() == null ? ""
-								: "\n" + x.number + " -> " + String.valueOf(x.getReadyOnlyOperationsNode().number)
+						+ (x.getReadOnlyOperationsNode() == null ? ""
+								: "\n" + x.number + " -> " + String.valueOf(x.getReadOnlyOperationsNode().number)
 										+ "; ")
 						+ (x.getRelationNode() == null ? ""
 								: "\n" + x.number + " -> \"" + String.valueOf(x.getRelationNode().getImage()) + " ("
@@ -898,7 +898,7 @@ public class PrintTree {
 			temp += toGraphSelectNode((SelectNode) x.getUnitaryOperationsChildrenNode());
 		else if (x.getUnitaryOperationsChildrenNode() instanceof TransitiveCloseNode)
 			temp += toGraphTransitiveCloseNode((TransitiveCloseNode) x.getUnitaryOperationsChildrenNode());
-		return temp + toGraphReadyOnlyOperationsNode(x.getReadyOnlyOperationsNode());
+		return temp + toGraphReadOnlyOperationsNode(x.getReadOnlyOperationsNode());
 	}
 
 	private String toGraphTransitiveCloseNode(TransitiveCloseNode x) {

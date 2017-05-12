@@ -1,11 +1,11 @@
 package translation;
 
-
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import br.edu.ifsp.parser.ParseException;
@@ -28,7 +28,7 @@ public class TranslationTest {
 		parser = new Parser();
 	}
 
-	@Test
+	@Ignore
 	public void projection() throws IOException, ParseException {
 		Translation translation = parser.translate(definition, "¢ idPeople (People);");
 		assertEquals(0, translation.getSemanticErrors());
@@ -40,7 +40,7 @@ public class TranslationTest {
 		assertEquals(2, translation.getSemanticErrors());
 	}
 
-	@Test
+	@Ignore
 	public void selection() throws IOException, ParseException {
 		Translation translation = parser.translate(definition, "£ idPeople > 5 v idPeople < 10 (People);");
 		assertEquals(0, translation.getSemanticErrors());
@@ -57,11 +57,11 @@ public class TranslationTest {
 		System.out.println(translation.getTranslation());
 	}
 
-	@Test
+	@Ignore
 	public void rename() throws IOException, ParseException {
 		Translation translation = parser.translate(definition, "§ idPeople id (People);");
 		assertEquals(0, translation.getSemanticErrors());
-		
+
 		translation = parser.translate(definition, "§ idNonExistent id (People);");
 		assertEquals(1, translation.getSemanticErrors());
 
@@ -69,7 +69,7 @@ public class TranslationTest {
 		assertEquals(2, translation.getSemanticErrors());
 	}
 
-	@Test
+	@Ignore
 	public void transitiveClosure() throws IOException, ParseException {
 		Translation translation = parser.translate(definition, "<<Composition>>;");
 		assertEquals(0, translation.getSemanticErrors());
@@ -80,11 +80,32 @@ public class TranslationTest {
 		translation = parser.translate(definition, "<<nonExistent>>;");
 		assertEquals(2, translation.getSemanticErrors());
 	}
-	
+
 	/*---------------------------BINARY----------------------------*/
-	@Test
+	@Ignore
 	public void join() throws IOException, ParseException {
 		Translation translation = parser.translate(definition, "People [] Sale;");
+		assertEquals(0, translation.getSemanticErrors());
+		System.out.println(translation.getTranslation());
+	}
+
+	@Ignore
+	public void division() throws IOException, ParseException {
+		definition = "Sale.idSale:INTEGER;" + "ItemSale.idSale:INTEGER;" + "ItemSale.idProduct:INTEGER;";
+
+		Translation translation = parser.translate(definition, "(¢ idSale, idProduct (ItemSale)) / (¢ idSale (Sale));");
+		assertEquals(0, translation.getSemanticErrors());
+	}
+
+	@Test
+	public void divisionAbstract() throws IOException, ParseException {
+		definition = "A.a1:INTEGER;A.b1:INTEGER;B.b1:INTEGER;";
+
+		Translation translation = parser.translate(definition, "(¢ a1, b1 (A)) / (¢ b1 (B));");
+		assertEquals(0, translation.getSemanticErrors());
+		//System.out.println(translation.getTranslation());
+		
+		translation = parser.translate(definition, "A / B;");
 		assertEquals(0, translation.getSemanticErrors());
 		System.out.println(translation.getTranslation());
 	}

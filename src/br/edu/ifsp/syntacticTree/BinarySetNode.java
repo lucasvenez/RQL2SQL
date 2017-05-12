@@ -61,7 +61,7 @@ public class BinarySetNode extends Node {
 	 * Method that returns the first relation of set
 	 * @return ReadOnlyOperationsNode
 	 */
-	public ReadOnlyOperationsNode getReadyOnlyOperationsNode1(){
+	public ReadOnlyOperationsNode getReadOnlyOperationsNode1(){
 		return roon1;
 	}
 	
@@ -69,7 +69,7 @@ public class BinarySetNode extends Node {
 	 * Method that returns the second relation of set
 	 * @return ReadOnlyOperationsNode
 	 */
-	public ReadOnlyOperationsNode getReadyOnlyOperationsNode2(){
+	public ReadOnlyOperationsNode getReadOnlyOperationsNode2(){
 		return roon2;
 	}
 

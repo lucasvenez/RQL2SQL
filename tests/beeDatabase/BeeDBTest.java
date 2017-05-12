@@ -4,8 +4,6 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 
-import javax.swing.JOptionPane;
-
 import org.junit.Before;
 import org.junit.Test;
 
@@ -87,7 +85,7 @@ public class BeeDBTest {
 
 	@Test
 	public void question10() throws IOException, ParseException {
-		Translation translation = parser.translate(definition, "Pollen / (¢ idBee (Bee));");
+		Translation translation = parser.translate(definition, "Pollen / (¢ idFlower (Flower));");
 		assertEquals(0, translation.getSemanticErrors());
 		System.out.println(translation.getTranslation());
 	}

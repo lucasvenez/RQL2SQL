@@ -1,6 +1,6 @@
 /**
  * This document describe the Relational Query Language.
- * @author Lucas Venezian Povoa and DÈrick Welman Brock Rangel
+ * @author Lucas Venezian Povoa and D√©rick Welman Brock Rangel
  * @since 24th Setember, 2010
  */
 
@@ -10,16 +10,16 @@
 options {
 
 	/*
-	 * Esse atributo determina que as classes n„o devem ser est·ticas.
+	 * Esse atributo determina que as classes n√£o devem ser est√°ticas.
 	 */
 	STATIC = false;
 
 	GRAMMAR_ENCODING = "ISO-8859-1";
 
 	/*
-	 * Esse atributo determina que o Analisador Sint·tico deve mostrar na saÌda-padr„o
-	 * quais s„o os n„o-terminais que est„o sendo "executados" e quais s„o os tokens que
-	 * est„o sendo consumidos em cada um deles.
+	 * Esse atributo determina que o Analisador Sint√°tico deve mostrar na sa√≠da-padr√£o
+	 * quais s√£o os n√£o-terminais que est√£o sendo "executados" e quais s√£o os tokens que
+	 * est√£o sendo consumidos em cada um deles.
 	 */
 	DEBUG_LOOKAHEAD = false;
 }
@@ -40,24 +40,19 @@ public class RelationalQueryLanguage {
 	 * Method used to link a founded token with his name.
 	 * 
 	 * @see the book DELAMARO, M. E. Como Construir um Compilador: Utilizando
-	 *      Ferramentas Java. S„o Paulo: Novatec. 2004
+	 *      Ferramentas Java. S√£o Paulo: Novatec. 2004
 	 * @param x
 	 * @return
 	 */
 	public static String im(int x) {
-
 		int k;
 		String s;
-
 		s = tokenImage[x];
 		k = s.lastIndexOf("\u005c"");
-
 		try {
-
 			s.substring(1, k);
 		} catch (Exception exception) {
 		}
-
 		return s;
 	}
 	  
@@ -131,9 +126,9 @@ TOKEN : {
  * @since Setember 24th, 2010
  */
 TOKEN: {
-        < PROJECT_TOKEN	:   "¢" >
-   |	< SELECT_TOKEN	:   "£" >
-   |	< RENAME_TOKEN	:   "ß" >
+        < PROJECT_TOKEN	:   "¬¢" >
+   |	< SELECT_TOKEN	:   "¬£" >
+   |	< RENAME_TOKEN	:   "¬ß" >
    |	< EXTEND_TOKEN	:   < AMPERSAND > >
    |	< CROSS_TOKEN	:	"x" >
    |	< NATURAL_JOIN_TOKEN		: "[]" >
@@ -161,7 +156,7 @@ TOKEN: {
        < AND   :   "^"   >
    |   < OR    :   "v"   >
    |   < XOR   :   "_v_" >
-   |   < NOT   :   "¨"   >
+   |   < NOT   :   "¬¨"   >
 }
 
 /**
@@ -277,15 +272,15 @@ SPECIAL_TOKEN: {
 				"+",
 				"*",
 				"=",
-				"£",
-				"¢",
-				"¨",
-				"ß",
+				"¬£",
+				"¬¢",
+				"¬¨",
+				"¬ß",
 				"|",
 				"{",
 				"}",
-				"™",
-				"∫",
+				"¬™",
+				"¬∫",
 				"^",
 				">",
 				" ",
@@ -521,7 +516,7 @@ LogicalSentenceNode logicalSentence() : {
 	LogicalOperatorNode lon = null;
 	LogicalOperatorNode temp = null;
 	Token t = null;
-} {
+} {no
    csn1 = conditionalSentence()
    ( t = logicalOperator() csn2 = conditionalSentence() 
    {
@@ -594,7 +589,7 @@ AdditionSentenceNode additionSentence() : {
 	AdditionOperatorNode temp = null;
 	Token t = null;
 } {
-   msn1= multiplicationSentence() ( ( t = <PLUS_SIGN> | t = <MINUS_SIGN> ) msn2 = multiplicationSentence() 
+   msn1 = multiplicationSentence() ( ( t = <PLUS_SIGN> | t = <MINUS_SIGN> ) msn2 = multiplicationSentence() 
    {
    		if(aon == null){
 	   		aon = new AdditionOperatorNode(t, msn1, msn2);

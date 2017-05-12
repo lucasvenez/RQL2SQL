@@ -122,17 +122,17 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 		if (x == null)
 			return;
 		if (x.getNode() instanceof ReadOnlyOperationsNode) {
-			readyOnlyOperationsNodeCheck((ReadOnlyOperationsNode) x.getNode());
+			readOnlyOperationsNodeCheck((ReadOnlyOperationsNode) x.getNode());
 		}
 	}
 
 	/**
-	 * Method that analyzes the ReadyOnlyOperationsNode
+	 * Method that analyzes the ReadOnlyOperationsNode
 	 * 
 	 * @param ReadOnlyOperationsNode
 	 *            x - Node that represents a read only operation
 	 */
-	private void readyOnlyOperationsNodeCheck(ReadOnlyOperationsNode x) {
+	private void readOnlyOperationsNodeCheck(ReadOnlyOperationsNode x) {
 		if (x == null)
 			return;
 		globalScope++;
@@ -181,8 +181,8 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 		int binaryScopes[] = new int[2];
 
 		binaryScopes[0] = globalScope + 1;
-		if (x.getReadyOnlyOperationsNode1() != null) {
-			readyOnlyOperationsNodeCheck(x.getReadyOnlyOperationsNode1());
+		if (x.getReadOnlyOperationsNode1() != null) {
+			readOnlyOperationsNodeCheck(x.getReadOnlyOperationsNode1());
 		} else {
 			globalScope++;
 			schema.addRelation("temporaryRelation" + globalScope);
@@ -190,8 +190,8 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 		}
 
 		binaryScopes[1] = globalScope + 1;
-		if (x.getReadyOnlyOperationsNode2() != null) {
-			readyOnlyOperationsNodeCheck(x.getReadyOnlyOperationsNode2());
+		if (x.getReadOnlyOperationsNode2() != null) {
+			readOnlyOperationsNodeCheck(x.getReadOnlyOperationsNode2());
 		} else {
 			globalScope++;
 			schema.addRelation("temporaryRelation" + globalScope);
@@ -403,7 +403,7 @@ public class RelationCheck implements RelationalQueryLanguageConstants {
 		if (x.getRelationNode() != null) {
 			relationNodeCheck(x.getRelationNode());
 		} else {
-			readyOnlyOperationsNodeCheck(x.getReadyOnlyOperationsNode());
+			readOnlyOperationsNodeCheck(x.getReadOnlyOperationsNode());
 		}
 		if (x.getUnitaryOperationsChildrenNode() instanceof ProjectNode)
 			projectNodeCheck((ProjectNode) x.getUnitaryOperationsChildrenNode(), scope);
